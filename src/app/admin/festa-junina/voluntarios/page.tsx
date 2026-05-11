@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
 import { VolunteerRoleSummary } from "@/components/volunteer-role-summary";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { createVolunteer, updateVolunteer } from "./actions";
+import { AdminPageShell } from "@/components/admin-page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +49,8 @@ export default async function VoluntariosPage({ searchParams }: PageProps) {
   const { volunteers, confirmedPeople, possiblePeople } = await getData();
 
   return (
-    <main className="min-h-screen bg-amber-50 text-stone-900">
-      <SiteHeader />
+    <AdminPageShell>
+      
       <section className="mx-auto max-w-6xl px-5 py-12">
         <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao admin</Link>
         <h1 className="mt-8 text-3xl font-black text-green-950">Voluntários e papéis</h1>
@@ -90,6 +90,6 @@ export default async function VoluntariosPage({ searchParams }: PageProps) {
           ))}
         </div>
       </section>
-    </main>
+    </AdminPageShell>
   );
 }

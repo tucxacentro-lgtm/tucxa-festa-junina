@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { MobileMenu } from "@/components/mobile-menu";
+import { HelpButton } from "@/components/help-button";
 
 const links = [
   { href: "/festa-junina", label: "Início" },
@@ -39,7 +40,10 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <MobileMenu links={links} />
+        <div className="flex items-center gap-2">
+          <HelpButton compact />
+          <MobileMenu links={links} />
+        </div>
       </div>
     </header>
   );

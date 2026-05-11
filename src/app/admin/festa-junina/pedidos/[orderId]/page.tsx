@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
 import { PaymentStatusBadge } from "@/components/payment-status-badge";
 import { requireAdmin } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import type { TicketOrder } from "@/types/festa-junina";
 import { approvePayment, rejectPayment } from "../actions";
+import { AdminPageShell } from "@/components/admin-page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +45,8 @@ export default async function AdminPedidoDetalhePage({ params }: PageProps) {
   const { order, proofUrl, error } = await getOrder(orderId);
 
   return (
-    <main className="min-h-screen bg-amber-50 text-stone-900">
-      <SiteHeader />
+    <AdminPageShell>
+      
       <section className="mx-auto max-w-5xl px-5 py-12">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <Link href="/admin/festa-junina/pedidos" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">
@@ -133,6 +133,6 @@ export default async function AdminPedidoDetalhePage({ params }: PageProps) {
           </div>
         )}
       </section>
-    </main>
+    </AdminPageShell>
   );
 }

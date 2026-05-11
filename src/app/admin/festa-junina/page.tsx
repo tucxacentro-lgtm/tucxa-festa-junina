@@ -1,53 +1,16 @@
 import Link from "next/link";
 import { ClipboardList, CreditCard, Settings, Ticket, Utensils, Gift, Share2, ClipboardCheck, Megaphone, UsersRound, ListChecks, Warehouse } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
 import { requireAdmin } from "@/lib/auth";
-import { createSupabaseAdminClient } from "@/lib/supabaseServer";
-import { AdminOperationalChecklist, type OperationalChecklistItem } from "@/components/admin-operational-checklist";
 import { AdminFamiliarizationBox } from "@/components/admin-familiarization-box";
+import { AdminPageShell } from "@/components/admin-page-shell";
 
 export const dynamic = "force-dynamic";
 
-const defaultChecklistItems: OperationalChecklistItem[] = [
-  { title: "Configurar evento, data, local e Pix", description: "Confirmar informações públicas e chave Pix.", status: "suggested", href: "/admin/festa-junina/configuracoes" },
-  { title: "Configurar convites, valores e combos", description: "Revisar preços, gratuidades, combos e ofertas.", status: "suggested", href: "/admin/festa-junina/convites" },
-  { title: "Cadastrar cardápio e ficha técnica", description: "Definir itens, preparo e insumos.", status: "pending", href: "/admin/festa-junina/cardapio" },
-  { title: "Revisar planejamento de compras", description: "Validar sugestões de compras, mesas e voluntários.", status: "pending", href: "/admin/festa-junina/planejamento" },
-  { title: "Confirmar compras e armazenamento", description: "Definir o que foi comprado, onde ficará e quem responde.", status: "pending", href: "/admin/festa-junina/operacao" },
-  { title: "Simular compra, comprovante e caixa", description: "Testar venda, aprovação de comprovante, entrada por QR Code e pagamento.", status: "pending", href: "/admin/festa-junina/operacao" },
-];
-
-async function getChecklistPreview() {
-  const supabase = createSupabaseAdminClient();
-  const { data: event } = await supabase.from("events").select("id").eq("slug", "arraia-tucxa-2026").single();
-
-  if (!event) return defaultChecklistItems;
-
-  const { data, error } = await supabase
-    .from("event_operational_checklist")
-    .select("title, description, status, href, sort_order")
-    .eq("event_id", event.id)
-    .order("sort_order");
-
-  if (error || !data || data.length === 0) {
-    return defaultChecklistItems;
-  }
-
-  return data.map((item) => ({
-    title: item.title,
-    description: item.description ?? "",
-    status: item.status ?? "pending",
-    href: item.href ?? undefined,
-  }));
-}
-
 export default async function AdminFestaJuninaPage() {
   const admin = await requireAdmin(undefined, "/admin/festa-junina");
-  const checklistItems = await getChecklistPreview();
-
   return (
-    <main className="min-h-screen bg-amber-50 text-stone-900">
-      <SiteHeader />
+    <AdminPageShell>
+      
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="rounded-2xl bg-white px-4 py-3 text-sm text-stone-600 shadow-sm">
@@ -63,7 +26,6 @@ export default async function AdminFestaJuninaPage() {
           Painel inicial para acompanhar reservas, comprovantes, combos com bingo e configurar a página pública.
         </p>
 
-        <AdminOperationalChecklist items={checklistItems} />
         <AdminFamiliarizationBox />
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -142,6 +104,6 @@ export default async function AdminFestaJuninaPage() {
           </Link>
         </div>
       </section>
-    </main>
+    </AdminPageShell>
   );
 }

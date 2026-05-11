@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
 import { WhatsAppMessageCard } from "@/components/whatsapp-message-card";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { buildPublicUrl } from "@/lib/site-url";
 import { sendUpsellSummary } from "./actions";
+import { AdminPageShell } from "@/components/admin-page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -39,8 +39,8 @@ export default async function UpsellEnviosPage({ searchParams }: PageProps) {
   const template = campaign?.whatsapp_message || "Oi, {nome}! Sua presença no Arraiá do Tucxa já está registrada 🎉\n\nPara deixar o dia da festa mais prático, você pode complementar sua compra com combo de comida, bebida ou cartela de bingo. Assim você evita fila e ajuda a organização a planejar melhor as compras.\n\nAcesse aqui: {link_compra_adicional}";
 
   return (
-    <main className="min-h-screen bg-amber-50 text-stone-900">
-      <SiteHeader />
+    <AdminPageShell>
+      
       <section className="mx-auto max-w-5xl px-5 py-12">
         <div className="mb-6 flex flex-wrap justify-between gap-3"><Link href="/admin/festa-junina/upsell" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao upsell</Link><a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair do admin</a></div>
         <h1 className="text-3xl font-black text-green-950">Envios de upsell por WhatsApp</h1>
@@ -64,6 +64,6 @@ export default async function UpsellEnviosPage({ searchParams }: PageProps) {
           {orders.length === 0 ? <div className="rounded-3xl bg-white p-6 text-center text-stone-500 shadow-sm">Nenhum comprador encontrado nos últimos {days} dias.</div> : null}
         </div>
       </section>
-    </main>
+    </AdminPageShell>
   );
 }

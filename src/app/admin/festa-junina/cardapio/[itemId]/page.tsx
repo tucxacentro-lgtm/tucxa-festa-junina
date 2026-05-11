@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
 import { MenuItemTechnicalSheet } from "@/components/menu-item-technical-sheet";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { addRecipeIngredient, updateMenuPlanningItem, updateRecipeIngredient } from "../actions";
+import { AdminPageShell } from "@/components/admin-page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -53,13 +53,13 @@ export default async function CardapioDetalhePage({ params, searchParams }: Page
 
   if (!item) {
     return (
-      <main className="min-h-screen bg-amber-50 text-stone-900"><SiteHeader /><section className="mx-auto max-w-3xl px-5 py-16"><div className="rounded-3xl bg-white p-8 shadow-sm"><h1 className="text-3xl font-black text-green-950">Item não encontrado</h1><Link href="/admin/festa-junina/cardapio" className="mt-5 inline-block rounded-2xl bg-green-900 px-5 py-3 font-bold text-white">Voltar</Link></div></section></main>
+      <AdminPageShell><section className="mx-auto max-w-3xl px-5 py-16"><div className="rounded-3xl bg-white p-8 shadow-sm"><h1 className="text-3xl font-black text-green-950">Item não encontrado</h1><Link href="/admin/festa-junina/cardapio" className="mt-5 inline-block rounded-2xl bg-green-900 px-5 py-3 font-bold text-white">Voltar</Link></div></section></AdminPageShell>
     );
   }
 
   return (
-    <main className="min-h-screen bg-amber-50 text-stone-900">
-      <SiteHeader />
+    <AdminPageShell>
+      
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex flex-wrap justify-between gap-3">
           <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao cardápio</Link>
@@ -127,6 +127,6 @@ export default async function CardapioDetalhePage({ params, searchParams }: Page
           </div>
         </div>
       </section>
-    </main>
+    </AdminPageShell>
   );
 }

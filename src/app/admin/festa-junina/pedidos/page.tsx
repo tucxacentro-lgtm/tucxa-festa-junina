@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
 import { PaymentStatusBadge } from "@/components/payment-status-badge";
 import { createSupabaseAdminClient, hasSupabaseServiceRoleKey } from "@/lib/supabaseServer";
 import { requireAdmin } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format";
 import type { TicketOrder } from "@/types/festa-junina";
 import { approvePayment, rejectPayment } from "./actions";
+import { AdminPageShell } from "@/components/admin-page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +43,8 @@ export default async function AdminPedidosPage({ searchParams }: PageProps) {
   const bingoOrders = orders.filter((order) => order.includes_bingo).length;
 
   return (
-    <main className="min-h-screen bg-amber-50 text-stone-900">
-      <SiteHeader />
+    <AdminPageShell>
+      
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex justify-end">
           <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm transition hover:bg-amber-100">
@@ -159,6 +159,6 @@ export default async function AdminPedidosPage({ searchParams }: PageProps) {
           </div>
         </div>
       </section>
-    </main>
+    </AdminPageShell>
   );
 }

@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { SiteHeader } from "@/components/site-header";
 import { requireAdmin } from "@/lib/auth";
 import { createMenuPlanningItem } from "../actions";
+import { AdminPageShell } from "@/components/admin-page-shell";
 
 export default async function NovoCardapioPage() {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/cardapio/novo");
 
   return (
-    <main className="min-h-screen bg-amber-50 text-stone-900">
-      <SiteHeader />
+    <AdminPageShell>
+      
       <section className="mx-auto max-w-4xl px-5 py-12">
         <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao cardápio</Link>
         <h1 className="mt-8 text-3xl font-black text-green-950">Novo item do cardápio</h1>
@@ -25,6 +25,6 @@ export default async function NovoCardapioPage() {
           <button className="mt-6 w-full rounded-2xl bg-green-900 px-5 py-3 font-black text-white">Criar item</button>
         </form>
       </section>
-    </main>
+    </AdminPageShell>
   );
 }
