@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
+import { ADMIN_ACCESS_TOKEN_COOKIE } from "@/lib/admin-auth";
+
+const publicAdminPaths = ["/admin/login", "/admin/esqueci-senha", "/admin/redefinir-senha", "/admin/logout"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (!pathname.startsWith("/admin") || pathname.startsWith("/admin/login") || pathname.startsWith("/admin/logout")) {
+  if (!pathname.startsWith("/admin") || publicAdminPaths.some((path) => pathname.startsWith(path))) {
     return NextResponse.next();
   }
 
-  const expectedSecret = process.env.ADMIN_SESSION_SECRET;
-  const sessionValue = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
+  const accessToken = request.cookies.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
 
-  if (expectedSecret && sessionValue === expectedSecret) {
+  if (accessToken) {
     return NextResponse.next();
   }
 

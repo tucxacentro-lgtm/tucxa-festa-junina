@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { createSupabaseAdminClient, hasSupabaseServiceRoleKey } from "@/lib/supabaseServer";
+import { requireAdmin } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format";
 import type { TicketOrder } from "@/types/festa-junina";
 
@@ -22,6 +23,7 @@ async function getOrders() {
 }
 
 export default async function AdminPedidosPage() {
+  await requireAdmin(["admin", "coordenador", "caixa"], "/admin/festa-junina/pedidos");
   const { orders, error } = await getOrders();
   const total = orders.reduce((sum, order) => sum + Number(order.total_amount ?? 0), 0);
   const bingoOrders = orders.filter((order) => order.includes_bingo).length;

@@ -248,6 +248,23 @@ export function TicketOrderForm({
       </div>
 
       <label className="rounded-3xl border border-green-100 bg-white p-4 shadow-sm">
+        <span className="text-sm font-black text-green-950">Observações</span>
+        <textarea
+          name="notes"
+          className="mt-2 min-h-28 w-full rounded-2xl border border-stone-200 p-3 outline-none focus:border-green-700"
+          placeholder="Ex.: nome de quem vendeu, combinação feita, observação sobre crianças, etc."
+        />
+      </label>
+
+      <div className="rounded-3xl bg-green-950 p-5 text-white shadow-lg">
+        <p className="text-sm font-bold text-amber-200">Total estimado a pagar</p>
+        <p className="text-4xl font-black">{formatCurrency(estimatedTotal)}</p>
+        <p className="mt-2 text-sm text-white/75">
+          Confira o valor acima antes de anexar o comprovante. Depois faça o pagamento conforme a opção escolhida e carregue o comprovante/registro abaixo.
+        </p>
+      </div>
+
+      <label className="rounded-3xl border border-green-100 bg-white p-4 shadow-sm">
         <span className="text-sm font-black text-green-950">Comprovante/registro do pagamento</span>
         <input
           required
@@ -261,29 +278,13 @@ export function TicketOrderForm({
         </span>
       </label>
 
-      <label className="rounded-3xl border border-green-100 bg-white p-4 shadow-sm">
-        <span className="text-sm font-black text-green-950">Observações</span>
-        <textarea
-          name="notes"
-          className="mt-2 min-h-28 w-full rounded-2xl border border-stone-200 p-3 outline-none focus:border-green-700"
-          placeholder="Ex.: nome de quem vendeu, combinação feita, observação sobre crianças, etc."
-        />
-      </label>
-
-      <div className="rounded-3xl bg-green-950 p-5 text-white shadow-lg">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-bold text-amber-200">Total estimado</p>
-            <p className="text-4xl font-black">{formatCurrency(estimatedTotal)}</p>
-            <p className="mt-1 text-sm text-white/75">O valor final será registrado e validado pela organização.</p>
-          </div>
-          <button
-            disabled={isPending}
-            className="rounded-2xl bg-amber-300 px-6 py-4 font-black text-green-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isPending ? "Registrando..." : "Registrar compra e comprovante"}
-          </button>
-        </div>
+      <div className="rounded-3xl bg-white p-4 shadow-sm">
+        <button
+          disabled={isPending}
+          className="w-full rounded-2xl bg-amber-300 px-6 py-4 font-black text-green-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isPending ? "Registrando..." : "Registrar compra e comprovante"}
+        </button>
       </div>
     </form>
   );

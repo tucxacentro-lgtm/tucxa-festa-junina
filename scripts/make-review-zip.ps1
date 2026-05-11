@@ -40,6 +40,7 @@ foreach ($Item in $ItemsToCopy) {
       Copy-Item $Source $Destination -Recurse -Force
     } else {
       $DestinationParent = Split-Path $Destination -Parent
+
       if (!(Test-Path $DestinationParent)) {
         New-Item -ItemType Directory -Path $DestinationParent | Out-Null
       }

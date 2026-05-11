@@ -27,6 +27,8 @@ export type TicketType = {
   price: number | string;
   sale_mode: string;
   is_free: boolean;
+  active?: boolean;
+  sort_order?: number;
 };
 
 export type Combo = {
@@ -40,6 +42,8 @@ export type Combo = {
   highlighted: boolean;
   includes_bingo?: boolean | null;
   bingo_cards_quantity?: number | null;
+  active?: boolean;
+  sort_order?: number;
 };
 
 export type PaymentOption = {
@@ -47,6 +51,8 @@ export type PaymentOption = {
   name: string;
   method: string;
   instructions: string | null;
+  active?: boolean;
+  sort_order?: number;
 };
 
 export type TicketOrder = {

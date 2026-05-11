@@ -1,17 +1,17 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useActionState } from "react";
-import { loginAdmin } from "./actions";
+import { AdminLoginForm } from "./admin-login-form";
 
-const initialState = {
-  ok: false,
-  message: "",
+export const dynamic = "force-dynamic";
+
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function AdminLoginPage() {
-  const [state, formAction, isPending] = useActionState(loginAdmin, initialState);
+export default async function AdminLoginPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const nextParam = params?.next;
+  const next = Array.isArray(nextParam) ? nextParam[0] ?? "/admin/festa-junina" : nextParam ?? "/admin/festa-junina";
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-400 via-orange-400 to-yellow-300 px-5 py-12 text-stone-900">
@@ -31,49 +31,11 @@ export default function AdminLoginPage() {
             <p className="text-sm font-black uppercase tracking-[0.2em] text-green-800">Admin</p>
             <h1 className="mt-2 text-3xl font-black text-green-950">Acesso administrativo</h1>
             <p className="mt-2 text-sm text-stone-600">
-              Entre para acompanhar compras, comprovantes, combos e configurações do Arraiá do Tucxa.
+              Entre com um usuário real do Supabase Auth autorizado em admin_profiles.
             </p>
           </div>
 
-          <form action={formAction} className="grid gap-4">
-            <label className="grid gap-2 text-sm font-bold text-green-950">
-              E-mail
-              <input
-                name="email"
-                type="email"
-                autoComplete="username"
-                required
-                className="rounded-2xl border border-amber-200 px-4 py-3 font-normal outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-100"
-                placeholder="admin@tucxa.com.br"
-              />
-            </label>
-
-            <label className="grid gap-2 text-sm font-bold text-green-950">
-              Senha
-              <input
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="rounded-2xl border border-amber-200 px-4 py-3 font-normal outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-100"
-                placeholder="Digite a senha"
-              />
-            </label>
-
-            {state.message ? (
-              <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
-                {state.message}
-              </div>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-2xl bg-green-900 px-6 py-4 font-black text-white shadow-lg transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isPending ? "Entrando..." : "Entrar no admin"}
-            </button>
-          </form>
+          <AdminLoginForm next={next} />
 
           <div className="mt-6 text-center text-sm">
             <Link href="/festa-junina" className="font-bold text-green-900 underline decoration-green-300 underline-offset-4">

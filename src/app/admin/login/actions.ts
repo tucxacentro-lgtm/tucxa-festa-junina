@@ -2,14 +2,10 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import {
-  ADMIN_SESSION_COOKIE,
-  getAdminSessionSecret,
-  isAdminAuthConfigured,
-  isValidAdminCredentials,
-} from "@/lib/admin-auth";
+import { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE } from "@/lib/admin-auth";
+import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabaseServer";
 
-type LoginState = {
+export type LoginState = {
   ok: boolean;
   message: string;
 };
@@ -18,33 +14,67 @@ function normalize(value: FormDataEntryValue | null) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-export async function loginAdmin(
-  _previousState: LoginState | null,
-  formData: FormData,
-): Promise<LoginState> {
-  const email = normalize(formData.get("email"));
-  const password = typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
-
-  if (!isAdminAuthConfigured()) {
-    return {
-      ok: false,
-      message:
-        "Login administrativo não configurado. Defina ADMIN_USER_EMAIL, ADMIN_PASSWORD e ADMIN_SESSION_SECRET no .env.local.",
-    };
+function normalizeNext(value: string) {
+  if (!value || !value.startsWith("/admin") || value.startsWith("//")) {
+    return "/admin/festa-junina";
   }
 
-  if (!isValidAdminCredentials(email, password)) {
+  if (value.startsWith("/admin/login") || value.startsWith("/admin/logout")) {
+    return "/admin/festa-junina";
+  }
+
+  return value;
+}
+
+export async function loginAdmin(_previousState: LoginState | null, formData: FormData): Promise<LoginState> {
+  const email = normalize(formData.get("email")).toLowerCase();
+  const password = typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
+  const next = normalizeNext(normalize(formData.get("next")));
+
+  if (!email || !password) {
+    return { ok: false, message: "Informe e-mail e senha." };
+  }
+
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error || !data.session || !data.user) {
     return { ok: false, message: "E-mail ou senha inválidos." };
   }
 
+  const adminClient = createSupabaseAdminClient();
+  const { data: profile, error: profileError } = await adminClient
+    .from("admin_profiles")
+    .select("id, role, active")
+    .eq("id", data.user.id)
+    .eq("active", true)
+    .single();
+
+  if (profileError || !profile) {
+    return {
+      ok: false,
+      message: "Usuário autenticado, mas sem permissão administrativa ativa. Verifique o cadastro em admin_profiles.",
+    };
+  }
+
   const cookieStore = await cookies();
-  cookieStore.set(ADMIN_SESSION_COOKIE, getAdminSessionSecret(), {
+  const maxAge = data.session.expires_in ?? 60 * 60 * 8;
+
+  cookieStore.set(ADMIN_ACCESS_TOKEN_COOKIE, data.session.access_token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60 * 8,
+    maxAge,
   });
 
-  redirect("/admin/festa-junina");
+  cookieStore.set(ADMIN_REFRESH_TOKEN_COOKIE, data.session.refresh_token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+
+  redirect(next);
 }
