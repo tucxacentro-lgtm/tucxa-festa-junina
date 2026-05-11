@@ -76,7 +76,7 @@ export default async function AdminPedidoDetalhePage({ params }: PageProps) {
                 <h2 className="font-black text-green-950">Comprador</h2>
                 <div className="mt-4 space-y-2 text-sm text-stone-700">
                   <p><strong>Nome:</strong> {order.buyer_name}</p>
-                  <p><strong>E-mail:</strong> {order.buyer_email}</p>
+                  <p><strong>E-mail:</strong> {order.buyer_email || "Não informado"}</p>
                   <p><strong>WhatsApp:</strong> {order.buyer_whatsapp}</p>
                   <p><strong>Adultos:</strong> {order.adults_quantity}</p>
                   <p><strong>Crianças:</strong> {order.children_quantity}</p>

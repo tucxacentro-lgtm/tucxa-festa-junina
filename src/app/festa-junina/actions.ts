@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { getEventAdminRecipients, sendMail } from "@/lib/mail";
 import { formatCurrency } from "@/lib/format";
+import { buildPublicUrl } from "@/lib/site-url";
 
 type CreateOrderResult = {
   ok: boolean;
@@ -26,15 +27,9 @@ function generateBuyerCode() {
 }
 
 function getBaseUrl() {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
-  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
-  const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "";
-
-  if (explicit && !explicit.includes("localhost")) return explicit.replace(/\/$/, "");
-  if (vercelUrl) return vercelUrl.replace(/\/$/, "");
-  if (productionUrl) return productionUrl.replace(/\/$/, "");
-  return (explicit || "http://localhost:3000").replace(/\/$/, "");
+  return buildPublicUrl("/").replace(/\/$/, "");
 }
+
 
 function buildOrderEmailHtml(input: {
   buyerName: string;
@@ -83,8 +78,8 @@ export async function createTicketOrder(
 
   if (!eventId) return { ok: false, message: "Evento não encontrado." };
   if (!buyerName) return { ok: false, message: "Informe o nome completo." };
-  if (!buyerEmail || !buyerEmail.includes("@")) return { ok: false, message: "Informe um e-mail válido." };
-  if (!buyerWhatsapp) return { ok: false, message: "Informe o WhatsApp." };
+  if (buyerEmail && !buyerEmail.includes("@")) return { ok: false, message: "Informe um e-mail válido ou deixe o campo em branco." };
+  if (!buyerWhatsapp) return { ok: false, message: "Informe o WhatsApp. Ele será usado para contato caso não haja e-mail." };
   if (!paymentOptionId) return { ok: false, message: "Escolha a forma de pagamento." };
 
   if (!(proof instanceof File) || proof.size === 0) {
@@ -157,7 +152,7 @@ export async function createTicketOrder(
       event_id: eventId,
       buyer_code: buyerCode,
       buyer_name: buyerName,
-      buyer_email: buyerEmail,
+      buyer_email: buyerEmail || null,
       buyer_whatsapp: buyerWhatsapp,
       adults_quantity: adultsQuantity,
       children_quantity: childrenQuantity,
@@ -188,7 +183,7 @@ export async function createTicketOrder(
   }
 
   const confirmationUrl = `${getBaseUrl()}/minha-compra/${buyerCode}`;
-  const recipients = Array.from(new Set([buyerEmail, ...getEventAdminRecipients(includesBingo)]));
+  const recipients = Array.from(new Set([buyerEmail, ...getEventAdminRecipients(includesBingo)].filter(Boolean)));
 
   try {
     await sendMail({

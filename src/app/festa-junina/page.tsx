@@ -269,7 +269,7 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
           <h2 className="text-3xl font-black text-green-950">Reserve seu convite</h2>
           <p className="mt-2 text-stone-600">
             Informe seus dados, escolha convite ou combo e carregue o comprovante/registro do pagamento.
-            O e-mail será usado como canal principal de comunicação.
+            O WhatsApp é obrigatório. O e-mail pode ser informado quando houver.
           </p>
 
           <TicketOrderForm

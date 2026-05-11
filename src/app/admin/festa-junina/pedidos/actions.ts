@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format";
 import { getEventAdminRecipients, sendMail } from "@/lib/mail";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
+import { buildPublicUrl } from "@/lib/site-url";
 import type { TicketOrder } from "@/types/festa-junina";
 
 function text(formData: FormData, name: string) {
@@ -14,13 +15,9 @@ function text(formData: FormData, name: string) {
 }
 
 function getBaseUrl() {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
-  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
-
-  if (explicit && !explicit.includes("localhost")) return explicit.replace(/\/$/, "");
-  if (vercelUrl) return vercelUrl.replace(/\/$/, "");
-  return (explicit || "http://localhost:3000").replace(/\/$/, "");
+  return buildPublicUrl("/").replace(/\/$/, "");
 }
+
 
 function buildPaymentReviewEmail(input: {
   buyerName: string;
@@ -82,7 +79,7 @@ async function reviewPayment(formData: FormData, status: "paid" | "rejected") {
   if (updateError) throw new Error(updateError.message);
 
   try {
-    const recipients = Array.from(new Set([order.buyer_email, ...getEventAdminRecipients(order.includes_bingo)]));
+    const recipients = Array.from(new Set([order.buyer_email, ...getEventAdminRecipients(order.includes_bingo)].filter(Boolean)));
 
     await sendMail({
       to: recipients,

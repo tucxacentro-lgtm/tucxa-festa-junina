@@ -118,7 +118,7 @@ export default async function AdminPedidosPage({ searchParams }: PageProps) {
                       </Link>
                     </td>
                     <td className="p-4">{order.buyer_name}</td>
-                    <td className="p-4">{order.buyer_email}</td>
+                    <td className="p-4">{order.buyer_email || "Não informado"}</td>
                     <td className="p-4 font-bold">{formatCurrency(order.total_amount)}</td>
                     <td className="p-4"><PaymentStatusBadge status={order.payment_status} /></td>
                     <td className="p-4">{order.includes_bingo ? `${order.bingo_cards_quantity} cartela(s)` : "Não"}</td>

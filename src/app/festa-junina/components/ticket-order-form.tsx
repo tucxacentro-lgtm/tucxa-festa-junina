@@ -76,15 +76,14 @@ export function TicketOrderForm({
         </label>
 
         <label className="rounded-3xl border border-green-100 bg-white p-4 shadow-sm">
-          <span className="text-sm font-black text-green-950">E-mail</span>
+          <span className="text-sm font-black text-green-950">E-mail opcional</span>
           <input
-            required
             type="email"
             name="buyer_email"
             className="mt-2 w-full rounded-2xl border border-stone-200 p-3 outline-none focus:border-green-700"
             placeholder="voce@email.com"
           />
-          <span className="mt-1 block text-xs text-stone-500">Será o principal canal de comunicação.</span>
+          <span className="mt-1 block text-xs text-stone-500">Informe se tiver. Sem e-mail, usaremos o WhatsApp como contato principal.</span>
         </label>
 
         <label className="rounded-3xl border border-green-100 bg-white p-4 shadow-sm">

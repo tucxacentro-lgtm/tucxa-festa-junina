@@ -64,3 +64,28 @@ export async function savePlanningEstimate(formData: FormData) {
   revalidatePath("/admin/festa-junina/planejamento");
   redirect("/admin/festa-junina/planejamento?saved=estimate");
 }
+
+export async function savePlanningIngredient(formData: FormData) {
+  await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/planejamento");
+  const supabase = createSupabaseAdminClient();
+  const id = text(formData, "id");
+
+  const { error } = await supabase
+    .from("planning_recipe_ingredients")
+    .update({
+      ingredient_name: text(formData, "ingredient_name"),
+      ingredient_category: text(formData, "ingredient_category") || "Insumos",
+      amount_per_unit: number(formData, "amount_per_unit", 0),
+      unit_label: text(formData, "unit_label") || "un",
+      editable_quantity: text(formData, "editable_quantity") ? number(formData, "editable_quantity", 0) : null,
+      purchase_status: text(formData, "purchase_status") || "pending",
+      notes: text(formData, "notes") || null,
+      active: bool(formData, "active"),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/festa-junina/planejamento");
+  redirect("/admin/festa-junina/planejamento?saved=ingredient");
+}

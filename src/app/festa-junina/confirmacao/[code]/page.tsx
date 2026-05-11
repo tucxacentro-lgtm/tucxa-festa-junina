@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { headers } from "next/headers";
-import { CheckCircle2, Copy, Mail, Ticket } from "lucide-react";
+import { CheckCircle2, Copy, Ticket } from "lucide-react";
 import QRCode from "qrcode";
 import { SiteHeader } from "@/components/site-header";
+import { CopyButton } from "@/components/copy-button";
+import { ShareButton } from "@/components/share-button";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { formatCurrency } from "@/lib/format";
+import { getServerPublicSiteUrl } from "@/lib/site-url";
 import type { TicketOrder } from "@/types/festa-junina";
 
 export const dynamic = "force-dynamic";
@@ -12,21 +14,6 @@ export const dynamic = "force-dynamic";
 type PageProps = {
   params: Promise<{ code: string }>;
 };
-
-async function getBaseUrl() {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
-  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
-
-  if (explicit && !explicit.includes("localhost")) return explicit.replace(/\/$/, "");
-  if (vercelUrl) return vercelUrl.replace(/\/$/, "");
-
-  const headersList = await headers();
-  const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
-  const protocol = headersList.get("x-forwarded-proto") ?? "http";
-
-  if (host && !host.includes("localhost")) return `${protocol}://${host}`.replace(/\/$/, "");
-  return (explicit || "http://localhost:3000").replace(/\/$/, "");
-}
 
 async function getOrder(code: string) {
   const supabase = createSupabaseServerClient();
@@ -39,6 +26,18 @@ async function getOrder(code: string) {
 
   if (error || !data) return null;
   return data as TicketOrder;
+}
+
+function getPaymentText(status: TicketOrder["payment_status"]) {
+  const labels = {
+    pending: "Aguardando comprovante",
+    proof_sent: "Comprovante enviado",
+    paid: "Pago",
+    rejected: "Reprovado",
+    cancelled: "Cancelado",
+  } satisfies Record<TicketOrder["payment_status"], string>;
+
+  return labels[status] ?? "Em análise";
 }
 
 export default async function ConfirmacaoCompraPage({ params }: PageProps) {
@@ -62,9 +61,10 @@ export default async function ConfirmacaoCompraPage({ params }: PageProps) {
     );
   }
 
-  const baseUrl = await getBaseUrl();
+  const baseUrl = await getServerPublicSiteUrl();
   const myPurchaseUrl = `${baseUrl}/minha-compra/${order.buyer_code}`;
-  const referralUrl = `${baseUrl}/festa-junina?ref=${order.referral_code ?? order.buyer_code}#reserva`;
+  const referralUrl = `${baseUrl}/festa-junina?ref=${encodeURIComponent(order.referral_code ?? order.buyer_code)}#reserva`;
+  const shareText = `Oi! Já garanti minha presença no Arraiá do Tucxa 🎉\n\nUse meu link de indicação para comprar seu convite. Além de participar da festa, você ajuda na organização das comidas, bebidas, mesas e atendimento.`;
   const qrCode = await QRCode.toDataURL(myPurchaseUrl, { margin: 1, width: 220 });
 
   return (
@@ -99,7 +99,7 @@ export default async function ConfirmacaoCompraPage({ params }: PageProps) {
             </div>
             <div className="rounded-3xl bg-amber-50 p-5">
               <p className="text-sm font-bold text-stone-500">Status</p>
-              <p className="mt-2 text-2xl font-black text-green-950">Comprovante enviado</p>
+              <p className="mt-2 text-2xl font-black text-green-950">{getPaymentText(order.payment_status)}</p>
             </div>
           </div>
 
@@ -110,7 +110,8 @@ export default async function ConfirmacaoCompraPage({ params }: PageProps) {
             </h2>
             <div className="mt-4 grid gap-3 text-sm text-stone-700 md:grid-cols-2">
               <p><strong>Comprador:</strong> {order.buyer_name}</p>
-              <p><strong>E-mail:</strong> {order.buyer_email}</p>
+              <p><strong>E-mail:</strong> {order.buyer_email || "Não informado"}</p>
+              <p><strong>WhatsApp:</strong> {order.buyer_whatsapp}</p>
               <p><strong>Adultos:</strong> {order.adults_quantity}</p>
               <p><strong>Crianças:</strong> {order.children_quantity}</p>
               <p><strong>Inclui bingo:</strong> {order.includes_bingo ? `Sim (${order.bingo_cards_quantity} cartela(s))` : "Não"}</p>
@@ -122,12 +123,26 @@ export default async function ConfirmacaoCompraPage({ params }: PageProps) {
             <Link href={`/minha-compra/${order.buyer_code}`} className="rounded-2xl bg-green-900 px-5 py-4 text-center font-bold text-white">
               Acessar minha compra
             </Link>
-            <a href={`mailto:?subject=Arraiá do Tucxa 2026&body=${encodeURIComponent(referralUrl)}`} className="rounded-2xl bg-amber-300 px-5 py-4 text-center font-bold text-green-950">
-              <Mail className="mr-2 inline h-4 w-4" /> Compartilhar por e-mail
-            </a>
-            <div className="rounded-2xl bg-stone-100 px-5 py-4 text-center text-sm font-bold text-stone-700">
-              <Copy className="mr-2 inline h-4 w-4" /> Link de indicação: {order.referral_code ?? order.buyer_code}
+            <ShareButton
+              title="Arraiá do Tucxa 2026"
+              text={shareText}
+              url={referralUrl}
+              label="Compartilhar"
+            />
+            <div className="rounded-2xl bg-stone-100 px-5 py-4 text-sm font-bold text-stone-700">
+              <div className="mb-2 flex items-center gap-2"><Copy className="h-4 w-4" /> Link de indicação</div>
+              <CopyButton value={referralUrl} label="Copiar link" className="bg-white text-green-950 hover:bg-amber-50" />
             </div>
+          </div>
+
+          <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-5">
+            <h2 className="text-xl font-black text-green-950">Quer deixar sua festa mais prática?</h2>
+            <p className="mt-2 text-sm leading-relaxed text-stone-700">
+              Sua entrada já foi registrada. Na área “Minha compra”, você poderá compartilhar seu código e acompanhar brindes por indicação. Em breve, também poderá complementar com combos de comida, bebida e bingo para evitar filas no dia.
+            </p>
+            <Link href="/festa-junina#combos" className="mt-4 inline-block rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white">
+              Ver combos disponíveis
+            </Link>
           </div>
         </div>
       </section>

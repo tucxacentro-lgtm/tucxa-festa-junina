@@ -1,5 +1,5 @@
 type MailInput = {
-  to: string[];
+  to: Array<string | null | undefined>;
   subject: string;
   html: string;
   text?: string;
@@ -29,9 +29,16 @@ export function getEventAdminRecipients(includesBingo: boolean) {
 }
 
 export async function sendMail(input: MailInput) {
+  const recipients = input.to.filter((recipient): recipient is string => Boolean(recipient && recipient.includes("@")));
+
+  if (recipients.length === 0) {
+    console.info("E-mail não enviado: nenhum destinatário válido.", { subject: input.subject });
+    return { sent: false, reason: "no_valid_recipients" };
+  }
+
   if (!EMAIL_NOTIFICATIONS_ENABLED) {
     console.info("E-mail não enviado: EMAIL_NOTIFICATIONS_ENABLED não está true.", {
-      to: input.to,
+      to: recipients,
       subject: input.subject,
     });
     return { sent: false, reason: "disabled" };
@@ -63,7 +70,7 @@ export async function sendMail(input: MailInput) {
 
   await transporter.sendMail({
     from: SMTP_FROM,
-    to: input.to.join(", "),
+    to: recipients.join(", "),
     subject: input.subject,
     html: input.html,
     text: input.text ?? stripHtml(input.html),

@@ -61,7 +61,7 @@ export type TicketOrder = {
   buyer_code: string;
   buyer_name: string;
   buyer_whatsapp: string;
-  buyer_email: string;
+  buyer_email: string | null;
   adults_quantity: number;
   children_quantity: number;
   selected_ticket_type_id: string | null;

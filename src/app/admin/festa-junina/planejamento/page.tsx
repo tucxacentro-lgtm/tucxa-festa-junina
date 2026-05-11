@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
-import { savePlanningAssumptions, savePlanningEstimate } from "./actions";
+import { savePlanningAssumptions, savePlanningEstimate, savePlanningIngredient } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,19 @@ type Estimate = {
   active: boolean;
 };
 
+type RecipeIngredient = {
+  id: string;
+  estimate_id: string;
+  ingredient_name: string;
+  ingredient_category: string;
+  amount_per_unit: number | string;
+  unit_label: string;
+  editable_quantity: number | string | null;
+  purchase_status: string;
+  notes: string | null;
+  active: boolean;
+};
+
 type OrderTotals = {
   paidAdults: number;
   paidChildren: number;
@@ -40,13 +53,19 @@ async function getData() {
   const supabase = createSupabaseAdminClient();
   const { data: event } = await supabase.from("events").select("id").eq("slug", "arraia-tucxa-2026").single();
   if (!event) {
-    return { assumptions: null as Assumptions | null, estimates: [] as Estimate[], totals: { paidAdults: 0, paidChildren: 0, pendingAdults: 0, pendingChildren: 0 } };
+    return {
+      assumptions: null as Assumptions | null,
+      estimates: [] as Estimate[],
+      ingredients: [] as RecipeIngredient[],
+      totals: { paidAdults: 0, paidChildren: 0, pendingAdults: 0, pendingChildren: 0 },
+    };
   }
 
-  const [{ data: assumptions }, { data: estimates }, { data: orders }] = await Promise.all([
+  const [{ data: assumptions }, { data: estimates }, { data: orders }, { data: ingredients }] = await Promise.all([
     supabase.from("planning_assumptions").select("*").eq("event_id", event.id).maybeSingle(),
     supabase.from("planning_menu_estimates").select("*").eq("event_id", event.id).order("sort_order"),
     supabase.from("ticket_orders").select("adults_quantity, children_quantity, payment_status").eq("event_id", event.id),
+    supabase.from("planning_recipe_ingredients").select("*").eq("event_id", event.id).order("sort_order"),
   ]);
 
   const totals = ((orders ?? []) as Array<{ adults_quantity: number; children_quantity: number; payment_status: string }>).reduce<OrderTotals>((acc, order) => {
@@ -60,7 +79,12 @@ async function getData() {
     return acc;
   }, { paidAdults: 0, paidChildren: 0, pendingAdults: 0, pendingChildren: 0 });
 
-  return { assumptions: assumptions as Assumptions | null, estimates: (estimates ?? []) as Estimate[], totals };
+  return {
+    assumptions: assumptions as Assumptions | null,
+    estimates: (estimates ?? []) as Estimate[],
+    ingredients: (ingredients ?? []) as RecipeIngredient[],
+    totals,
+  };
 }
 
 function roundUp(value: number) {
@@ -70,14 +94,29 @@ function roundUp(value: number) {
 function savedMessage(saved?: string) {
   if (saved === "assumptions") return "Premissas de planejamento salvas com sucesso.";
   if (saved === "estimate") return "Item de planejamento salvo com sucesso.";
+  if (saved === "ingredient") return "Insumo de preparo salvo com sucesso.";
   return null;
+}
+
+function calculateItemSuggestion(estimate: Estimate, adults: number, children: number, margin = 0) {
+  return roundUp(((Number(estimate.consumption_per_adult) * adults) + (Number(estimate.consumption_per_child) * children)) * (1 + margin / 100));
+}
+
+function statusLabel(status: string) {
+  const labels: Record<string, string> = {
+    pending: "Pendente",
+    partial: "Parcial",
+    purchased: "Comprado",
+  };
+
+  return labels[status] ?? status;
 }
 
 export default async function AdminPlanejamentoPage({ searchParams }: PageProps) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/planejamento");
   const params = await searchParams;
   const message = savedMessage(params?.saved);
-  const { assumptions, estimates, totals } = await getData();
+  const { assumptions, estimates, ingredients, totals } = await getData();
 
   const confirmedPeople = totals.paidAdults + totals.paidChildren;
   const possiblePeople = confirmedPeople + totals.pendingAdults + totals.pendingChildren;
@@ -86,6 +125,15 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
   const margin = Number(assumptions?.safety_margin_percent ?? 15) || 0;
   const suggestedTables = roundUp(possiblePeople / guestsPerTable);
   const suggestedVolunteers = roundUp((possiblePeople / 50) * volunteersPer50);
+
+  const estimateById = new Map(estimates.map((estimate) => [estimate.id, estimate]));
+  const activeIngredients = ingredients.filter((ingredient) => ingredient.active);
+  const conservativeIngredientTotals = activeIngredients.map((ingredient) => {
+    const estimate = estimateById.get(ingredient.estimate_id);
+    const itemQuantity = estimate ? calculateItemSuggestion(estimate, totals.paidAdults, totals.paidChildren, margin) : 0;
+    const suggested = roundUp(itemQuantity * Number(ingredient.amount_per_unit ?? 0));
+    return { ingredient, suggested, itemName: estimate?.item_name ?? "Item não encontrado" };
+  });
 
   return (
     <main className="min-h-screen bg-amber-50 text-stone-900">
@@ -97,13 +145,15 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
         </div>
 
         <h1 className="text-3xl font-black text-green-950">Planejamento de compras e operação</h1>
-        <p className="mt-2 max-w-3xl text-stone-600">Sugestões iniciais com base nas compras confirmadas e pendentes. Tudo deve ser validado e ajustado pela organização.</p>
+        <p className="mt-2 max-w-3xl text-stone-600">
+          Sugestões iniciais com base nas compras confirmadas e pendentes. Tudo deve ser validado e ajustado pela organização.
+        </p>
 
         {message ? <div className="mt-6 rounded-3xl border border-green-200 bg-green-50 p-5 text-sm font-bold text-green-900">{message}</div> : null}
 
         <div className="mt-8 grid gap-4 md:grid-cols-4">
-          <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Pessoas confirmadas</p><p className="mt-2 text-3xl font-black text-green-950">{confirmedPeople}</p></div>
-          <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Confirmadas + pendentes</p><p className="mt-2 text-3xl font-black text-green-950">{possiblePeople}</p></div>
+          <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Pessoas confirmadas</p><p className="mt-2 text-3xl font-black text-green-950">{confirmedPeople}</p><p className="mt-1 text-xs text-stone-500">Somente pagamentos aprovados</p></div>
+          <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Confirmadas + pendentes</p><p className="mt-2 text-3xl font-black text-green-950">{possiblePeople}</p><p className="mt-1 text-xs text-stone-500">Aprovados + comprovantes/reservas</p></div>
           <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Mesas sugeridas</p><p className="mt-2 text-3xl font-black text-green-950">{suggestedTables}</p></div>
           <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Voluntários sugeridos</p><p className="mt-2 text-3xl font-black text-green-950">{suggestedVolunteers}</p></div>
         </div>
@@ -124,22 +174,26 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
 
         <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black text-green-950">Sugestão de compras por item</h2>
-          <p className="mt-2 text-sm text-stone-600">A sugestão usa adultos/crianças confirmados + pendentes e aplica a margem de segurança. O campo “Qtd. final” permite ajuste manual.</p>
+          <p className="mt-2 text-sm text-stone-600">
+            A sugestão mostra duas bases: conservadora, usando apenas pagamentos aprovados; e provável, usando aprovados + pendentes. O campo “Qtd. final” permite ajuste manual.
+          </p>
 
           <div className="mt-5 overflow-x-auto">
-            <table className="w-full min-w-[1000px] text-left text-sm">
-              <thead className="bg-green-950 text-white"><tr><th className="p-3">Item</th><th className="p-3">Categoria</th><th className="p-3">Adulto</th><th className="p-3">Criança</th><th className="p-3">Sugestão</th><th className="p-3">Qtd. final</th><th className="p-3">Ações</th></tr></thead>
+            <table className="w-full min-w-[1100px] text-left text-sm">
+              <thead className="bg-green-950 text-white"><tr><th className="p-3">Item</th><th className="p-3">Categoria</th><th className="p-3">Adulto</th><th className="p-3">Criança</th><th className="p-3">Base aprovada</th><th className="p-3">Base provável</th><th className="p-3">Qtd. final</th><th className="p-3">Ações</th></tr></thead>
               <tbody>
                 {estimates.map((estimate) => {
-                  const suggested = roundUp(((Number(estimate.consumption_per_adult) * (totals.paidAdults + totals.pendingAdults)) + (Number(estimate.consumption_per_child) * (totals.paidChildren + totals.pendingChildren))) * (1 + margin / 100));
+                  const paidSuggested = calculateItemSuggestion(estimate, totals.paidAdults, totals.paidChildren, margin);
+                  const possibleSuggested = calculateItemSuggestion(estimate, totals.paidAdults + totals.pendingAdults, totals.paidChildren + totals.pendingChildren, margin);
                   return (
                     <tr key={estimate.id} className="border-b border-stone-100 align-top last:border-0">
                       <td className="p-3 font-bold text-green-950">{estimate.item_name}</td>
                       <td className="p-3">{estimate.category}</td>
                       <td className="p-3">{estimate.consumption_per_adult} {estimate.unit_label}</td>
                       <td className="p-3">{estimate.consumption_per_child} {estimate.unit_label}</td>
-                      <td className="p-3 font-black">{suggested} {estimate.unit_label}</td>
-                      <td className="p-3 font-black">{estimate.editable_quantity ?? suggested} {estimate.unit_label}</td>
+                      <td className="p-3 font-black">{paidSuggested} {estimate.unit_label}</td>
+                      <td className="p-3 font-black">{possibleSuggested} {estimate.unit_label}</td>
+                      <td className="p-3 font-black">{estimate.editable_quantity ?? possibleSuggested} {estimate.unit_label}</td>
                       <td className="p-3">
                         <form action={savePlanningEstimate} className="grid gap-2 md:grid-cols-2">
                           <input type="hidden" name="id" value={estimate.id} />
@@ -159,6 +213,55 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
               </tbody>
             </table>
           </div>
+        </div>
+
+        <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-black text-green-950">Insumos para preparo</h2>
+          <p className="mt-2 text-sm text-stone-600">
+            Lista de ingredientes e materiais necessários para preparar os itens do cardápio. A sugestão abaixo usa apenas pagamentos aprovados como base conservadora; ajuste a quantidade final conforme decisão da coordenação.
+          </p>
+
+          {ingredients.length === 0 ? (
+            <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-900">
+              Rode a migration 005 para carregar os insumos iniciais de preparo.
+            </div>
+          ) : (
+            <div className="mt-5 overflow-x-auto">
+              <table className="w-full min-w-[1100px] text-left text-sm">
+                <thead className="bg-green-950 text-white"><tr><th className="p-3">Insumo</th><th className="p-3">Item relacionado</th><th className="p-3">Por unidade</th><th className="p-3">Sugestão aprovada</th><th className="p-3">Qtd. final</th><th className="p-3">Status</th><th className="p-3">Ações</th></tr></thead>
+                <tbody>
+                  {conservativeIngredientTotals.map(({ ingredient, suggested, itemName }) => (
+                    <tr key={ingredient.id} className="border-b border-stone-100 align-top last:border-0">
+                      <td className="p-3 font-bold text-green-950">{ingredient.ingredient_name}<p className="text-xs font-normal text-stone-500">{ingredient.ingredient_category}</p></td>
+                      <td className="p-3">{itemName}</td>
+                      <td className="p-3">{ingredient.amount_per_unit} {ingredient.unit_label}</td>
+                      <td className="p-3 font-black">{suggested} {ingredient.unit_label}</td>
+                      <td className="p-3 font-black">{ingredient.editable_quantity ?? suggested} {ingredient.unit_label}</td>
+                      <td className="p-3">{statusLabel(ingredient.purchase_status)}</td>
+                      <td className="p-3">
+                        <form action={savePlanningIngredient} className="grid gap-2 md:grid-cols-2">
+                          <input type="hidden" name="id" value={ingredient.id} />
+                          <input name="ingredient_name" defaultValue={ingredient.ingredient_name} className="rounded-xl border p-2" />
+                          <input name="ingredient_category" defaultValue={ingredient.ingredient_category} className="rounded-xl border p-2" />
+                          <input name="amount_per_unit" defaultValue={ingredient.amount_per_unit} className="rounded-xl border p-2" />
+                          <input name="unit_label" defaultValue={ingredient.unit_label} className="rounded-xl border p-2" />
+                          <input name="editable_quantity" defaultValue={ingredient.editable_quantity ?? ""} placeholder="Qtd. final" className="rounded-xl border p-2" />
+                          <select name="purchase_status" defaultValue={ingredient.purchase_status} className="rounded-xl border p-2">
+                            <option value="pending">Pendente</option>
+                            <option value="partial">Parcial</option>
+                            <option value="purchased">Comprado</option>
+                          </select>
+                          <input name="notes" defaultValue={ingredient.notes ?? ""} placeholder="Observações" className="rounded-xl border p-2 md:col-span-2" />
+                          <label className="flex items-center gap-2 text-xs font-bold text-green-950"><input type="checkbox" name="active" defaultChecked={ingredient.active} /> Ativo</label>
+                          <button className="rounded-xl bg-green-900 px-3 py-2 text-xs font-black text-white">Salvar</button>
+                        </form>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </section>
     </main>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, CreditCard, Settings, Ticket, Utensils, Gift, Share2, ClipboardCheck } from "lucide-react";
+import { ClipboardList, CreditCard, Settings, Ticket, Utensils, Gift, Share2, ClipboardCheck, Megaphone } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdmin } from "@/lib/auth";
 
@@ -65,6 +65,14 @@ export default async function AdminFestaJuninaPage() {
             <ClipboardCheck className="mb-4 h-8 w-8 text-green-800" />
             <h2 className="text-xl font-black text-green-950">Planejamento</h2>
             <p className="mt-2 text-sm text-stone-600">Sugestão de mesas, voluntários, compras e itens do cardápio.</p>
+          </Link>
+
+
+
+          <Link href="/admin/festa-junina/upsell" className="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <Megaphone className="mb-4 h-8 w-8 text-green-800" />
+            <h2 className="text-xl font-black text-green-950">Upsell e mensagens</h2>
+            <p className="mt-2 text-sm text-stone-600">Configurar mensagens para complementar compra com combos, comida, bebida e bingo.</p>
           </Link>
 
           <div className="rounded-3xl bg-white p-6 shadow-sm opacity-80">

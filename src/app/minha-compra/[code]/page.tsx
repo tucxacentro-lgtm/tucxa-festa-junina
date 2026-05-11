@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import QRCode from "qrcode";
 import { SiteHeader } from "@/components/site-header";
 import { ShareReferralCard } from "@/components/share-referral-card";
 import { getPaymentStatusLabel, PaymentStatusBadge } from "@/components/payment-status-badge";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { formatCurrency } from "@/lib/format";
+import { getServerPublicSiteUrl } from "@/lib/site-url";
 import type { TicketOrder } from "@/types/festa-junina";
 
 export const dynamic = "force-dynamic";
@@ -20,21 +20,6 @@ type ReferralRule = {
   reward_description: string;
   active: boolean;
 };
-
-async function getBaseUrl() {
-  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
-  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
-
-  if (explicit && !explicit.includes("localhost")) return explicit.replace(/\/$/, "");
-  if (vercelUrl) return vercelUrl.replace(/\/$/, "");
-
-  const headersList = await headers();
-  const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
-  const protocol = headersList.get("x-forwarded-proto") ?? "http";
-
-  if (host && !host.includes("localhost")) return `${protocol}://${host}`.replace(/\/$/, "");
-  return (explicit || "http://localhost:3000").replace(/\/$/, "");
-}
 
 async function getOrder(code: string) {
   const supabase = createSupabaseServerClient();
@@ -97,7 +82,7 @@ export default async function MinhaCompraCodigoPage({ params }: PageProps) {
     );
   }
 
-  const baseUrl = await getBaseUrl();
+  const baseUrl = await getServerPublicSiteUrl();
   const myPurchaseUrl = `${baseUrl}/minha-compra/${order.buyer_code}`;
   const referralUrl = `${baseUrl}/festa-junina?ref=${encodeURIComponent(order.buyer_code)}#reserva`;
   const qrCode = await QRCode.toDataURL(myPurchaseUrl, { margin: 1, width: 240 });
@@ -137,7 +122,7 @@ export default async function MinhaCompraCodigoPage({ params }: PageProps) {
               <h2 className="font-black text-green-950">Dados da compra</h2>
               <div className="mt-4 space-y-2 text-sm text-stone-700">
                 <p><strong>Comprador:</strong> {order.buyer_name}</p>
-                <p><strong>E-mail:</strong> {order.buyer_email}</p>
+                <p><strong>E-mail:</strong> {order.buyer_email || "Não informado"}</p>
                 <p><strong>WhatsApp:</strong> {order.buyer_whatsapp}</p>
                 <p><strong>Total:</strong> {formatCurrency(order.total_amount)}</p>
               </div>
