@@ -35,7 +35,12 @@ export default async function AjudaAdminPage() {
                   <h2 className="mt-1 text-xl font-black text-green-950">{item.title}</h2>
                   <p className="mt-2 text-sm leading-relaxed text-stone-700">{item.description}</p>
                 </div>
-                <Link href={item.path} className="rounded-full bg-green-900 px-4 py-2 text-center text-sm font-black text-white transition hover:bg-green-800">
+                <Link
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full bg-green-900 px-4 py-2 text-center text-sm font-black text-white transition hover:bg-green-800"
+                >
                   Abrir tela
                 </Link>
               </div>

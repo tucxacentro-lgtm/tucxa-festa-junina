@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { formatCurrency, formatDate, formatTime } from "@/lib/format";
 import type { Combo, EventConfig, PaymentOption, TicketType } from "@/types/festa-junina";
 import { TicketOrderForm } from "./components/ticket-order-form";
+import { WelcomeModal } from "@/components/welcome-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -80,6 +81,7 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
   return (
     <main className="min-h-screen bg-amber-50 text-stone-900">
       <SiteHeader />
+      <WelcomeModal />
 
       <section className="relative overflow-hidden bg-gradient-to-br from-amber-400 via-orange-400 to-yellow-300">
         <div className="absolute inset-x-0 top-0 h-12 bg-[repeating-linear-gradient(45deg,#166534_0_12px,#fef3c7_12px_24px,#dc2626_24px_36px,#2563eb_36px_48px)] opacity-40" />

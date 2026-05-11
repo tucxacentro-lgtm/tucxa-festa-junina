@@ -1,6 +1,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ADMIN_ACCESS_TOKEN_COOKIE, canAccessAdminArea, type AdminProfile, type AdminRole } from "@/lib/admin-auth";
+import {
+  ADMIN_ACCESS_TOKEN_COOKIE,
+  ADMIN_REFRESH_TOKEN_COOKIE,
+  canAccessAdminArea,
+  type AdminProfile,
+  type AdminRole,
+} from "@/lib/admin-auth";
 import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export type CurrentAdmin = {
@@ -15,22 +21,41 @@ function getLoginRedirectPath(nextPath = "/admin/festa-junina") {
   return `/admin/login?next=${encodeURIComponent(nextPath)}`;
 }
 
-export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
+async function getUserFromStoredSession() {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
-
-  if (!accessToken) return null;
-
+  const refreshToken = cookieStore.get(ADMIN_REFRESH_TOKEN_COOKIE)?.value;
   const supabase = createSupabaseServerClient();
-  const { data: userData, error: userError } = await supabase.auth.getUser(accessToken);
 
-  if (userError || !userData.user) return null;
+  if (accessToken) {
+    const { data, error } = await supabase.auth.getUser(accessToken);
+
+    if (!error && data.user) {
+      return data.user;
+    }
+  }
+
+  if (refreshToken) {
+    const { data, error } = await supabase.auth.refreshSession({ refresh_token: refreshToken });
+
+    if (!error && data.user) {
+      return data.user;
+    }
+  }
+
+  return null;
+}
+
+export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
+  const user = await getUserFromStoredSession();
+
+  if (!user) return null;
 
   const adminClient = createSupabaseAdminClient();
   const { data: profile, error: profileError } = await adminClient
     .from("admin_profiles")
     .select("*")
-    .eq("id", userData.user.id)
+    .eq("id", user.id)
     .eq("active", true)
     .single();
 
@@ -38,8 +63,8 @@ export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
 
   return {
     user: {
-      id: userData.user.id,
-      email: userData.user.email ?? undefined,
+      id: user.id,
+      email: user.email ?? undefined,
     },
     profile: profile as AdminProfile,
   };
