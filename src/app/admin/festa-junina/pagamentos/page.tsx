@@ -7,6 +7,20 @@ import { savePaymentOption } from "./actions";
 
 export const dynamic = "force-dynamic";
 
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function FormStatusMessage({ message }: { message?: string }) {
+  if (!message) return null;
+
+  return (
+    <div className="mb-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-900">
+      {message}
+    </div>
+  );
+}
+
 async function getData() {
   const supabase = createSupabaseAdminClient();
   const { data: event, error: eventError } = await supabase.from("events").select("*").eq("slug", "arraia-tucxa-2026").single();
@@ -64,9 +78,11 @@ function PaymentForm({ eventId, option }: { eventId: string; option?: PaymentOpt
   );
 }
 
-export default async function PagamentosPage() {
+export default async function PagamentosPage({ searchParams }: PageProps) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/pagamentos");
   const { event, paymentOptions } = await getData();
+  const params = await searchParams;
+  const successMessage = params?.saved ? "Forma de pagamento salva com sucesso." : undefined;
 
   return (
     <main className="min-h-screen bg-amber-50 text-stone-900">
@@ -79,6 +95,8 @@ export default async function PagamentosPage() {
           </div>
           <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">Voltar ao admin</Link>
         </div>
+
+        <FormStatusMessage message={successMessage} />
 
         <div className="grid gap-5">
           {paymentOptions.map((option) => <PaymentForm key={option.id} eventId={event.id} option={option} />)}

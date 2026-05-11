@@ -10,8 +10,10 @@ if (Test-Path $OutputDir) {
 
 New-Item -ItemType Directory -Path $OutputDir | Out-Null
 
-$TempDir = Join-Path $OutputDir "tucxa-festa-junina"
-New-Item -ItemType Directory -Path $TempDir | Out-Null
+$TempRoot = Join-Path $env:TEMP ("tucxa-festa-junina-review-" + [guid]::NewGuid().ToString())
+$TempDir = Join-Path $TempRoot "tucxa-festa-junina"
+
+New-Item -ItemType Directory -Path $TempDir -Force | Out-Null
 
 $ItemsToCopy = @(
   "package.json",
@@ -42,7 +44,7 @@ foreach ($Item in $ItemsToCopy) {
       $DestinationParent = Split-Path $Destination -Parent
 
       if (!(Test-Path $DestinationParent)) {
-        New-Item -ItemType Directory -Path $DestinationParent | Out-Null
+        New-Item -ItemType Directory -Path $DestinationParent -Force | Out-Null
       }
 
       Copy-Item $Source $Destination -Force
@@ -78,6 +80,8 @@ foreach ($FileName in $ForbiddenFiles) {
 }
 
 Compress-Archive -Path "$TempDir\*" -DestinationPath $ZipPath -Force
+
+Remove-Item $TempRoot -Recurse -Force
 
 Write-Host ""
 Write-Host "ZIP gerado com sucesso:"

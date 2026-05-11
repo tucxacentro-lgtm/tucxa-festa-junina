@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 
@@ -62,4 +63,6 @@ export async function updateEventSettings(formData: FormData) {
   revalidatePath("/festa-junina");
   revalidatePath("/admin/festa-junina/configuracoes");
   revalidatePath("/admin/festa-junina");
+
+  redirect("/admin/festa-junina/configuracoes?saved=1");
 }

@@ -7,6 +7,20 @@ import { saveCombo } from "./actions";
 
 export const dynamic = "force-dynamic";
 
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function FormStatusMessage({ message }: { message?: string }) {
+  if (!message) return null;
+
+  return (
+    <div className="mb-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-900">
+      {message}
+    </div>
+  );
+}
+
 async function getData() {
   const supabase = createSupabaseAdminClient();
   const { data: event, error: eventError } = await supabase.from("events").select("*").eq("slug", "arraia-tucxa-2026").single();
@@ -80,9 +94,11 @@ function ComboForm({ eventId, combo }: { eventId: string; combo?: Combo }) {
   );
 }
 
-export default async function CombosPage() {
+export default async function CombosPage({ searchParams }: PageProps) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/combos");
   const { event, combos } = await getData();
+  const params = await searchParams;
+  const successMessage = params?.saved ? "Combo salvo com sucesso." : undefined;
 
   return (
     <main className="min-h-screen bg-amber-50 text-stone-900">
@@ -95,6 +111,8 @@ export default async function CombosPage() {
           </div>
           <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">Voltar ao admin</Link>
         </div>
+
+        <FormStatusMessage message={successMessage} />
 
         <div className="grid gap-5">
           {combos.map((combo) => <ComboForm key={combo.id} eventId={event.id} combo={combo} />)}

@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useActionState } from "react";
 import { createTicketOrder } from "../actions";
+import { CopyButton } from "@/components/copy-button";
 import { formatCurrency } from "@/lib/format";
 import type { Combo, EventConfig, PaymentOption, TicketType } from "@/types/festa-junina";
 
@@ -31,9 +32,17 @@ export function TicketOrderForm({
   const [selectedComboId, setSelectedComboId] = useState(combos[0]?.id ?? "");
   const [adultsQuantity, setAdultsQuantity] = useState(1);
   const [comboQuantity, setComboQuantity] = useState(1);
+  const [selectedPaymentOptionId, setSelectedPaymentOptionId] = useState(
+    paymentOptions.find((option) => option.method === "pix")?.id ?? paymentOptions[0]?.id ?? "",
+  );
 
   const selectedTicketType = ticketTypes.find((ticket) => ticket.id === selectedTicketTypeId);
   const selectedCombo = combos.find((combo) => combo.id === selectedComboId);
+  const selectedPaymentOption = paymentOptions.find((option) => option.id === selectedPaymentOptionId);
+  const isPixPayment = selectedPaymentOption?.method === "pix";
+  const isResponsiblePayment = selectedPaymentOption?.method === "manual";
+  const pixKey = event.pix_key?.trim();
+  const pixReceiverName = event.pix_receiver_name?.trim() || "Tucxa";
 
   const estimatedTotal = useMemo(() => {
     if (purchaseType === "combo") {
@@ -204,6 +213,8 @@ export function TicketOrderForm({
           <select
             required
             name="payment_option_id"
+            value={selectedPaymentOptionId}
+            onChange={(event) => setSelectedPaymentOptionId(event.target.value)}
             className="mt-2 w-full rounded-2xl border border-stone-200 p-3 outline-none focus:border-green-700"
           >
             <option value="">Escolha</option>
@@ -263,6 +274,64 @@ export function TicketOrderForm({
           Confira o valor acima antes de anexar o comprovante. Depois faça o pagamento conforme a opção escolhida e carregue o comprovante/registro abaixo.
         </p>
       </div>
+
+      {isPixPayment ? (
+        <div className="rounded-3xl border border-green-200 bg-green-50 p-5 shadow-sm">
+          <p className="text-sm font-black uppercase tracking-wide text-green-900">Pagamento via Pix</p>
+          <h3 className="mt-1 text-2xl font-black text-green-950">Chave Pix do Tucxa</h3>
+
+          {pixKey ? (
+            <div className="mt-4 grid gap-3 rounded-2xl bg-white p-4 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <p className="text-xs font-bold uppercase text-stone-500">Chave Pix</p>
+                <p className="break-all text-xl font-black text-green-950">{pixKey}</p>
+                <p className="mt-2 text-sm text-stone-600">
+                  Recebedor: <strong>{pixReceiverName}</strong>
+                </p>
+              </div>
+
+              <CopyButton
+                value={pixKey}
+                label="Copiar chave Pix"
+                className="bg-green-900 text-white hover:bg-green-800"
+              />
+            </div>
+          ) : (
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+              A chave Pix ainda não foi configurada pela organização. Escolha outra forma de pagamento ou fale com um responsável.
+            </div>
+          )}
+
+          <p className="mt-4 text-sm leading-relaxed text-green-950">
+            Faça o pagamento no aplicativo do seu banco usando a chave acima. Depois anexe abaixo o comprovante Pix para a organização validar sua compra.
+          </p>
+
+          {selectedPaymentOption?.instructions ? (
+            <p className="mt-3 rounded-2xl bg-white p-3 text-sm text-stone-700">{selectedPaymentOption.instructions}</p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {isResponsiblePayment ? (
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+          <p className="text-sm font-black uppercase tracking-wide text-amber-900">Pagamento com responsável</p>
+          <h3 className="mt-1 text-2xl font-black text-green-950">Anexe o registro do pagamento combinado</h3>
+          <p className="mt-3 text-sm leading-relaxed text-stone-700">
+            Anexe uma foto do recibo do cartão de crédito, recibo do pagamento em dinheiro ou outro registro autorizado.
+            Nas observações, informe o nome e o celular de quem pagou e, se possível, o nome de quem recebeu o pagamento.
+          </p>
+          {selectedPaymentOption?.instructions ? (
+            <p className="mt-3 rounded-2xl bg-white p-3 text-sm text-stone-700">{selectedPaymentOption.instructions}</p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {!isPixPayment && !isResponsiblePayment && selectedPaymentOption?.instructions ? (
+        <div className="rounded-3xl border border-green-100 bg-white p-5 shadow-sm">
+          <p className="text-sm font-black text-green-950">Orientações de pagamento</p>
+          <p className="mt-2 text-sm text-stone-600">{selectedPaymentOption.instructions}</p>
+        </div>
+      ) : null}
 
       <label className="rounded-3xl border border-green-100 bg-white p-4 shadow-sm">
         <span className="text-sm font-black text-green-950">Comprovante/registro do pagamento</span>

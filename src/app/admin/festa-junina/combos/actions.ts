@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 
@@ -65,4 +66,5 @@ export async function saveCombo(formData: FormData) {
 
   if (error) throw new Error(error.message);
   refresh();
+  redirect("/admin/festa-junina/combos?saved=1");
 }

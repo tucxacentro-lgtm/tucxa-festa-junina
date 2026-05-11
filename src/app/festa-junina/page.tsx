@@ -48,8 +48,23 @@ async function getEventData() {
       .order("sort_order"),
   ]);
 
+  const eventConfig = {
+    ...event,
+    pix_key:
+      event.pix_key ||
+      process.env.TUCXA_PIX_KEY ||
+      process.env.NEXT_PUBLIC_TUCXA_PIX_KEY ||
+      process.env.PIX_KEY ||
+      null,
+    pix_receiver_name:
+      event.pix_receiver_name ||
+      process.env.TUCXA_PIX_RECEIVER_NAME ||
+      process.env.NEXT_PUBLIC_TUCXA_PIX_RECEIVER_NAME ||
+      "Tucxa",
+  } as EventConfig;
+
   return {
-    event: event as EventConfig,
+    event: eventConfig,
     ticketTypes: (ticketTypes ?? []) as TicketType[],
     combos: (combos ?? []) as Combo[],
     paymentOptions: (paymentOptions ?? []) as PaymentOption[],
