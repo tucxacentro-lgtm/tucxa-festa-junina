@@ -26,11 +26,14 @@ function generateBuyerCode() {
 }
 
 function getBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` ||
-    "http://localhost:3000"
-  );
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
+  const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "";
+
+  if (explicit && !explicit.includes("localhost")) return explicit.replace(/\/$/, "");
+  if (vercelUrl) return vercelUrl.replace(/\/$/, "");
+  if (productionUrl) return productionUrl.replace(/\/$/, "");
+  return (explicit || "http://localhost:3000").replace(/\/$/, "");
 }
 
 function buildOrderEmailHtml(input: {

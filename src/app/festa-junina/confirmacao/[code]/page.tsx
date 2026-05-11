@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { CheckCircle2, Copy, Mail, Ticket } from "lucide-react";
 import QRCode from "qrcode";
 import { SiteHeader } from "@/components/site-header";
@@ -12,8 +13,19 @@ type PageProps = {
   params: Promise<{ code: string }>;
 };
 
-function getBaseUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+async function getBaseUrl() {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
+
+  if (explicit && !explicit.includes("localhost")) return explicit.replace(/\/$/, "");
+  if (vercelUrl) return vercelUrl.replace(/\/$/, "");
+
+  const headersList = await headers();
+  const host = headersList.get("x-forwarded-host") ?? headersList.get("host");
+  const protocol = headersList.get("x-forwarded-proto") ?? "http";
+
+  if (host && !host.includes("localhost")) return `${protocol}://${host}`.replace(/\/$/, "");
+  return (explicit || "http://localhost:3000").replace(/\/$/, "");
 }
 
 async function getOrder(code: string) {
@@ -50,8 +62,9 @@ export default async function ConfirmacaoCompraPage({ params }: PageProps) {
     );
   }
 
-  const myPurchaseUrl = `${getBaseUrl()}/minha-compra/${order.buyer_code}`;
-  const referralUrl = `${getBaseUrl()}/festa-junina?ref=${order.referral_code ?? order.buyer_code}`;
+  const baseUrl = await getBaseUrl();
+  const myPurchaseUrl = `${baseUrl}/minha-compra/${order.buyer_code}`;
+  const referralUrl = `${baseUrl}/festa-junina?ref=${order.referral_code ?? order.buyer_code}#reserva`;
   const qrCode = await QRCode.toDataURL(myPurchaseUrl, { margin: 1, width: 220 });
 
   return (

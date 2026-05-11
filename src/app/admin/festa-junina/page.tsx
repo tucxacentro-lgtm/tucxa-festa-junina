@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, CreditCard, Settings, Ticket, Utensils, Gift } from "lucide-react";
+import { ClipboardList, CreditCard, Settings, Ticket, Utensils, Gift, Share2, ClipboardCheck } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdmin } from "@/lib/auth";
 
@@ -53,6 +53,18 @@ export default async function AdminFestaJuninaPage() {
             <CreditCard className="mb-4 h-8 w-8 text-green-800" />
             <h2 className="text-xl font-black text-green-950">Pagamentos</h2>
             <p className="mt-2 text-sm text-stone-600">Configurar Pix, dinheiro, cartão, cortesia e instruções.</p>
+          </Link>
+
+          <Link href="/admin/festa-junina/indicacoes" className="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <Share2 className="mb-4 h-8 w-8 text-green-800" />
+            <h2 className="text-xl font-black text-green-950">Indicações e brindes</h2>
+            <p className="mt-2 text-sm text-stone-600">Configurar código de indicação, compras necessárias e brindes.</p>
+          </Link>
+
+          <Link href="/admin/festa-junina/planejamento" className="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <ClipboardCheck className="mb-4 h-8 w-8 text-green-800" />
+            <h2 className="text-xl font-black text-green-950">Planejamento</h2>
+            <p className="mt-2 text-sm text-stone-600">Sugestão de mesas, voluntários, compras e itens do cardápio.</p>
           </Link>
 
           <div className="rounded-3xl bg-white p-6 shadow-sm opacity-80">

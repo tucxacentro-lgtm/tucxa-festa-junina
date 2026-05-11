@@ -68,7 +68,10 @@ export type TicketOrder = {
   selected_combo_id: string | null;
   payment_option_id: string | null;
   total_amount: number | string;
-  payment_status: "pending" | "proof_sent" | "paid" | "cancelled";
+  payment_status: "pending" | "proof_sent" | "paid" | "rejected" | "cancelled";
+  payment_reviewed_at?: string | null;
+  payment_reviewed_by?: string | null;
+  payment_rejection_reason?: string | null;
   order_status: "created" | "confirmed" | "cancelled";
   notes: string | null;
   planning_answers: Record<string, unknown>;
