@@ -45,12 +45,15 @@ export default async function AdminUpsellPage({ searchParams }: PageProps) {
       <section className="mx-auto max-w-5xl px-5 py-12">
         <div className="mb-6 flex flex-wrap justify-between gap-3">
           <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao admin</Link>
-          <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair do admin</a>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/admin/festa-junina/upsell/envios" className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm">Mensagens para WhatsApp</Link>
+            <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair do admin</a>
+          </div>
         </div>
 
         <h1 className="text-3xl font-black text-green-950">Upsell e mensagens de complemento</h1>
         <p className="mt-2 max-w-3xl text-stone-600">
-          Configure a mensagem para convidar compradores a complementar a experiência com combos, comidas, bebidas ou bingo. Para WhatsApp sem custo, use a mensagem pronta para copiar e colar manualmente.
+          Configure a mensagem para convidar compradores a complementar a experiência com combos, comidas, bebidas ou bingo. Para WhatsApp sem custo, use a página de mensagens prontas para copiar e colar manualmente ou enviar um resumo ao e-mail operacional.
         </p>
 
         {params?.saved ? <div className="mt-6 rounded-3xl border border-green-200 bg-green-50 p-5 text-sm font-bold text-green-900">Configuração de upsell salva com sucesso.</div> : null}

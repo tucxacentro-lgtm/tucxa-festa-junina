@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, CreditCard, Settings, Ticket, Utensils, Gift, Share2, ClipboardCheck, Megaphone } from "lucide-react";
+import { ClipboardList, CreditCard, Settings, Ticket, Utensils, Gift, Share2, ClipboardCheck, Megaphone, UsersRound } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdmin } from "@/lib/auth";
 
@@ -75,11 +75,17 @@ export default async function AdminFestaJuninaPage() {
             <p className="mt-2 text-sm text-stone-600">Configurar mensagens para complementar compra com combos, comida, bebida e bingo.</p>
           </Link>
 
-          <div className="rounded-3xl bg-white p-6 shadow-sm opacity-80">
+          <Link href="/admin/festa-junina/cardapio" className="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
             <Utensils className="mb-4 h-8 w-8 text-green-800" />
-            <h2 className="text-xl font-black text-green-950">Cardápio e caixa</h2>
-            <p className="mt-2 text-sm text-stone-600">Próxima etapa: cardápio, mesas, pedidos, cozinha, entrega e fechamento.</p>
-          </div>
+            <h2 className="text-xl font-black text-green-950">Cardápio e ficha técnica</h2>
+            <p className="mt-2 text-sm text-stone-600">Cadastrar itens, consumo por pessoa, insumos e preparo.</p>
+          </Link>
+
+          <Link href="/admin/festa-junina/voluntarios" className="rounded-3xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <UsersRound className="mb-4 h-8 w-8 text-green-800" />
+            <h2 className="text-xl font-black text-green-950">Voluntários</h2>
+            <p className="mt-2 text-sm text-stone-600">Cadastrar equipe e comparar com a sugestão por participantes.</p>
+          </Link>
         </div>
       </section>
     </main>

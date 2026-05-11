@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
-import { getEventAdminRecipients, sendMail } from "@/lib/mail";
+import { buildWhatsAppUrl, getEventAdminRecipients, getTucxaOperationsEmail, sendMail } from "@/lib/mail";
 import { formatCurrency } from "@/lib/format";
 import { buildPublicUrl } from "@/lib/site-url";
 
@@ -33,10 +33,12 @@ function getBaseUrl() {
 
 function buildOrderEmailHtml(input: {
   buyerName: string;
+  buyerWhatsapp: string;
   buyerCode: string;
   totalAmount: number;
   includesBingo: boolean;
   confirmationUrl: string;
+  referralUrl: string;
 }) {
   return `
     <div style="font-family: Arial, sans-serif; color: #1c1917; line-height: 1.5;">
@@ -48,6 +50,24 @@ function buildOrderEmailHtml(input: {
       ${input.includesBingo ? "<p><strong>Esta compra envolve cartela(s) de bingo.</strong></p>" : ""}
       <p>Guarde este código. Ele será usado para comprovar sua compra e acessar sua área exclusiva.</p>
       <p><a href="${input.confirmationUrl}" style="color:#047857;font-weight:bold;">Acessar minha compra</a></p>
+      <hr style="border:none;border-top:1px solid #e7e5e4;margin:24px 0;" />
+      <h2 style="color:#064e3b;">Mensagem pronta para WhatsApp</h2>
+      <p>Use este texto para enviar manualmente ao comprador quando ele não informou e-mail ou precisar receber pelo WhatsApp:</p>
+      <pre style="white-space:pre-wrap;background:#fff7ed;border-radius:12px;padding:12px;">Olá, ${input.buyerName}! Sua compra do Arraiá do Tucxa foi registrada.
+
+Código: ${input.buyerCode}
+Total: ${formatCurrency(input.totalAmount)}
+Acesse sua área da compra: ${input.confirmationUrl}
+
+Guarde este código para apresentar na entrada da festa.</pre>
+      <p><a href="${buildWhatsAppUrl(input.buyerWhatsapp, `Olá, ${input.buyerName}! Sua compra do Arraiá do Tucxa foi registrada.
+
+Código: ${input.buyerCode}
+Total: ${formatCurrency(input.totalAmount)}
+Acesse sua área da compra: ${input.confirmationUrl}
+
+Guarde este código para apresentar na entrada da festa.`)}" style="color:#047857;font-weight:bold;">Abrir WhatsApp do comprador</a></p>
+      <p><strong>Link de indicação do comprador:</strong> ${input.referralUrl}</p>
       <p>O pagamento/comprovante será validado pela organização.</p>
     </div>
   `;
@@ -183,6 +203,7 @@ export async function createTicketOrder(
   }
 
   const confirmationUrl = `${getBaseUrl()}/minha-compra/${buyerCode}`;
+  const referralUrl = `${getBaseUrl()}/festa-junina?ref=${encodeURIComponent(buyerCode)}#reserva`;
   const recipients = Array.from(new Set([buyerEmail, ...getEventAdminRecipients(includesBingo)].filter(Boolean)));
 
   try {
@@ -191,12 +212,46 @@ export async function createTicketOrder(
       subject: `Arraiá do Tucxa 2026 - Reserva ${buyerCode}`,
       html: buildOrderEmailHtml({
         buyerName,
+        buyerWhatsapp,
         buyerCode,
         totalAmount,
         includesBingo,
         confirmationUrl,
+        referralUrl,
       }),
     });
+
+
+    if (referredByCode) {
+      const { data: referrer } = await supabase
+        .from("ticket_orders")
+        .select("buyer_name, buyer_email, buyer_whatsapp, buyer_code")
+        .eq("buyer_code", referredByCode)
+        .maybeSingle();
+
+      const referrerName = typeof referrer?.buyer_name === "string" ? referrer.buyer_name : "Comprador indicado";
+      const referrerWhatsapp = typeof referrer?.buyer_whatsapp === "string" ? referrer.buyer_whatsapp : "";
+      const referrerUrl = referrer?.buyer_code ? `${getBaseUrl()}/minha-compra/${referrer.buyer_code}` : "";
+      const whatsappMessage = `Olá, ${referrerName}! Uma compra foi registrada usando seu código de indicação no Arraiá do Tucxa. Assim que o pagamento for aprovado, ela poderá contar para seus brindes. Acompanhe aqui: ${referrerUrl}`;
+
+      await sendMail({
+        to: Array.from(new Set([referrer?.buyer_email, ...getEventAdminRecipients(includesBingo), getTucxaOperationsEmail()].filter(Boolean))),
+        subject: `Compra por indicação - ${referredByCode}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; color:#1c1917; line-height:1.5;">
+            <h1 style="color:#064e3b;">Compra feita com código de indicação</h1>
+            <p><strong>Comprador indicado:</strong> ${buyerName}</p>
+            <p><strong>WhatsApp do comprador:</strong> ${buyerWhatsapp}</p>
+            <p><strong>Código usado:</strong> ${referredByCode}</p>
+            <p><strong>Quem indicou:</strong> ${referrerName}</p>
+            <p><strong>Link do comprador indicado:</strong> <a href="${confirmationUrl}">${confirmationUrl}</a></p>
+            <h2 style="color:#064e3b;">Mensagem pronta para avisar quem indicou</h2>
+            <pre style="white-space:pre-wrap;background:#fff7ed;border-radius:12px;padding:12px;">${whatsappMessage}</pre>
+            ${referrerWhatsapp ? `<p><a href="${buildWhatsAppUrl(referrerWhatsapp, whatsappMessage)}" style="color:#047857;font-weight:bold;">Abrir WhatsApp de quem indicou</a></p>` : ""}
+          </div>
+        `,
+      });
+    }
 
     await supabase
       .from("ticket_orders")

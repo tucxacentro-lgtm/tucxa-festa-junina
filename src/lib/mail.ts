@@ -12,20 +12,38 @@ const SMTP_PASS = process.env.SMTP_PASS;
 const SMTP_FROM = process.env.SMTP_FROM ?? SMTP_USER;
 const EMAIL_NOTIFICATIONS_ENABLED = process.env.EMAIL_NOTIFICATIONS_ENABLED === "true";
 
+export const DEFAULT_TUCXA_OPERATIONS_EMAIL = "tucxacentro@gmail.com";
+
 function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function addEmail(set: Set<string>, value?: string | null) {
+  const email = value?.trim();
+  if (email && email.includes("@")) set.add(email);
+}
+
+export function getTucxaOperationsEmail() {
+  return process.env.TUCXA_OPERATIONS_EMAIL || process.env.TUCXA_CENTRO_EMAIL || DEFAULT_TUCXA_OPERATIONS_EMAIL;
 }
 
 export function getEventAdminRecipients(includesBingo: boolean) {
   const recipients = new Set<string>();
 
-  recipients.add(process.env.TUCXA_ADMIN_EMAIL ?? "tucxa@gmail.com");
+  addEmail(recipients, getTucxaOperationsEmail());
+  addEmail(recipients, process.env.TUCXA_ADMIN_EMAIL ?? "tucxa@gmail.com");
 
   if (includesBingo) {
-    recipients.add(process.env.BINGO_ADMIN_EMAIL ?? "bazardosementinha@gmail.com");
+    addEmail(recipients, process.env.BINGO_ADMIN_EMAIL ?? "bazardosementinha@gmail.com");
   }
 
-  return Array.from(recipients).filter(Boolean);
+  return Array.from(recipients);
+}
+
+export function buildWhatsAppUrl(phone: string, message: string) {
+  const digits = phone.replace(/\D/g, "");
+  const normalized = digits.startsWith("55") ? digits : `55${digits}`;
+  return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
 }
 
 export async function sendMail(input: MailInput) {
@@ -54,8 +72,6 @@ export async function sendMail(input: MailInput) {
     return { sent: false, reason: "missing_smtp_config" };
   }
 
-  // Importação dinâmica para manter o build funcionando mesmo antes de instalar o nodemailer.
-  // Rode: npm install nodemailer && npm install -D @types/nodemailer
   const nodemailer = await import("nodemailer");
 
   const transporter = nodemailer.createTransport({

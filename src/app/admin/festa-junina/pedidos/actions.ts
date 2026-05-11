@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format";
-import { getEventAdminRecipients, sendMail } from "@/lib/mail";
+import { buildWhatsAppUrl, getEventAdminRecipients, sendMail } from "@/lib/mail";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { buildPublicUrl } from "@/lib/site-url";
 import type { TicketOrder } from "@/types/festa-junina";
@@ -21,6 +21,7 @@ function getBaseUrl() {
 
 function buildPaymentReviewEmail(input: {
   buyerName: string;
+  buyerWhatsapp: string;
   buyerCode: string;
   status: "paid" | "rejected";
   totalAmount: number;
@@ -28,6 +29,19 @@ function buildPaymentReviewEmail(input: {
 }) {
   const purchaseUrl = `${getBaseUrl()}/minha-compra/${input.buyerCode}`;
   const isPaid = input.status === "paid";
+
+  const message = isPaid
+    ? `Olá, ${input.buyerName}! Seu pagamento do Arraiá do Tucxa foi aprovado.
+
+Código: ${input.buyerCode}
+Acesse sua compra: ${purchaseUrl}
+
+Apresente o código ou QR Code na entrada da festa.`
+    : `Olá, ${input.buyerName}! O comprovante da sua compra do Arraiá do Tucxa precisa de ajuste.
+
+Código: ${input.buyerCode}
+Motivo: ${input.rejectionReason || "verificar com a organização"}
+Acesse sua compra: ${purchaseUrl}`;
 
   return `
     <div style="font-family: Arial, sans-serif; color: #1c1917; line-height: 1.5;">
@@ -39,6 +53,10 @@ function buildPaymentReviewEmail(input: {
       ${!isPaid && input.rejectionReason ? `<p><strong>Motivo:</strong> ${input.rejectionReason}</p>` : ""}
       <p>${isPaid ? "Apresente seu código ou QR Code na entrada da festa." : "Acesse sua compra e procure a organização para regularizar o pagamento."}</p>
       <p><a href="${purchaseUrl}" style="color:#047857;font-weight:bold;">Acessar minha compra</a></p>
+      <hr style="border:none;border-top:1px solid #e7e5e4;margin:24px 0;" />
+      <h2 style="color:#064e3b;">Mensagem pronta para WhatsApp</h2>
+      <pre style="white-space:pre-wrap;background:#fff7ed;border-radius:12px;padding:12px;">${message}</pre>
+      <p><a href="${buildWhatsAppUrl(input.buyerWhatsapp, message)}" style="color:#047857;font-weight:bold;">Abrir WhatsApp do comprador</a></p>
     </div>
   `;
 }
@@ -88,12 +106,40 @@ async function reviewPayment(formData: FormData, status: "paid" | "rejected") {
         : `Comprovante reprovado - ${order.buyer_code}`,
       html: buildPaymentReviewEmail({
         buyerName: order.buyer_name,
+        buyerWhatsapp: order.buyer_whatsapp,
         buyerCode: order.buyer_code,
         status,
         totalAmount: Number(order.total_amount ?? 0),
         rejectionReason,
       }),
     });
+
+    if (status === "paid" && order.referred_by_code) {
+      const { data: referrer } = await supabase
+        .from("ticket_orders")
+        .select("buyer_name, buyer_email, buyer_whatsapp, buyer_code")
+        .eq("buyer_code", order.referred_by_code)
+        .maybeSingle();
+
+      const referrerName = typeof referrer?.buyer_name === "string" ? referrer.buyer_name : "Participante";
+      const referrerWhatsapp = typeof referrer?.buyer_whatsapp === "string" ? referrer.buyer_whatsapp : "";
+      const referrerUrl = referrer?.buyer_code ? `${getBaseUrl()}/minha-compra/${referrer.buyer_code}` : "";
+      const message = `Olá, ${referrerName}! Uma compra feita com seu código de indicação foi aprovada no Arraiá do Tucxa. Ela já conta para seus brindes. Acompanhe aqui: ${referrerUrl}`;
+
+      await sendMail({
+        to: Array.from(new Set([referrer?.buyer_email, ...getEventAdminRecipients(order.includes_bingo)].filter(Boolean))),
+        subject: `Indicação aprovada - ${order.referred_by_code}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;color:#1c1917;line-height:1.5;">
+            <h1 style="color:#064e3b;">Indicação aprovada</h1>
+            <p>A compra de <strong>${order.buyer_name}</strong> foi aprovada usando o código <strong>${order.referred_by_code}</strong>.</p>
+            <p>Ela já conta para a campanha de brindes de <strong>${referrerName}</strong>.</p>
+            <pre style="white-space:pre-wrap;background:#fff7ed;border-radius:12px;padding:12px;">${message}</pre>
+            ${referrerWhatsapp ? `<p><a href="${buildWhatsAppUrl(referrerWhatsapp, message)}" style="color:#047857;font-weight:bold;">Abrir WhatsApp de quem indicou</a></p>` : ""}
+          </div>
+        `,
+      });
+    }
   } catch (error) {
     console.error("Falha ao enviar e-mail de revisão de pagamento", error);
   }

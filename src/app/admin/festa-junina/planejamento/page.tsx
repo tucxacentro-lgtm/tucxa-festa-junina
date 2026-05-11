@@ -145,7 +145,11 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
         </div>
 
         <h1 className="text-3xl font-black text-green-950">Planejamento de compras e operação</h1>
-        <p className="mt-2 max-w-3xl text-stone-600">
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm">Editar cardápio/ficha técnica</Link>
+          <Link href="/admin/festa-junina/voluntarios" className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm">Cadastrar voluntários</Link>
+        </div>
+        <p className="mt-4 max-w-3xl text-stone-600">
           Sugestões iniciais com base nas compras confirmadas e pendentes. Tudo deve ser validado e ajustado pela organização.
         </p>
 
