@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { MobileMenu } from "@/components/mobile-menu";
 
 const links = [
   { href: "/festa-junina", label: "Início" },
@@ -26,7 +27,7 @@ export function SiteHeader() {
           <span className="hidden sm:inline">Arraiá do Tucxa</span>
         </Link>
 
-        <nav className="flex items-center gap-1 overflow-x-auto text-sm font-bold text-green-950">
+        <nav className="hidden items-center gap-1 text-sm font-bold text-green-950 md:flex">
           {links.map((link) => (
             <Link
               key={link.href}
@@ -37,6 +38,8 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
+
+        <MobileMenu links={links} />
       </div>
     </header>
   );

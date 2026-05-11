@@ -2,7 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
-import { savePlanningAssumptions, savePlanningEstimate, savePlanningIngredient } from "./actions";
+import { savePlanningAssumptions } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -146,6 +146,8 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
 
         <h1 className="text-3xl font-black text-green-950">Planejamento de compras e operação</h1>
         <div className="mt-4 flex flex-wrap gap-3">
+          <a href="#sugestao-compras" className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm">Sugestão de compras por item</a>
+          <a href="#insumos-preparo" className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm">Insumos para preparo</a>
           <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm">Editar cardápio/ficha técnica</Link>
           <Link href="/admin/festa-junina/voluntarios" className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm">Cadastrar voluntários</Link>
         </div>
@@ -176,7 +178,7 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
           </form>
         ) : <div className="mt-8 rounded-3xl bg-amber-100 p-5 text-amber-900">Rode a migration 004 para criar as premissas iniciais de planejamento.</div>}
 
-        <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
+        <div id="sugestao-compras" className="mt-8 scroll-mt-24 rounded-3xl bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black text-green-950">Sugestão de compras por item</h2>
           <p className="mt-2 text-sm text-stone-600">
             A sugestão mostra duas bases: conservadora, usando apenas pagamentos aprovados; e provável, usando aprovados + pendentes. O campo “Qtd. final” permite ajuste manual.
@@ -184,7 +186,7 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
 
           <div className="mt-5 overflow-x-auto">
             <table className="w-full min-w-[1100px] text-left text-sm">
-              <thead className="bg-green-950 text-white"><tr><th className="p-3">Item</th><th className="p-3">Categoria</th><th className="p-3">Adulto</th><th className="p-3">Criança</th><th className="p-3">Base aprovada</th><th className="p-3">Base provável</th><th className="p-3">Qtd. final</th><th className="p-3">Ações</th></tr></thead>
+              <thead className="bg-green-950 text-white"><tr><th className="p-3">Item</th><th className="p-3">Categoria</th><th className="p-3">Adulto</th><th className="p-3">Criança</th><th className="p-3">Base aprovada</th><th className="p-3">Base provável</th><th className="p-3">Qtd. final</th><th className="p-3">Observação</th></tr></thead>
               <tbody>
                 {estimates.map((estimate) => {
                   const paidSuggested = calculateItemSuggestion(estimate, totals.paidAdults, totals.paidChildren, margin);
@@ -198,18 +200,8 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
                       <td className="p-3 font-black">{paidSuggested} {estimate.unit_label}</td>
                       <td className="p-3 font-black">{possibleSuggested} {estimate.unit_label}</td>
                       <td className="p-3 font-black">{estimate.editable_quantity ?? possibleSuggested} {estimate.unit_label}</td>
-                      <td className="p-3">
-                        <form action={savePlanningEstimate} className="grid gap-2 md:grid-cols-2">
-                          <input type="hidden" name="id" value={estimate.id} />
-                          <input name="item_name" defaultValue={estimate.item_name} className="rounded-xl border p-2" />
-                          <input name="category" defaultValue={estimate.category} className="rounded-xl border p-2" />
-                          <input name="consumption_per_adult" defaultValue={estimate.consumption_per_adult} className="rounded-xl border p-2" />
-                          <input name="consumption_per_child" defaultValue={estimate.consumption_per_child} className="rounded-xl border p-2" />
-                          <input name="unit_label" defaultValue={estimate.unit_label} className="rounded-xl border p-2" />
-                          <input name="editable_quantity" defaultValue={estimate.editable_quantity ?? ""} placeholder="Qtd. final" className="rounded-xl border p-2" />
-                          <label className="flex items-center gap-2 text-xs font-bold text-green-950"><input type="checkbox" name="active" defaultChecked={estimate.active} /> Ativo</label>
-                          <button className="rounded-xl bg-green-900 px-3 py-2 text-xs font-black text-white">Salvar</button>
-                        </form>
+                      <td className="p-3 text-xs text-stone-500">
+                        Edite consumo, categoria, preparo e ficha técnica em <Link href="/admin/festa-junina/cardapio" className="font-black text-green-900 underline">Cardápio/Ficha técnica</Link>.
                       </td>
                     </tr>
                   );
@@ -219,7 +211,7 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
           </div>
         </div>
 
-        <div className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
+        <div id="insumos-preparo" className="mt-8 scroll-mt-24 rounded-3xl bg-white p-6 shadow-sm">
           <h2 className="text-xl font-black text-green-950">Insumos para preparo</h2>
           <p className="mt-2 text-sm text-stone-600">
             Lista de ingredientes e materiais necessários para preparar os itens do cardápio. A sugestão abaixo usa apenas pagamentos aprovados como base conservadora; ajuste a quantidade final conforme decisão da coordenação.
@@ -232,7 +224,7 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
           ) : (
             <div className="mt-5 overflow-x-auto">
               <table className="w-full min-w-[1100px] text-left text-sm">
-                <thead className="bg-green-950 text-white"><tr><th className="p-3">Insumo</th><th className="p-3">Item relacionado</th><th className="p-3">Por unidade</th><th className="p-3">Sugestão aprovada</th><th className="p-3">Qtd. final</th><th className="p-3">Status</th><th className="p-3">Ações</th></tr></thead>
+                <thead className="bg-green-950 text-white"><tr><th className="p-3">Insumo</th><th className="p-3">Item relacionado</th><th className="p-3">Por unidade</th><th className="p-3">Sugestão aprovada</th><th className="p-3">Qtd. final</th><th className="p-3">Status</th><th className="p-3">Observação</th></tr></thead>
                 <tbody>
                   {conservativeIngredientTotals.map(({ ingredient, suggested, itemName }) => (
                     <tr key={ingredient.id} className="border-b border-stone-100 align-top last:border-0">
@@ -242,23 +234,8 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
                       <td className="p-3 font-black">{suggested} {ingredient.unit_label}</td>
                       <td className="p-3 font-black">{ingredient.editable_quantity ?? suggested} {ingredient.unit_label}</td>
                       <td className="p-3">{statusLabel(ingredient.purchase_status)}</td>
-                      <td className="p-3">
-                        <form action={savePlanningIngredient} className="grid gap-2 md:grid-cols-2">
-                          <input type="hidden" name="id" value={ingredient.id} />
-                          <input name="ingredient_name" defaultValue={ingredient.ingredient_name} className="rounded-xl border p-2" />
-                          <input name="ingredient_category" defaultValue={ingredient.ingredient_category} className="rounded-xl border p-2" />
-                          <input name="amount_per_unit" defaultValue={ingredient.amount_per_unit} className="rounded-xl border p-2" />
-                          <input name="unit_label" defaultValue={ingredient.unit_label} className="rounded-xl border p-2" />
-                          <input name="editable_quantity" defaultValue={ingredient.editable_quantity ?? ""} placeholder="Qtd. final" className="rounded-xl border p-2" />
-                          <select name="purchase_status" defaultValue={ingredient.purchase_status} className="rounded-xl border p-2">
-                            <option value="pending">Pendente</option>
-                            <option value="partial">Parcial</option>
-                            <option value="purchased">Comprado</option>
-                          </select>
-                          <input name="notes" defaultValue={ingredient.notes ?? ""} placeholder="Observações" className="rounded-xl border p-2 md:col-span-2" />
-                          <label className="flex items-center gap-2 text-xs font-bold text-green-950"><input type="checkbox" name="active" defaultChecked={ingredient.active} /> Ativo</label>
-                          <button className="rounded-xl bg-green-900 px-3 py-2 text-xs font-black text-white">Salvar</button>
-                        </form>
+                      <td className="p-3 text-xs text-stone-500">
+                        Ajuste insumo, quantidade por unidade e status em <Link href="/admin/festa-junina/cardapio" className="font-black text-green-900 underline">Cardápio/Ficha técnica</Link>.
                       </td>
                     </tr>
                   ))}
