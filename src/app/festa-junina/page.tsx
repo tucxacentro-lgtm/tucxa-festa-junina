@@ -2,6 +2,7 @@ import Image from "next/image";
 import { CalendarDays, Gift, MapPin, PartyPopper, QrCode, Ticket, Utensils, Users } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { getCurrentEventSlug } from "@/lib/current-event";
 import { formatCurrency, formatDate, formatTime } from "@/lib/format";
 import type { Combo, EventConfig, PaymentOption, TicketType } from "@/types/festa-junina";
 import { TicketOrderForm } from "./components/ticket-order-form";
@@ -19,7 +20,7 @@ async function getEventData() {
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select("*")
-    .eq("slug", "arraia-tucxa-2026")
+    .eq("slug", getCurrentEventSlug())
     .single();
 
   if (eventError || !event) {
@@ -151,8 +152,8 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
             <div className="rounded-3xl bg-amber-100 p-5">
               <h2 className="text-2xl font-black text-green-950">Comprar antes ajuda todo mundo</h2>
               <p className="mt-3 text-sm leading-relaxed text-stone-700">
-                Sua reserva antecipada ajuda a estimar comida, bebida, mesas, voluntários e atendimento.
-                Assim, a festa fica mais organizada, confortável e gostosa para todos.
+                Comprar antes ajuda a organizar melhor a festa e garante sua participação no sorteio/bingo da Air Fryer.
+                Assim, todo mundo chega com mais tranquilidade, menos fila e mais tempo para aproveitar.
               </p>
             </div>
           </div>
@@ -192,7 +193,7 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
           <Ticket className="h-8 w-8 text-green-800" />
           <div>
             <h2 className="text-3xl font-black text-green-950">Opções de convite</h2>
-            <p className="mt-1 text-stone-600">Valores configuráveis pela organização.</p>
+            <p className="mt-1 text-stone-600">Convite antecipado R$ 20,00 até 08/06/2026. Convite no dia da festa R$ 30,00. Crianças até 10 anos não pagam.</p>
           </div>
         </div>
 
@@ -207,6 +208,11 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
             </div>
           ))}
         </div>
+
+        <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+          <h3 className="text-xl font-black text-green-950">Concorra a uma linda Air Fryer</h3>
+          <p className="mt-2 text-sm leading-relaxed text-stone-700">Cada ingresso adquirido para este evento participa do bingo/sorteio da Air Fryer, conforme as regras da organização no dia da festa.</p>
+        </div>
       </section>
 
       <section id="combos" className="mx-auto max-w-6xl px-5 py-10">
@@ -220,6 +226,7 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
           </div>
         </div>
 
+        {event.allow_combos && combos.length > 0 ? (
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           {combos.map((combo) => (
             <div
@@ -264,14 +271,16 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
             </div>
           ))}
         </div>
+        ) : (
+          <div className="mt-6 rounded-3xl bg-white p-6 text-sm text-stone-600 shadow-sm">Neste evento, a organização optou por vender somente os ingressos definidos no folder.</div>
+        )}
       </section>
 
       <section id="reserva" className="mx-auto max-w-6xl px-5 py-10">
         <div className="rounded-[2rem] bg-white p-6 shadow-sm md:p-8">
-          <h2 className="text-3xl font-black text-green-950">Reserve seu convite</h2>
+          <h2 className="text-3xl font-black text-green-950">Garanta seu convite</h2>
           <p className="mt-2 text-stone-600">
-            Informe seus dados, escolha convite ou combo e carregue o comprovante/registro do pagamento.
-            O WhatsApp é obrigatório. O e-mail pode ser informado quando houver.
+            Informe seus dados, escolha o tipo de convite e carregue o comprovante/registro do pagamento. Cada ingresso concorre a uma linda Air Fryer no bingo da festa.
           </p>
 
           <TicketOrderForm

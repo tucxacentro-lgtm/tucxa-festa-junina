@@ -58,11 +58,35 @@ const helpByKey: Record<string, HelpContent> = {
     sections: [
       {
         title: "Ordem recomendada",
-        body: "Comece por Configurações, Convites, Combos, Pagamentos, Cardápio/Ficha Técnica, Planejamento, Voluntários e Checklist.",
+        body: "Comece por Eventos e Módulos. Depois configure Convites, Pagamentos, Planejamento, Cardápio/Ficha Técnica, Voluntários e Checklist conforme a decisão da coordenação.",
       },
       {
         title: "Validação com a equipe",
         body: "Use o sistema como ambiente de familiarização. Tudo foi feito para ser configurável e ajustável pela organização.",
+      },
+    ],
+  },
+  "/admin/festa-junina/eventos": {
+    title: "Eventos",
+    description: "Cadastre cada edição anual da Festa Junina do Tucxa e defina o evento ativo.",
+    sections: [
+      {
+        title: "Multi-evento",
+        body: "Cada ano terá seu próprio evento, com convites, planejamento, compras, voluntários, checklist e prestação de contas separados.",
+      },
+    ],
+  },
+  "/admin/festa-junina/modulos": {
+    title: "Módulos do evento",
+    description: "Defina quais funcionalidades serão usadas neste evento e o status de cada uma.",
+    sections: [
+      {
+        title: "Módulos independentes",
+        body: "Você pode usar uma funcionalidade mesmo que a anterior não seja usada. Exemplo: usar planejamento com vendas manuais mesmo sem registrar todos os convites no sistema.",
+      },
+      {
+        title: "Status recomendado",
+        body: "Use Não usado, Sugestão, Em configuração, Em uso e Concluído para guiar a coordenação e os voluntários.",
       },
     ],
   },
@@ -212,6 +236,8 @@ export function getHelpContent(pathname: string): HelpContent {
   if (helpByKey[normalized]) return helpByKey[normalized];
 
   if (normalized.startsWith("/minha-compra/")) return helpByKey["/minha-compra"];
+  if (normalized.startsWith("/admin/festa-junina/eventos")) return helpByKey["/admin/festa-junina/eventos"];
+  if (normalized.startsWith("/admin/festa-junina/modulos")) return helpByKey["/admin/festa-junina/modulos"];
   if (normalized.startsWith("/admin/festa-junina/pedidos/")) return helpByKey["/admin/festa-junina/pedidos"];
   if (normalized.startsWith("/admin/festa-junina/cardapio/")) return helpByKey["/admin/festa-junina/cardapio"];
   if (normalized.startsWith("/admin/festa-junina/upsell/envios")) return helpByKey["/admin/festa-junina/upsell/envios"];

@@ -1,0 +1,49 @@
+import { saveManualSales } from "@/app/admin/festa-junina/planejamento/actions";
+
+type ManualSales = {
+  id?: string;
+  event_id: string;
+  presale_paid_quantity?: number | string | null;
+  door_paid_quantity?: number | string | null;
+  children_free_quantity?: number | string | null;
+  notes?: string | null;
+};
+
+export function ManualSalesForm({ data, eventId }: { data?: ManualSales | null; eventId: string }) {
+  return (
+    <form action={saveManualSales} className="mt-8 rounded-3xl border border-green-100 bg-white p-6 shadow-sm">
+      <input type="hidden" name="id" value={data?.id ?? ""} />
+      <input type="hidden" name="event_id" value={data?.event_id ?? eventId} />
+      <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+        <div>
+          <h2 className="text-xl font-black text-green-950">Vendas manuais para planejamento</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-stone-600">
+            Use estes campos quando nem todos os convites forem registrados no sistema. O planejamento continua funcionando com a quantidade vendida informada manualmente.
+          </p>
+        </div>
+        <span className="rounded-full bg-amber-100 px-4 py-2 text-xs font-black text-amber-900">Opcional por evento</span>
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <label className="grid gap-2 text-sm font-bold text-green-950">
+          Antecipados vendidos manualmente
+          <input name="presale_paid_quantity" type="number" min={0} defaultValue={data?.presale_paid_quantity ?? 0} className="rounded-2xl border border-stone-200 p-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold text-green-950">
+          Vendidos no dia manualmente
+          <input name="door_paid_quantity" type="number" min={0} defaultValue={data?.door_paid_quantity ?? 0} className="rounded-2xl border border-stone-200 p-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold text-green-950">
+          Crianças estimadas/manual
+          <input name="children_free_quantity" type="number" min={0} defaultValue={data?.children_free_quantity ?? 0} className="rounded-2xl border border-stone-200 p-3 font-normal" />
+        </label>
+        <label className="grid gap-2 text-sm font-bold text-green-950 md:col-span-3">
+          Observações
+          <textarea name="notes" defaultValue={data?.notes ?? ""} className="min-h-20 rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Ex.: convites impressos vendidos na secretaria, por coordenadores ou na porta." />
+        </label>
+      </div>
+
+      <button className="mt-5 rounded-2xl bg-green-900 px-5 py-3 font-black text-white">Salvar vendas manuais</button>
+    </form>
+  );
+}

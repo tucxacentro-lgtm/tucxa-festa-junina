@@ -63,6 +63,16 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps) {
               <input name="name" defaultValue={event.name} required className="rounded-2xl border border-stone-200 p-3 font-normal" />
             </label>
 
+            <label className="grid gap-2 text-sm font-bold text-green-950">
+              Ano
+              <input name="year" type="number" defaultValue={event.year ?? 2026} className="rounded-2xl border border-stone-200 p-3 font-normal" />
+            </label>
+
+            <label className="flex items-center gap-3 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-green-950">
+              <input name="active_for_sales" type="checkbox" defaultChecked={event.active_for_sales !== false} className="h-5 w-5" />
+              Evento ativo para venda
+            </label>
+
             <label className="grid gap-2 text-sm font-bold text-green-950 md:col-span-2">
               Subtítulo
               <input name="subtitle" defaultValue={event.subtitle ?? ""} className="rounded-2xl border border-stone-200 p-3 font-normal" />
@@ -107,6 +117,16 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps) {
             <label className="grid gap-2 text-sm font-bold text-green-950">
               Nome do recebedor Pix
               <input name="pix_receiver_name" defaultValue={event.pix_receiver_name ?? ""} className="rounded-2xl border border-stone-200 p-3 font-normal" />
+            </label>
+
+            <label className="grid gap-2 text-sm font-bold text-green-950">
+              Brinde/sorteio
+              <input name="featured_prize_name" defaultValue={event.featured_prize_name ?? "Linda Air Fryer"} className="rounded-2xl border border-stone-200 p-3 font-normal" />
+            </label>
+
+            <label className="grid gap-2 text-sm font-bold text-green-950 md:col-span-2">
+              Descrição do brinde/sorteio
+              <input name="featured_prize_description" defaultValue={event.featured_prize_description ?? "Cada ingresso concorre a uma linda Air Fryer através de um bingo realizado na festa."} className="rounded-2xl border border-stone-200 p-3 font-normal" />
             </label>
 
             <label className="grid gap-2 text-sm font-bold text-green-950">

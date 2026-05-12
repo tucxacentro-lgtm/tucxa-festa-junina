@@ -113,6 +113,7 @@ export function TicketOrderForm({
             <span className="mt-1 block text-sm font-medium opacity-80">Entrada para a festa</span>
           </button>
 
+          {combos.length > 0 && event.allow_combos ? (
           <button
             type="button"
             onClick={() => setPurchaseType("combo")}
@@ -123,8 +124,9 @@ export function TicketOrderForm({
             }`}
           >
             Combo configurável
-            <span className="mt-1 block text-sm font-medium opacity-80">Pode incluir comida, bebida e bingo</span>
+            <span className="mt-1 block text-sm font-medium opacity-80">Se a organização liberar combos neste evento</span>
           </button>
+          ) : null}
         </div>
       </div>
 

@@ -20,6 +20,8 @@ const groups: AdminGroup[] = [
     title: "Geral",
     links: [
       { href: "/admin/festa-junina", label: "Painel principal" },
+      { href: "/admin/festa-junina/eventos", label: "Eventos" },
+      { href: "/admin/festa-junina/modulos", label: "Módulos" },
       { href: "/admin/festa-junina/pedidos", label: "Compras e comprovantes" },
       { href: "/admin/festa-junina/configuracoes", label: "Configurações" },
       { href: "/admin/festa-junina/convites", label: "Convites" },

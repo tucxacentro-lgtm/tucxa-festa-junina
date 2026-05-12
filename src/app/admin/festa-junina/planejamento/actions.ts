@@ -89,3 +89,25 @@ export async function savePlanningIngredient(formData: FormData) {
   revalidatePath("/admin/festa-junina/planejamento");
   redirect("/admin/festa-junina/planejamento?saved=ingredient");
 }
+
+export async function saveManualSales(formData: FormData) {
+  await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/planejamento");
+  const supabase = createSupabaseAdminClient();
+  const id = text(formData, "id");
+  const payload = {
+    event_id: text(formData, "event_id"),
+    presale_paid_quantity: number(formData, "presale_paid_quantity", 0),
+    door_paid_quantity: number(formData, "door_paid_quantity", 0),
+    children_free_quantity: number(formData, "children_free_quantity", 0),
+    notes: text(formData, "notes") || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = id
+    ? await supabase.from("event_manual_sales").update(payload).eq("id", id)
+    : await supabase.from("event_manual_sales").insert(payload);
+
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/festa-junina/planejamento");
+  redirect("/admin/festa-junina/planejamento?saved=manual-sales");
+}

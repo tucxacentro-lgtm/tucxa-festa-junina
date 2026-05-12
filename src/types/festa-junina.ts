@@ -18,6 +18,10 @@ export type EventConfig = {
   allow_children_free: boolean;
   children_free_age_limit: number;
   status: "draft" | "published" | "closed";
+  year?: number | null;
+  active_for_sales?: boolean | null;
+  featured_prize_name?: string | null;
+  featured_prize_description?: string | null;
 };
 
 export type TicketType = {
@@ -29,6 +33,8 @@ export type TicketType = {
   is_free: boolean;
   active?: boolean;
   sort_order?: number;
+  available_until?: string | null;
+  available_from?: string | null;
 };
 
 export type Combo = {

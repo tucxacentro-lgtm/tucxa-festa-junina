@@ -1,9 +1,22 @@
-import { ClipboardList, CreditCard, Settings, Ticket, Utensils, Gift, Share2, ClipboardCheck, Megaphone, UsersRound, ListChecks, Warehouse, type LucideIcon } from "lucide-react";
+import { CalendarDays, ClipboardList, CreditCard, Settings, Ticket, Utensils, Gift, Share2, ClipboardCheck, Megaphone, UsersRound, ListChecks, Warehouse, LayoutGrid, type LucideIcon } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { AdminFamiliarizationBox } from "@/components/admin-familiarization-box";
 import { AdminPageShell } from "@/components/admin-page-shell";
+import { EventModuleStatusCard } from "@/components/event-module-status-card";
+import { EVENT_MODULES, type EventModuleStatus } from "@/lib/event-modules";
+import { createSupabaseAdminClient } from "@/lib/supabaseServer";
+import { getCurrentEventForAdmin } from "@/lib/current-event";
 
 export const dynamic = "force-dynamic";
+
+type ModuleRow = { module_key: string; enabled: boolean; status: EventModuleStatus; notes: string | null };
+
+async function getDashboardData() {
+  const event = await getCurrentEventForAdmin();
+  const supabase = createSupabaseAdminClient();
+  const { data } = await supabase.from("event_modules").select("module_key, enabled, status, notes").eq("event_id", event.id);
+  return { event, modules: new Map(((data ?? []) as ModuleRow[]).map((row) => [row.module_key, row])) };
+}
 
 function AdminCard({ href, icon: Icon, title, description }: { href: string; icon: LucideIcon; title: string; description: string }) {
   return (
@@ -18,6 +31,7 @@ function AdminCard({ href, icon: Icon, title, description }: { href: string; ico
 
 export default async function AdminFestaJuninaPage() {
   const admin = await requireAdmin(undefined, "/admin/festa-junina");
+  const { event, modules } = await getDashboardData();
   return (
     <AdminPageShell>
       
@@ -33,12 +47,14 @@ export default async function AdminFestaJuninaPage() {
 
         <h1 className="text-3xl font-black text-green-950">Administração da Festa Junina</h1>
         <p className="mt-3 max-w-3xl text-stone-600">
-          Painel inicial para acompanhar reservas, comprovantes, combos com bingo e configurar a página pública.
+          Painel do evento <strong>{event.name}</strong>. Use os módulos de forma independente: é possível planejar com quantidades manuais mesmo que nem todas as vendas sejam registradas no sistema.
         </p>
 
         <AdminFamiliarizationBox />
 
         <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <AdminCard href="/admin/festa-junina/eventos" icon={CalendarDays} title="Eventos" description="Cadastrar cada edição anual e escolher o evento ativo." />
+          <AdminCard href="/admin/festa-junina/modulos" icon={LayoutGrid} title="Módulos do evento" description="Definir quais funcionalidades serão usadas neste evento." />
           <AdminCard href="/admin/festa-junina/pedidos" icon={ClipboardList} title="Compras e comprovantes" description="Ver reservas, status de pagamento e compras que incluem bingo." />
           <AdminCard href="/admin/festa-junina/configuracoes" icon={Settings} title="Configurações" description="Editar evento, data, local, Pix, status e regras de venda." />
           <AdminCard href="/admin/festa-junina/convites" icon={Ticket} title="Convites" description="Editar tipos de convite, valores, gratuidade e disponibilidade." />
@@ -52,6 +68,17 @@ export default async function AdminFestaJuninaPage() {
           <AdminCard href="/admin/festa-junina/checklist" icon={ListChecks} title="Checklist operacional" description="Acompanhar o que está pendente, sugerido, em andamento e confirmado." />
           <AdminCard href="/admin/festa-junina/operacao" icon={Warehouse} title="Operação e simulação" description="Confirmar compras, armazenamento, responsáveis e testes de atendimento/caixa." />
         </div>
+
+        <section className="mt-10">
+          <h2 className="text-2xl font-black text-green-950">Módulos recomendados</h2>
+          <p className="mt-2 text-sm text-stone-600">Cada módulo pode ser usado, ignorado ou configurado separadamente para este evento.</p>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {EVENT_MODULES.map((definition) => {
+              const row = modules.get(definition.key);
+              return <EventModuleStatusCard key={definition.key} definition={definition} enabled={row?.enabled ?? true} status={row?.status ?? "suggested"} notes={row?.notes} />;
+            })}
+          </div>
+        </section>
       </section>
     </AdminPageShell>
   );

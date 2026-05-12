@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { savePlanningAssumptions } from "./actions";
+import { ManualSalesForm } from "@/components/manual-sales-form";
 import { AdminPageShell } from "@/components/admin-page-shell";
 
 export const dynamic = "force-dynamic";
@@ -49,23 +50,35 @@ type OrderTotals = {
   pendingChildren: number;
 };
 
+type ManualSales = {
+  id: string;
+  event_id: string;
+  presale_paid_quantity: number | string | null;
+  door_paid_quantity: number | string | null;
+  children_free_quantity: number | string | null;
+  notes: string | null;
+};
+
 async function getData() {
   const supabase = createSupabaseAdminClient();
   const { data: event } = await supabase.from("events").select("id").eq("slug", "arraia-tucxa-2026").single();
   if (!event) {
     return {
+      eventId: "",
       assumptions: null as Assumptions | null,
       estimates: [] as Estimate[],
       ingredients: [] as RecipeIngredient[],
+      manualSales: null as ManualSales | null,
       totals: { paidAdults: 0, paidChildren: 0, pendingAdults: 0, pendingChildren: 0 },
     };
   }
 
-  const [{ data: assumptions }, { data: estimates }, { data: orders }, { data: ingredients }] = await Promise.all([
+  const [{ data: assumptions }, { data: estimates }, { data: orders }, { data: ingredients }, { data: manualSales }] = await Promise.all([
     supabase.from("planning_assumptions").select("*").eq("event_id", event.id).maybeSingle(),
     supabase.from("planning_menu_estimates").select("*").eq("event_id", event.id).order("sort_order"),
     supabase.from("ticket_orders").select("adults_quantity, children_quantity, payment_status").eq("event_id", event.id),
     supabase.from("planning_recipe_ingredients").select("*").eq("event_id", event.id).order("sort_order"),
+    supabase.from("event_manual_sales").select("*").eq("event_id", event.id).maybeSingle(),
   ]);
 
   const totals = ((orders ?? []) as Array<{ adults_quantity: number; children_quantity: number; payment_status: string }>).reduce<OrderTotals>((acc, order) => {
@@ -80,9 +93,11 @@ async function getData() {
   }, { paidAdults: 0, paidChildren: 0, pendingAdults: 0, pendingChildren: 0 });
 
   return {
+    eventId: event.id,
     assumptions: assumptions as Assumptions | null,
     estimates: (estimates ?? []) as Estimate[],
     ingredients: (ingredients ?? []) as RecipeIngredient[],
+    manualSales: manualSales as ManualSales | null,
     totals,
   };
 }
@@ -95,6 +110,7 @@ function savedMessage(saved?: string) {
   if (saved === "assumptions") return "Premissas de planejamento salvas com sucesso.";
   if (saved === "estimate") return "Item de planejamento salvo com sucesso.";
   if (saved === "ingredient") return "Insumo de preparo salvo com sucesso.";
+  if (saved === "manual-sales") return "Vendas manuais salvas com sucesso.";
   return null;
 }
 
@@ -116,9 +132,11 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/planejamento");
   const params = await searchParams;
   const message = savedMessage(params?.saved);
-  const { assumptions, estimates, ingredients, totals } = await getData();
+  const { eventId, assumptions, estimates, ingredients, manualSales, totals } = await getData();
 
-  const confirmedPeople = totals.paidAdults + totals.paidChildren;
+  const manualAdults = Number(manualSales?.presale_paid_quantity ?? 0) + Number(manualSales?.door_paid_quantity ?? 0);
+  const manualChildren = Number(manualSales?.children_free_quantity ?? 0);
+  const confirmedPeople = totals.paidAdults + totals.paidChildren + manualAdults + manualChildren;
   const possiblePeople = confirmedPeople + totals.pendingAdults + totals.pendingChildren;
   const guestsPerTable = Number(assumptions?.guests_per_table ?? 4) || 4;
   const volunteersPer50 = Number(assumptions?.volunteers_per_50_guests ?? 3) || 3;
@@ -157,8 +175,10 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
 
         {message ? <div className="mt-6 rounded-3xl border border-green-200 bg-green-50 p-5 text-sm font-bold text-green-900">{message}</div> : null}
 
+        <ManualSalesForm data={manualSales} eventId={eventId} />
+
         <div className="mt-8 grid gap-4 md:grid-cols-4">
-          <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Pessoas confirmadas</p><p className="mt-2 text-3xl font-black text-green-950">{confirmedPeople}</p><p className="mt-1 text-xs text-stone-500">Somente pagamentos aprovados</p></div>
+          <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Pessoas confirmadas</p><p className="mt-2 text-3xl font-black text-green-950">{confirmedPeople}</p><p className="mt-1 text-xs text-stone-500">Pagamentos aprovados + vendas manuais</p></div>
           <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Confirmadas + pendentes</p><p className="mt-2 text-3xl font-black text-green-950">{possiblePeople}</p><p className="mt-1 text-xs text-stone-500">Aprovados + comprovantes/reservas</p></div>
           <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Mesas sugeridas</p><p className="mt-2 text-3xl font-black text-green-950">{suggestedTables}</p></div>
           <div className="rounded-3xl bg-white p-5 shadow-sm"><p className="text-sm font-bold text-stone-500">Voluntários sugeridos</p><p className="mt-2 text-3xl font-black text-green-950">{suggestedVolunteers}</p></div>
