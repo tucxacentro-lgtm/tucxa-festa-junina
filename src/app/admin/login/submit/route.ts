@@ -23,14 +23,18 @@ function normalizeNext(value: string) {
   return value;
 }
 
-function getCookieOptions(maxAge: number) {
+function getCookieOptions(maxAge: number, httpOnly = true) {
   return {
-    httpOnly: true,
+    httpOnly,
     sameSite: "lax" as const,
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge,
   };
+}
+
+function wantsJson(request: NextRequest) {
+  return request.headers.get("x-admin-login-fetch") === "1";
 }
 
 function redirectWithError(request: NextRequest, message: string, next: string) {
@@ -40,21 +44,48 @@ function redirectWithError(request: NextRequest, message: string, next: string) 
   return NextResponse.redirect(url, { status: 303 });
 }
 
+function jsonWithError(message: string, status = 400) {
+  return NextResponse.json({ ok: false, error: message }, { status });
+}
+
+function applyAdminCookies(
+  response: NextResponse,
+  values: {
+    adminSessionToken: string;
+    accessToken?: string;
+    refreshToken?: string;
+    adminSessionMaxAge: number;
+    accessTokenMaxAge: number;
+    refreshTokenMaxAge: number;
+  },
+) {
+  response.cookies.set(ADMIN_SESSION_COOKIE, values.adminSessionToken, getCookieOptions(values.adminSessionMaxAge));
+
+  if (values.accessToken) {
+    response.cookies.set(ADMIN_ACCESS_TOKEN_COOKIE, values.accessToken, getCookieOptions(values.accessTokenMaxAge));
+  }
+
+  if (values.refreshToken) {
+    response.cookies.set(ADMIN_REFRESH_TOKEN_COOKIE, values.refreshToken, getCookieOptions(values.refreshTokenMaxAge));
+  }
+}
+
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const email = normalize(formData.get("email")).toLowerCase();
   const password = typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
   const next = normalizeNext(normalize(formData.get("next")));
+  const jsonMode = wantsJson(request);
 
   if (!email || !password) {
-    return redirectWithError(request, "Informe e-mail e senha.", next);
+    return jsonMode ? jsonWithError("Informe e-mail e senha.") : redirectWithError(request, "Informe e-mail e senha.", next);
   }
 
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error || !data.session || !data.user) {
-    return redirectWithError(request, "E-mail ou senha inválidos.", next);
+    return jsonMode ? jsonWithError("E-mail ou senha inválidos.", 401) : redirectWithError(request, "E-mail ou senha inválidos.", next);
   }
 
   const adminClient = createSupabaseAdminClient();
@@ -66,11 +97,8 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (profileError || !profile) {
-    return redirectWithError(
-      request,
-      "Usuário autenticado, mas sem permissão administrativa ativa. Verifique o cadastro em admin_profiles.",
-      next,
-    );
+    const message = "Usuário autenticado, mas sem permissão administrativa ativa. Verifique o cadastro em admin_profiles.";
+    return jsonMode ? jsonWithError(message, 403) : redirectWithError(request, message, next);
   }
 
   const adminSessionMaxAge = 60 * 60 * 24 * 7;
@@ -84,12 +112,40 @@ export async function POST(request: NextRequest) {
     expiresAt: Date.now() + adminSessionMaxAge * 1000,
   });
 
-  const response = NextResponse.redirect(new URL(next, request.url), { status: 303 });
+  if (jsonMode) {
+    const response = NextResponse.json({
+      ok: true,
+      next,
+      cookies: [
+        {
+          name: ADMIN_SESSION_COOKIE,
+          value: adminSessionToken,
+          maxAge: adminSessionMaxAge,
+        },
+      ],
+    });
 
-  // Definido diretamente no NextResponse para garantir que o Set-Cookie seja enviado no redirect.
-  response.cookies.set(ADMIN_SESSION_COOKIE, adminSessionToken, getCookieOptions(adminSessionMaxAge));
-  response.cookies.set(ADMIN_ACCESS_TOKEN_COOKIE, data.session.access_token, getCookieOptions(accessTokenMaxAge));
-  response.cookies.set(ADMIN_REFRESH_TOKEN_COOKIE, data.session.refresh_token, getCookieOptions(refreshTokenMaxAge));
+    applyAdminCookies(response, {
+      adminSessionToken,
+      accessToken: data.session.access_token,
+      refreshToken: data.session.refresh_token,
+      adminSessionMaxAge,
+      accessTokenMaxAge,
+      refreshTokenMaxAge,
+    });
+
+    return response;
+  }
+
+  const response = NextResponse.redirect(new URL(next, request.url), { status: 303 });
+  applyAdminCookies(response, {
+    adminSessionToken,
+    accessToken: data.session.access_token,
+    refreshToken: data.session.refresh_token,
+    adminSessionMaxAge,
+    accessTokenMaxAge,
+    refreshTokenMaxAge,
+  });
 
   return response;
 }
