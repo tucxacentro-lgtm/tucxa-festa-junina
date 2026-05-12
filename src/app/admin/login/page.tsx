@@ -12,6 +12,8 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const nextParam = params?.next;
   const next = Array.isArray(nextParam) ? nextParam[0] ?? "/admin/festa-junina" : nextParam ?? "/admin/festa-junina";
+  const erroParam = params?.erro;
+  const erro = Array.isArray(erroParam) ? erroParam[0] : erroParam;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-amber-400 via-orange-400 to-yellow-300 px-5 py-12 text-stone-900">
@@ -34,6 +36,12 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
               Entre com um usuário real do Supabase Auth autorizado em admin_profiles.
             </p>
           </div>
+
+          {erro ? (
+            <div className="mb-4 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
+              {erro}
+            </div>
+          ) : null}
 
           <AdminLoginForm next={next} />
 

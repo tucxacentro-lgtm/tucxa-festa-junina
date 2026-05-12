@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE, ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
 
-const publicAdminPaths = ["/admin/login", "/admin/esqueci-senha", "/admin/redefinir-senha", "/admin/logout"];
+const ADMIN_ACCESS_TOKEN_COOKIE = "tucxa_admin_access_token";
+const ADMIN_REFRESH_TOKEN_COOKIE = "tucxa_admin_refresh_token";
+const ADMIN_SESSION_COOKIE = "tucxa_admin_session";
+
+const publicAdminPaths = [
+  "/admin/login",
+  "/admin/esqueci-senha",
+  "/admin/redefinir-senha",
+  "/admin/logout",
+  "/admin/session-check",
+];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,8 +23,6 @@ export function proxy(request: NextRequest) {
   const accessToken = request.cookies.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const refreshToken = request.cookies.get(ADMIN_REFRESH_TOKEN_COOKIE)?.value;
 
-  // A validação forte acontece nos Server Components via requireAdmin().
-  // Aqui basta verificar se existe alguma sessão para não redirecionar indevidamente a cada navegação.
   if (adminSession || accessToken || refreshToken) {
     return NextResponse.next();
   }
