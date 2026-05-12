@@ -47,7 +47,7 @@ export default async function AdminChecklistPage({ searchParams }: PageProps) {
       
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex flex-wrap justify-between gap-3">
-          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao admin</Link>
+          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao admin</Link>
           <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair do admin</a>
         </div>
 
@@ -73,7 +73,7 @@ export default async function AdminChecklistPage({ searchParams }: PageProps) {
                     <p className="text-sm font-black text-amber-700">Item {item.sort_order}</p>
                     <h2 className="mt-1 text-xl font-black text-green-950">{item.title}</h2>
                     {item.description ? <p className="mt-2 text-sm text-stone-600">{item.description}</p> : null}
-                    {item.href ? <Link href={item.href} className="mt-3 inline-block text-sm font-black text-green-900 underline">Abrir área relacionada</Link> : null}
+                    {item.href ? <Link href={item.href} className="mt-3 inline-block text-sm font-black text-green-900 underline" prefetch={false}>Abrir área relacionada</Link> : null}
                   </div>
                   <AdminChecklistStatusBadge status={item.status} />
                 </div>

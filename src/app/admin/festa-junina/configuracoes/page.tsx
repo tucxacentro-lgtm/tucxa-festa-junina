@@ -47,7 +47,7 @@ export default async function ConfiguracoesPage({ searchParams }: PageProps) {
             <h1 className="text-3xl font-black text-green-950">Configurações do evento</h1>
             <p className="mt-2 text-stone-600">Edite dados gerais, Pix e regras públicas da página de venda.</p>
           </div>
-          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">
+          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>
             Voltar ao admin
           </Link>
         </div>

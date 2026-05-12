@@ -39,10 +39,10 @@ export default async function AdminLoginPersistPage({ searchParams }: PageProps)
         </div>
 
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link href={next} className="rounded-2xl bg-green-900 px-5 py-3 font-black text-white">
+          <Link href={next} className="rounded-2xl bg-green-900 px-5 py-3 font-black text-white" prefetch={false}>
             Ir para o admin
           </Link>
-          <Link href="/admin/session-check" className="rounded-2xl bg-white px-5 py-3 font-black text-green-950 shadow-sm ring-1 ring-amber-100">
+          <Link href="/admin/session-check" className="rounded-2xl bg-white px-5 py-3 font-black text-green-950 shadow-sm ring-1 ring-amber-100" prefetch={false}>
             Ver diagnóstico
           </Link>
         </div>

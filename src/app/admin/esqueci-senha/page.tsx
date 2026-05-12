@@ -14,7 +14,7 @@ export default function EsqueciSenhaPage() {
         <ForgotPasswordForm />
 
         <div className="mt-6 text-center text-sm">
-          <Link href="/admin/login" className="font-bold text-green-900 underline decoration-green-300 underline-offset-4">
+          <Link href="/admin/login" className="font-bold text-green-900 underline decoration-green-300 underline-offset-4" prefetch={false}>
             Voltar para o login
           </Link>
         </div>

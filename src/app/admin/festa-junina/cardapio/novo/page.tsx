@@ -10,7 +10,7 @@ export default async function NovoCardapioPage() {
     <AdminPageShell>
       
       <section className="mx-auto max-w-4xl px-5 py-12">
-        <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao cardápio</Link>
+        <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao cardápio</Link>
         <h1 className="mt-8 text-3xl font-black text-green-950">Novo item do cardápio</h1>
         <form action={createMenuPlanningItem} className="mt-8 rounded-3xl bg-white p-6 shadow-sm">
           <div className="grid gap-4 md:grid-cols-2">

@@ -12,7 +12,7 @@ export default async function AjudaAdminPage() {
     <AdminPageShell>
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <Link href="/admin/festa-junina" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm transition hover:bg-amber-100">
+          <Link href="/admin/festa-junina" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm transition hover:bg-amber-100" prefetch={false}>
             ← Painel principal
           </Link>
           <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm transition hover:bg-amber-100">
@@ -40,7 +40,7 @@ export default async function AjudaAdminPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-full bg-green-900 px-4 py-2 text-center text-sm font-black text-white transition hover:bg-green-800"
-                >
+                 prefetch={false}>
                   Abrir tela
                 </Link>
               </div>

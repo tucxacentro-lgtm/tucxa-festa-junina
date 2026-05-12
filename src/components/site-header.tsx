@@ -15,7 +15,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-amber-200/70 bg-amber-50/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
-        <Link href="/festa-junina" className="flex items-center gap-3 font-black text-green-950">
+        <Link href="/festa-junina" className="flex items-center gap-3 font-black text-green-950" prefetch={false}>
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
             <Image
               src="/images/logo-tucxa.jpg"
@@ -34,7 +34,7 @@ export function SiteHeader() {
               key={link.href}
               href={link.href}
               className="whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-white hover:shadow-sm"
-            >
+             prefetch={false}>
               {link.label}
             </Link>
           ))}

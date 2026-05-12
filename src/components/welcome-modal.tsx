@@ -89,7 +89,7 @@ export function WelcomeModal() {
               href="/festa-junina#reserva"
               onClick={close}
               className="rounded-2xl bg-green-900 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-green-800"
-            >
+             prefetch={false}>
               Garantir meu convite
             </Link>
             <button

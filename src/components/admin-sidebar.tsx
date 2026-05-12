@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useState } from "react";
@@ -83,7 +82,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               {group.links.map((link) => {
                 const active = isActive(pathname, link.href);
                 return (
-                  <Link
+                  <a
                     key={link.href}
                     href={link.href}
                     onClick={onNavigate}
@@ -92,7 +91,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                     }`}
                   >
                     {link.label}
-                  </Link>
+                  </a>
                 );
               })}
             </div>
@@ -102,9 +101,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className="border-t border-white/10 p-3">
         <HelpButton compact />
-        <Link href="/admin/logout" className="mt-3 block rounded-xl bg-white/10 px-3 py-2 text-center text-sm font-black text-white transition hover:bg-white/20">
+        <a href="/admin/logout" className="mt-3 block rounded-xl bg-white/10 px-3 py-2 text-center text-sm font-black text-white transition hover:bg-white/20">
           Sair do admin
-        </Link>
+        </a>
       </div>
     </div>
   );

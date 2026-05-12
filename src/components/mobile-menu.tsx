@@ -36,6 +36,7 @@ export function MobileMenu({ links }: { links: MobileMenuLink[] }) {
                 key={link.href}
                 href={link.href}
                 onClick={() => setIsOpen(false)}
+                prefetch={false}
                 className="rounded-2xl bg-white px-4 py-3 text-base font-black text-green-950 shadow-sm transition hover:bg-amber-100"
               >
                 {link.label}

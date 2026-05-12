@@ -21,7 +21,7 @@ export function AdminOperationalChecklist({ items }: { items: OperationalCheckli
             Ordem sugerida para preparar a festa. Cada item pode ficar como pendente, sugestão, em andamento ou confirmado.
           </p>
         </div>
-        <Link href="/admin/festa-junina/checklist" className="rounded-2xl bg-green-900 px-5 py-3 text-center text-sm font-black text-white shadow-sm">
+        <Link href="/admin/festa-junina/checklist" className="rounded-2xl bg-green-900 px-5 py-3 text-center text-sm font-black text-white shadow-sm" prefetch={false}>
           Ver checklist completo
         </Link>
       </div>

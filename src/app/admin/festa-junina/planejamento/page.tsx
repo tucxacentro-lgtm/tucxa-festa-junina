@@ -140,7 +140,7 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
       
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex flex-wrap justify-between gap-3">
-          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao admin</Link>
+          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao admin</Link>
           <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair do admin</a>
         </div>
 
@@ -148,8 +148,8 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
         <div className="mt-4 flex flex-wrap gap-3">
           <a href="#sugestao-compras" className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm">Sugestão de compras por item</a>
           <a href="#insumos-preparo" className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm">Insumos para preparo</a>
-          <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm">Editar cardápio/ficha técnica</Link>
-          <Link href="/admin/festa-junina/voluntarios" className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm">Cadastrar voluntários</Link>
+          <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm" prefetch={false}>Editar cardápio/ficha técnica</Link>
+          <Link href="/admin/festa-junina/voluntarios" className="rounded-2xl bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm" prefetch={false}>Cadastrar voluntários</Link>
         </div>
         <p className="mt-4 max-w-3xl text-stone-600">
           Sugestões iniciais com base nas compras confirmadas e pendentes. Tudo deve ser validado e ajustado pela organização.
@@ -201,7 +201,7 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
                       <td className="p-3 font-black">{possibleSuggested} {estimate.unit_label}</td>
                       <td className="p-3 font-black">{estimate.editable_quantity ?? possibleSuggested} {estimate.unit_label}</td>
                       <td className="p-3 text-xs text-stone-500">
-                        Edite consumo, categoria, preparo e ficha técnica em <Link href="/admin/festa-junina/cardapio" className="font-black text-green-900 underline">Cardápio/Ficha técnica</Link>.
+                        Edite consumo, categoria, preparo e ficha técnica em <Link href="/admin/festa-junina/cardapio" className="font-black text-green-900 underline" prefetch={false}>Cardápio/Ficha técnica</Link>.
                       </td>
                     </tr>
                   );
@@ -235,7 +235,7 @@ export default async function AdminPlanejamentoPage({ searchParams }: PageProps)
                       <td className="p-3 font-black">{ingredient.editable_quantity ?? suggested} {ingredient.unit_label}</td>
                       <td className="p-3">{statusLabel(ingredient.purchase_status)}</td>
                       <td className="p-3 text-xs text-stone-500">
-                        Ajuste insumo, quantidade por unidade e status em <Link href="/admin/festa-junina/cardapio" className="font-black text-green-900 underline">Cardápio/Ficha técnica</Link>.
+                        Ajuste insumo, quantidade por unidade e status em <Link href="/admin/festa-junina/cardapio" className="font-black text-green-900 underline" prefetch={false}>Cardápio/Ficha técnica</Link>.
                       </td>
                     </tr>
                   ))}

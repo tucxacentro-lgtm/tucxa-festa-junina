@@ -52,7 +52,7 @@ export default async function VoluntariosPage({ searchParams }: PageProps) {
     <AdminPageShell>
       
       <section className="mx-auto max-w-6xl px-5 py-12">
-        <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao admin</Link>
+        <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao admin</Link>
         <h1 className="mt-8 text-3xl font-black text-green-950">Voluntários e papéis</h1>
         <p className="mt-2 max-w-3xl text-stone-600">Cadastre os voluntários e use a sugestão por quantidade de participantes como referência editável para a escala.</p>
         {params?.saved ? <div className="mt-5 rounded-3xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-900">Voluntário salvo com sucesso.</div> : null}

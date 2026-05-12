@@ -46,7 +46,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
           <AdminLoginForm next={next} />
 
           <div className="mt-6 text-center text-sm">
-            <Link href="/festa-junina" className="font-bold text-green-900 underline decoration-green-300 underline-offset-4">
+            <Link href="/festa-junina" className="font-bold text-green-900 underline decoration-green-300 underline-offset-4" prefetch={false}>
               Voltar para a página pública
             </Link>
           </div>

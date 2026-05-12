@@ -97,7 +97,7 @@ export default async function ConvitesPage({ searchParams }: PageProps) {
             <h1 className="text-3xl font-black text-green-950">Convites e valores</h1>
             <p className="mt-2 text-stone-600">Cadastre e edite os tipos de convite exibidos na página pública.</p>
           </div>
-          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">Voltar ao admin</Link>
+          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>Voltar ao admin</Link>
         </div>
 
         <FormStatusMessage message={successMessage} />

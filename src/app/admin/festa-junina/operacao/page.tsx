@@ -72,7 +72,7 @@ export default async function OperacaoPage({ searchParams }: PageProps) {
       
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex flex-wrap justify-between gap-3">
-          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao admin</Link>
+          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao admin</Link>
           <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair do admin</a>
         </div>
 

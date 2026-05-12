@@ -37,7 +37,7 @@ export function AdminLoginForm({ next }: { next: string }) {
       </button>
 
       <div className="text-center text-sm">
-        <Link href="/admin/esqueci-senha" className="font-bold text-green-900 underline decoration-green-300 underline-offset-4">
+        <Link href="/admin/esqueci-senha" className="font-bold text-green-900 underline decoration-green-300 underline-offset-4" prefetch={false}>
           Esqueci minha senha
         </Link>
       </div>

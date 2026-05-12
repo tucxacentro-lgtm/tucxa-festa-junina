@@ -37,7 +37,7 @@ export function SessionCheckClientDiagnostics() {
         LocalStorage com sessão: <strong>{diagnostics === null ? "verificando..." : diagnostics.localStorageSession ? "Sim" : "Não"}</strong>
       </p>
       <p className="mt-2 text-xs leading-relaxed">
-        Se o servidor e o navegador mostrarem cookie como “Não”, este navegador está recusando cookies para o domínio ou a etapa de persistência não foi executada.
+        Quando a sessão do servidor estiver válida, o cookie pode aparecer como “Não” aqui por estar protegido como HttpOnly. Isso é esperado e mais seguro. Use este bloco apenas como apoio ao diagnóstico.
       </p>
     </div>
   );

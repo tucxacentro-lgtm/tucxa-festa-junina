@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { HelpCircle } from "lucide-react";
 import { WhatsAppSupportButton } from "@/components/whatsapp-support-button";
 
@@ -13,13 +12,13 @@ export function AdminFamiliarizationBox() {
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Link
+          <a
             href="/admin/festa-junina/ajuda"
             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-black text-green-950 shadow-sm transition hover:bg-amber-100"
           >
             <HelpCircle className="h-4 w-4" />
             Conhecer funcionalidades
-          </Link>
+          </a>
           <WhatsAppSupportButton />
         </div>
       </div>

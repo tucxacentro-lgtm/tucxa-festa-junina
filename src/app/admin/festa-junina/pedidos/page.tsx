@@ -56,7 +56,7 @@ export default async function AdminPedidosPage({ searchParams }: PageProps) {
             <h1 className="text-3xl font-black text-green-950">Compras e comprovantes</h1>
             <p className="mt-2 text-stone-600">Acompanhe compras, visualize comprovantes e aprove/reprove pagamentos.</p>
           </div>
-          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">
+          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>
             Voltar ao admin
           </Link>
         </div>
@@ -113,7 +113,7 @@ export default async function AdminPedidosPage({ searchParams }: PageProps) {
                 {orders.map((order) => (
                   <tr key={order.id} className="border-b border-stone-100 align-top last:border-0">
                     <td className="p-4 font-bold text-green-950">
-                      <Link href={`/admin/festa-junina/pedidos/${order.id}`} className="underline decoration-green-300 underline-offset-4">
+                      <Link href={`/admin/festa-junina/pedidos/${order.id}`} className="underline decoration-green-300 underline-offset-4" prefetch={false}>
                         {order.buyer_code}
                       </Link>
                     </td>
@@ -125,7 +125,7 @@ export default async function AdminPedidosPage({ searchParams }: PageProps) {
                     <td className="p-4">{new Date(order.created_at).toLocaleString("pt-BR")}</td>
                     <td className="p-4">
                       <div className="flex min-w-56 flex-col gap-2">
-                        <Link href={`/admin/festa-junina/pedidos/${order.id}`} className="rounded-xl bg-amber-100 px-3 py-2 text-center text-xs font-black text-green-950 transition hover:bg-amber-200">
+                        <Link href={`/admin/festa-junina/pedidos/${order.id}`} className="rounded-xl bg-amber-100 px-3 py-2 text-center text-xs font-black text-green-950 transition hover:bg-amber-200" prefetch={false}>
                           Ver detalhes/comprovante
                         </Link>
                         {order.payment_status !== "paid" ? (

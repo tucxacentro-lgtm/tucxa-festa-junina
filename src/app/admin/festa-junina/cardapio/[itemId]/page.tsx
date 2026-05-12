@@ -53,7 +53,7 @@ export default async function CardapioDetalhePage({ params, searchParams }: Page
 
   if (!item) {
     return (
-      <AdminPageShell><section className="mx-auto max-w-3xl px-5 py-16"><div className="rounded-3xl bg-white p-8 shadow-sm"><h1 className="text-3xl font-black text-green-950">Item não encontrado</h1><Link href="/admin/festa-junina/cardapio" className="mt-5 inline-block rounded-2xl bg-green-900 px-5 py-3 font-bold text-white">Voltar</Link></div></section></AdminPageShell>
+      <AdminPageShell><section className="mx-auto max-w-3xl px-5 py-16"><div className="rounded-3xl bg-white p-8 shadow-sm"><h1 className="text-3xl font-black text-green-950">Item não encontrado</h1><Link href="/admin/festa-junina/cardapio" className="mt-5 inline-block rounded-2xl bg-green-900 px-5 py-3 font-bold text-white" prefetch={false}>Voltar</Link></div></section></AdminPageShell>
     );
   }
 
@@ -62,8 +62,8 @@ export default async function CardapioDetalhePage({ params, searchParams }: Page
       
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex flex-wrap justify-between gap-3">
-          <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao cardápio</Link>
-          <Link href="/admin/festa-junina/planejamento" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">Ver planejamento</Link>
+          <Link href="/admin/festa-junina/cardapio" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao cardápio</Link>
+          <Link href="/admin/festa-junina/planejamento" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>Ver planejamento</Link>
         </div>
 
         <h1 className="text-3xl font-black text-green-950">Ficha técnica: {item.item_name}</h1>

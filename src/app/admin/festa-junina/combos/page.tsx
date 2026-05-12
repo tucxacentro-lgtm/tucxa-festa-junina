@@ -109,7 +109,7 @@ export default async function CombosPage({ searchParams }: PageProps) {
             <h1 className="text-3xl font-black text-green-950">Combos e ofertas</h1>
             <p className="mt-2 text-stone-600">Configure combos com convites, comida, bebida e cartelas de bingo.</p>
           </div>
-          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">Voltar ao admin</Link>
+          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>Voltar ao admin</Link>
         </div>
 
         <FormStatusMessage message={successMessage} />

@@ -39,8 +39,8 @@ export default async function AdminCardapioPage() {
       
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex flex-wrap justify-between gap-3">
-          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm">← Voltar ao admin</Link>
-          <Link href="/admin/festa-junina/cardapio/novo" className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm">Novo item</Link>
+          <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao admin</Link>
+          <Link href="/admin/festa-junina/cardapio/novo" className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm" prefetch={false}>Novo item</Link>
         </div>
 
         <h1 className="text-3xl font-black text-green-950">Cardápio e ficha técnica</h1>
@@ -57,7 +57,7 @@ export default async function AdminCardapioPage() {
                   <td className="p-3">{item.consumption_per_adult} {item.unit_label}</td>
                   <td className="p-3">{item.consumption_per_child} {item.unit_label}</td>
                   <td className="p-3">{item.active ? "Ativo" : "Inativo"}</td>
-                  <td className="p-3"><Link href={`/admin/festa-junina/cardapio/${item.id}`} className="font-black text-green-800 underline">Editar ficha técnica</Link></td>
+                  <td className="p-3"><Link href={`/admin/festa-junina/cardapio/${item.id}`} className="font-black text-green-800 underline" prefetch={false}>Editar ficha técnica</Link></td>
                 </tr>
               ))}
               {items.length === 0 ? <tr><td colSpan={6} className="p-6 text-center text-stone-500">Nenhum item cadastrado.</td></tr> : null}

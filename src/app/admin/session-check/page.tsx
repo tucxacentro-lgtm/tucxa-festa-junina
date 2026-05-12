@@ -57,10 +57,10 @@ export default async function AdminSessionCheckPage() {
         ) : null}
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Link href="/admin/festa-junina" className="rounded-2xl bg-green-900 px-5 py-3 font-black text-white">
+          <Link href="/admin/festa-junina" className="rounded-2xl bg-green-900 px-5 py-3 font-black text-white" prefetch={false}>
             Ir para o admin
           </Link>
-          <Link href="/admin/logout" className="rounded-2xl bg-white px-5 py-3 font-black text-green-950 shadow-sm ring-1 ring-amber-100">
+          <Link href="/admin/logout" className="rounded-2xl bg-white px-5 py-3 font-black text-green-950 shadow-sm ring-1 ring-amber-100" prefetch={false}>
             Sair e testar login novamente
           </Link>
         </div>
