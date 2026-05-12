@@ -33,19 +33,11 @@ function getCookieOptions(maxAge: number, httpOnly = true) {
   };
 }
 
-function wantsJson(request: NextRequest) {
-  return request.headers.get("x-admin-login-fetch") === "1";
-}
-
 function redirectWithError(request: NextRequest, message: string, next: string) {
   const url = new URL("/admin/login", request.url);
   url.searchParams.set("next", next);
   url.searchParams.set("erro", message);
   return NextResponse.redirect(url, { status: 303 });
-}
-
-function jsonWithError(message: string, status = 400) {
-  return NextResponse.json({ ok: false, error: message }, { status });
 }
 
 function applyAdminCookies(
@@ -75,17 +67,16 @@ export async function POST(request: NextRequest) {
   const email = normalize(formData.get("email")).toLowerCase();
   const password = typeof formData.get("password") === "string" ? String(formData.get("password")) : "";
   const next = normalizeNext(normalize(formData.get("next")));
-  const jsonMode = wantsJson(request);
 
   if (!email || !password) {
-    return jsonMode ? jsonWithError("Informe e-mail e senha.") : redirectWithError(request, "Informe e-mail e senha.", next);
+    return redirectWithError(request, "Informe e-mail e senha.", next);
   }
 
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error || !data.session || !data.user) {
-    return jsonMode ? jsonWithError("E-mail ou senha inválidos.", 401) : redirectWithError(request, "E-mail ou senha inválidos.", next);
+    return redirectWithError(request, "E-mail ou senha inválidos.", next);
   }
 
   const adminClient = createSupabaseAdminClient();
@@ -97,8 +88,11 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (profileError || !profile) {
-    const message = "Usuário autenticado, mas sem permissão administrativa ativa. Verifique o cadastro em admin_profiles.";
-    return jsonMode ? jsonWithError(message, 403) : redirectWithError(request, message, next);
+    return redirectWithError(
+      request,
+      "Usuário autenticado, mas sem permissão administrativa ativa. Verifique o cadastro em admin_profiles.",
+      next,
+    );
   }
 
   const adminSessionMaxAge = 60 * 60 * 24 * 7;
@@ -112,31 +106,6 @@ export async function POST(request: NextRequest) {
     expiresAt: Date.now() + adminSessionMaxAge * 1000,
   });
 
-  if (jsonMode) {
-    const response = NextResponse.json({
-      ok: true,
-      next,
-      cookies: [
-        {
-          name: ADMIN_SESSION_COOKIE,
-          value: adminSessionToken,
-          maxAge: adminSessionMaxAge,
-        },
-      ],
-    });
-
-    applyAdminCookies(response, {
-      adminSessionToken,
-      accessToken: data.session.access_token,
-      refreshToken: data.session.refresh_token,
-      adminSessionMaxAge,
-      accessTokenMaxAge,
-      refreshTokenMaxAge,
-    });
-
-    return response;
-  }
-
   const response = NextResponse.redirect(new URL(next, request.url), { status: 303 });
   applyAdminCookies(response, {
     adminSessionToken,
@@ -147,5 +116,6 @@ export async function POST(request: NextRequest) {
     refreshTokenMaxAge,
   });
 
+  response.headers.set("Cache-Control", "no-store");
   return response;
 }
