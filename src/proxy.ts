@@ -6,6 +6,7 @@ const ADMIN_SESSION_COOKIE = "tucxa_admin_session";
 
 const publicAdminPaths = [
   "/admin/login",
+  "/admin/login/persist",
   "/admin/esqueci-senha",
   "/admin/redefinir-senha",
   "/admin/logout",

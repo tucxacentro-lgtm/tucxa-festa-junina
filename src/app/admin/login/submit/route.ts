@@ -40,26 +40,12 @@ function redirectWithError(request: NextRequest, message: string, next: string) 
   return NextResponse.redirect(url, { status: 303 });
 }
 
-function applyAdminCookies(
-  response: NextResponse,
-  values: {
-    adminSessionToken: string;
-    accessToken?: string;
-    refreshToken?: string;
-    adminSessionMaxAge: number;
-    accessTokenMaxAge: number;
-    refreshTokenMaxAge: number;
-  },
-) {
-  response.cookies.set(ADMIN_SESSION_COOKIE, values.adminSessionToken, getCookieOptions(values.adminSessionMaxAge));
-
-  if (values.accessToken) {
-    response.cookies.set(ADMIN_ACCESS_TOKEN_COOKIE, values.accessToken, getCookieOptions(values.accessTokenMaxAge));
-  }
-
-  if (values.refreshToken) {
-    response.cookies.set(ADMIN_REFRESH_TOKEN_COOKIE, values.refreshToken, getCookieOptions(values.refreshTokenMaxAge));
-  }
+function redirectToPersist(request: NextRequest, adminSessionToken: string, next: string, maxAge: number) {
+  const url = new URL("/admin/login/persist", request.url);
+  url.searchParams.set("session", adminSessionToken);
+  url.searchParams.set("next", next);
+  url.searchParams.set("maxAge", String(maxAge));
+  return NextResponse.redirect(url, { status: 303 });
 }
 
 export async function POST(request: NextRequest) {
@@ -106,16 +92,13 @@ export async function POST(request: NextRequest) {
     expiresAt: Date.now() + adminSessionMaxAge * 1000,
   });
 
-  const response = NextResponse.redirect(new URL(next, request.url), { status: 303 });
-  applyAdminCookies(response, {
-    adminSessionToken,
-    accessToken: data.session.access_token,
-    refreshToken: data.session.refresh_token,
-    adminSessionMaxAge,
-    accessTokenMaxAge,
-    refreshTokenMaxAge,
-  });
+  // Primeiro tenta gravar pelo servidor. Em seguida redireciona para uma página client-side
+  // que também grava o cookie via document.cookie. Isso contorna navegadores/ambientes
+  // em que o Set-Cookie do redirect não fica persistido.
+  const response = redirectToPersist(request, adminSessionToken, next, adminSessionMaxAge);
+  response.cookies.set(ADMIN_SESSION_COOKIE, adminSessionToken, getCookieOptions(adminSessionMaxAge));
+  response.cookies.set(ADMIN_ACCESS_TOKEN_COOKIE, data.session.access_token, getCookieOptions(accessTokenMaxAge));
+  response.cookies.set(ADMIN_REFRESH_TOKEN_COOKIE, data.session.refresh_token, getCookieOptions(refreshTokenMaxAge));
 
-  response.headers.set("Cache-Control", "no-store");
   return response;
 }

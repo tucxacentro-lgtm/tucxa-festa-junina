@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
+import { SessionCheckClientDiagnostics } from "./session-check-client";
 import {
   ADMIN_ACCESS_TOKEN_COOKIE,
   ADMIN_REFRESH_TOKEN_COOKIE,
@@ -45,6 +46,8 @@ export default async function AdminSessionCheckPage() {
           <StatusRow label="Assinatura da sessão admin válida" ok={Boolean(signedPayload)} />
           <StatusRow label="Admin atual identificado" ok={Boolean(currentAdmin)} />
         </div>
+
+        <SessionCheckClientDiagnostics />
 
         {currentAdmin ? (
           <div className="mt-6 rounded-2xl bg-green-50 p-4 text-sm text-green-950">
