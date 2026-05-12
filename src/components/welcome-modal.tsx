@@ -4,7 +4,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { WhatsAppSupportButton } from "@/components/whatsapp-support-button";
-import { SUPPORT_NAME, SUPPORT_PHONE_DISPLAY } from "@/lib/support";
+
 
 const STORAGE_KEY = "tucxa_festa_junina_welcome_hidden_v1";
 
@@ -77,7 +77,7 @@ export function WelcomeModal() {
             <article className="rounded-2xl border border-green-100 bg-amber-50 p-4">
               <h3 className="font-black text-green-950">Suporte</h3>
               <p className="mt-2 text-sm leading-relaxed text-stone-700">
-                Em caso de dúvida, fale com {SUPPORT_NAME}: {SUPPORT_PHONE_DISPLAY}.
+                Em caso de dúvida, toque no botão abaixo para falar com o suporte pelo WhatsApp.
               </p>
             </article>
           </div>

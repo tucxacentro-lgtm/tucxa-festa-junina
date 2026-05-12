@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE } from "@/lib/admin-auth";
+import { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE, ADMIN_SESSION_COOKIE, createAdminSessionToken } from "@/lib/admin-auth";
 import { createSupabaseAdminClient, createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export type LoginState = {
@@ -59,6 +59,21 @@ export async function loginAdmin(_previousState: LoginState | null, formData: Fo
 
   const cookieStore = await cookies();
   const maxAge = data.session.expires_in ?? 60 * 60 * 8;
+  const adminSessionMaxAge = 60 * 60 * 24 * 7;
+  const adminSessionToken = createAdminSessionToken({
+    userId: data.user.id,
+    email: data.user.email ?? email,
+    role: profile.role,
+    expiresAt: Date.now() + adminSessionMaxAge * 1000,
+  });
+
+  cookieStore.set(ADMIN_SESSION_COOKIE, adminSessionToken, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: adminSessionMaxAge,
+  });
 
   cookieStore.set(ADMIN_ACCESS_TOKEN_COOKIE, data.session.access_token, {
     httpOnly: true,

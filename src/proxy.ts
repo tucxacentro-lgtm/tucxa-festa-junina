@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE } from "@/lib/admin-auth";
+import { ADMIN_ACCESS_TOKEN_COOKIE, ADMIN_REFRESH_TOKEN_COOKIE, ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
 
 const publicAdminPaths = ["/admin/login", "/admin/esqueci-senha", "/admin/redefinir-senha", "/admin/logout"];
 
@@ -10,12 +10,13 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const adminSession = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
   const accessToken = request.cookies.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   const refreshToken = request.cookies.get(ADMIN_REFRESH_TOKEN_COOKIE)?.value;
 
-  // O access token pode expirar antes do refresh token. Se houver refresh token,
-  // deixa a rota seguir para o server component tentar recuperar a sessão.
-  if (accessToken || refreshToken) {
+  // A validação forte acontece nos Server Components via requireAdmin().
+  // Aqui basta verificar se existe alguma sessão para não redirecionar indevidamente a cada navegação.
+  if (adminSession || accessToken || refreshToken) {
     return NextResponse.next();
   }
 
