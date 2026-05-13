@@ -1,6 +1,6 @@
 import type React from "react";
 import Link from "next/link";
-import { Plus, Settings, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AdminPageShell } from "@/components/admin-page-shell";
 import {
   MENU_STATUS_OPTIONS,
@@ -16,6 +16,23 @@ import { createEventMenuDefaults, deactivateMenuItem, saveMenuItemComplete } fro
 export const dynamic = "force-dynamic";
 
 type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
+
+const MENU_PATH = "/admin/festa-junina/menu";
+
+function firstParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function menuHref(params: Record<string, string>) {
+  const query = new URLSearchParams(params);
+  return `${MENU_PATH}?${query.toString()}`;
+}
+
+function findMenuItem(catalog: AdminMenuCatalogItem[], itemKey: string | undefined) {
+  if (!itemKey) return undefined;
+  return catalog.find((item) => item.item_key === itemKey);
+}
+
 
 type MenuNode = AdminMenuCatalogItem & { children: MenuNode[] };
 
@@ -92,7 +109,7 @@ function MenuItemForm({
   mode,
   parentKey,
   section,
-  closeId,
+  closeHref,
 }: {
   item?: AdminMenuCatalogItem;
   catalog: AdminMenuCatalogItem[];
@@ -101,7 +118,7 @@ function MenuItemForm({
   mode: "edit" | "new";
   parentKey?: string | null;
   section?: string;
-  closeId: string;
+  closeHref: string;
 }) {
   const config = item ? eventConfigs.get(item.item_key) : undefined;
   const status = config?.status ?? (item?.default_enabled === false ? "not_used" : "suggested");
@@ -209,30 +226,28 @@ function MenuItemForm({
       </div>
 
       <div className="flex justify-end gap-3 border-t border-stone-100 pt-4">
-        <label htmlFor={closeId} className="cursor-pointer rounded-2xl border border-stone-200 px-5 py-3 text-sm font-black text-green-950">Cancelar</label>
+        <Link href={closeHref} className="rounded-2xl border border-stone-200 px-5 py-3 text-sm font-black text-green-950">Cancelar</Link>
         <button className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white">Salvar</button>
       </div>
     </form>
   );
 }
 
-function ModalShell({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+function ModalShell({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <>
-      <input id={id} type="checkbox" className="peer sr-only" />
-      <div className="fixed inset-0 z-[120] hidden items-center justify-center bg-black/45 p-4 peer-checked:flex">
-        <label htmlFor={id} className="absolute inset-0 cursor-pointer" aria-label="Fechar" />
-        <div className="relative z-10 max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl">
-          <div className="mb-5 flex items-center justify-between gap-4 border-b border-stone-100 pb-4">
-            <h3 className="text-2xl font-black text-green-950">{title}</h3>
-            <label htmlFor={id} className="cursor-pointer rounded-full bg-stone-100 px-3 py-1 text-xl font-black text-stone-700">×</label>
-          </div>
-          {children}
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4">
+      <Link href={MENU_PATH} className="absolute inset-0 cursor-pointer" aria-label="Fechar" />
+      <div className="relative z-10 max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl">
+        <div className="sticky top-0 z-20 mb-5 flex items-center justify-between gap-4 border-b border-stone-100 bg-white pb-4">
+          <h3 className="text-2xl font-black text-green-950">{title}</h3>
+          <Link href={MENU_PATH} className="rounded-full bg-stone-100 px-3 py-1 text-xl font-black text-stone-700" aria-label="Fechar">×</Link>
         </div>
+        {children}
       </div>
-    </>
+    </div>
   );
 }
+
 
 function MenuRow({
   item,
@@ -251,9 +266,6 @@ function MenuRow({
   const status = config?.status ?? (item.default_enabled ? "suggested" : "not_used");
   const customLabel = config?.custom_label?.trim();
   const route = effectiveRoute(item);
-  const editId = `edit-menu-${item.item_key}`;
-  const childId = `new-child-${item.item_key}`;
-
   return (
     <div className="rounded-2xl border border-stone-100 bg-white shadow-sm">
       <div className={`flex flex-wrap items-center gap-3 px-4 py-3 ${depthPadding(depth)}`}>
@@ -270,22 +282,14 @@ function MenuRow({
         </div>
         <div className="flex flex-wrap gap-2">
           {route ? <Link href={route} className="rounded-full border border-green-100 bg-white px-3 py-2 text-xs font-black text-green-950 hover:bg-green-50">Abrir</Link> : null}
-          <label htmlFor={editId} className="cursor-pointer rounded-full bg-green-900 px-3 py-2 text-xs font-black text-white">Editar</label>
-          <label htmlFor={childId} className="cursor-pointer rounded-full border border-green-100 bg-white px-3 py-2 text-xs font-black text-green-950 hover:bg-green-50">Novo filho</label>
+          <Link href={menuHref({ edit: item.item_key })} className="rounded-full bg-green-900 px-3 py-2 text-xs font-black text-white">Editar</Link>
+          <Link href={menuHref({ newChild: item.item_key })} className="rounded-full border border-green-100 bg-white px-3 py-2 text-xs font-black text-green-950 hover:bg-green-50">Novo filho</Link>
           <form action={deactivateMenuItem}>
             <input type="hidden" name="item_key" value={item.item_key} />
             <button className="rounded-full border border-red-100 bg-red-50 px-3 py-2 text-xs font-black text-red-700" title="Desativa o item sem apagar histórico.">Desativar</button>
           </form>
         </div>
       </div>
-
-      <ModalShell id={editId} title={`Editar: ${item.label}`}>
-        <MenuItemForm item={item} catalog={catalog} eventId={eventId} eventConfigs={eventConfigs} mode="edit" closeId={editId} />
-      </ModalShell>
-
-      <ModalShell id={childId} title={`Novo item dentro de ${item.label}`}>
-        <MenuItemForm catalog={catalog} eventId={eventId} eventConfigs={eventConfigs} mode="new" parentKey={item.item_key} section={item.section} closeId={childId} />
-      </ModalShell>
 
       {item.children.length ? (
         <div className="space-y-2 border-t border-stone-100 bg-stone-50/40 p-3">
@@ -302,6 +306,11 @@ export default async function AdminMenuPage({ searchParams }: PageProps) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/menu");
   const params = await searchParams;
   const { event, catalog, eventConfigs } = await getData();
+  const editKey = firstParam(params?.edit);
+  const newChildKey = firstParam(params?.newChild);
+  const showNewRoot = firstParam(params?.new) === "1";
+  const itemToEdit = findMenuItem(catalog, editKey);
+  const parentForNewChild = findMenuItem(catalog, newChildKey);
 
   return (
     <AdminPageShell>
@@ -315,18 +324,15 @@ export default async function AdminMenuPage({ searchParams }: PageProps) {
                 Organize todos os itens do menu, sua hierarquia, sequência e página associada. Os formulários ficam ocultos até clicar em <strong>Editar</strong> ou <strong>Novo filho</strong>, deixando a tela mais limpa.
               </p>
             </div>
-            <label htmlFor="new-root-menu-item" className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-green-800">
+            <Link href={menuHref({ new: "1" })} className="inline-flex items-center gap-2 rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-green-800">
               <Plus className="h-4 w-4" /> Novo item
-            </label>
+            </Link>
           </div>
           <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm font-bold text-amber-900">Evento aberto: {event.name}</div>
           {params?.saved ? <div className="mt-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-900">Menu salvo com sucesso.</div> : null}
           {params?.error ? <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">Não foi possível salvar. Verifique os campos obrigatórios.</div> : null}
         </div>
 
-        <ModalShell id="new-root-menu-item" title="Novo item do menu">
-          <MenuItemForm catalog={catalog} eventId={event.id} eventConfigs={eventConfigs} mode="new" closeId="new-root-menu-item" />
-        </ModalShell>
 
         <div className="mt-8 grid gap-6">
           <div className="rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
@@ -362,6 +368,25 @@ export default async function AdminMenuPage({ searchParams }: PageProps) {
             );
           })}
         </div>
+
+        {showNewRoot ? (
+          <ModalShell title="Novo item do menu">
+            <MenuItemForm catalog={catalog} eventId={event.id} eventConfigs={eventConfigs} mode="new" closeHref={MENU_PATH} />
+          </ModalShell>
+        ) : null}
+
+        {itemToEdit ? (
+          <ModalShell title={`Editar: ${itemToEdit.label}`}>
+            <MenuItemForm item={itemToEdit} catalog={catalog} eventId={event.id} eventConfigs={eventConfigs} mode="edit" closeHref={MENU_PATH} />
+          </ModalShell>
+        ) : null}
+
+        {parentForNewChild ? (
+          <ModalShell title={`Novo item dentro de ${parentForNewChild.label}`}>
+            <MenuItemForm catalog={catalog} eventId={event.id} eventConfigs={eventConfigs} mode="new" parentKey={parentForNewChild.item_key} section={parentForNewChild.section} closeHref={MENU_PATH} />
+          </ModalShell>
+        ) : null}
+
       </section>
     </AdminPageShell>
   );
