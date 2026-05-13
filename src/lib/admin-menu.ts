@@ -241,7 +241,7 @@ export async function getAdminMenuCatalog() {
   }
 
   const rows = (data?.length ? data : getDefaultMenuCatalog()) as AdminMenuCatalogItem[];
-  return rows.filter((item) => !item.deleted_at);
+  return rows;
 }
 
 export async function getEventMenuConfigurations(eventId: string) {

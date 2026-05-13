@@ -68,6 +68,20 @@ async function createUniqueKey(baseKey: string) {
   return `${baseKey || "item_menu"}_${Date.now()}`;
 }
 
+function stripOptionalMenuColumns<T extends Record<string, unknown>>(payload: T) {
+  // Mantém o salvamento compatível mesmo quando o schema cache do Supabase ainda não enxerga
+  // colunas novas adicionadas por migrations recentes. Os campos principais do menu continuam salvos.
+  const { template_key, is_deletable, opens_in_new_tab, ...safePayload } = payload;
+  void template_key;
+  void is_deletable;
+  void opens_in_new_tab;
+  return safePayload;
+}
+
+function isSchemaCacheColumnError(errorMessage: string) {
+  return /Could not find the .* column .* in the schema cache/i.test(errorMessage);
+}
+
 export async function saveMenuItemComplete(formData: FormData) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/menu");
 
@@ -100,17 +114,25 @@ export async function saveMenuItemComplete(formData: FormData) {
     template_key: templateKey,
     is_deletable: true,
     opens_in_new_tab: bool(formData, "opens_in_new_tab"),
-    deleted_at: null,
     updated_at: new Date().toISOString(),
   };
 
-  const { data: catalogItem, error } = await supabase
+  let catalogResult = await supabase
     .from("admin_menu_items")
     .upsert(catalogPayload, { onConflict: "item_key" })
     .select("id,item_key,sort_order")
     .single();
 
-  if (error) throw new Error(error.message);
+  if (catalogResult.error && isSchemaCacheColumnError(catalogResult.error.message)) {
+    catalogResult = await supabase
+      .from("admin_menu_items")
+      .upsert(stripOptionalMenuColumns(catalogPayload), { onConflict: "item_key" })
+      .select("id,item_key,sort_order")
+      .single();
+  }
+
+  if (catalogResult.error) throw new Error(catalogResult.error.message);
+  const catalogItem = catalogResult.data;
 
   if (eventId) {
     const { data: existingConfig, error: existingError } = await supabase
@@ -186,7 +208,7 @@ export async function deactivateMenuItem(formData: FormData) {
   const supabase = createSupabaseAdminClient();
   const { error } = await supabase
     .from("admin_menu_items")
-    .update({ active: false, deleted_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .update({ active: false, updated_at: new Date().toISOString() })
     .eq("item_key", itemKey);
 
   if (error) throw new Error(error.message);
