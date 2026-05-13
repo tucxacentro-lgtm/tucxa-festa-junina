@@ -97,11 +97,11 @@ const helpByKey: Record<string, HelpContent> = {
     sections: [
       {
         title: "Como organizar",
-        body: "Todos os itens ativos do catálogo aparecem para todos os eventos. Use Item pai / indentação para definir níveis, Ordem para definir a sequência e Rota para indicar qual tela será aberta.",
+        body: "Todos os itens ativos do catálogo aparecem para todos os eventos. Use Editar para alterar nome, item pai/indentação, ordem, rota/página associada e template padrão. O ícone ☰ indica a estrutura visual e pode evoluir para arrastar e soltar futuramente.",
       },
       {
         title: "Novos itens",
-        body: "Use o bloco Incluir novo item para criar novas opções no menu. Se o item ainda não tiver dados cadastrados para o evento, a tela associada deve abrir pronta para iniciar a configuração.",
+        body: "Use o botão Novo item para criar novas opções no menu, ou Novo filho para criar uma opção dentro de outra. O formulário abre em janela/modal para manter a tela limpa. Se o item ainda não tiver rota própria, escolha um template padrão para abrir uma página inicial de configuração.",
       },
       {
         title: "Status por evento",

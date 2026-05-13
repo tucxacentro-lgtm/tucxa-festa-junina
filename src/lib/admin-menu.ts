@@ -16,6 +16,10 @@ export type AdminMenuCatalogItem = {
   implemented: boolean;
   active: boolean;
   not_implemented_message: string | null;
+  template_key?: string | null;
+  is_deletable?: boolean | null;
+  deleted_at?: string | null;
+  opens_in_new_tab?: boolean | null;
 };
 
 export type EventMenuConfig = {
@@ -189,6 +193,10 @@ function item(
     implemented: true,
     active: true,
     not_implemented_message: null,
+    template_key: null,
+    is_deletable: true,
+    deleted_at: null,
+    opens_in_new_tab: false,
   };
 }
 
@@ -206,6 +214,10 @@ function sectionHeader(item_key: string, label: string, section: string, sort_or
     implemented: true,
     active: true,
     not_implemented_message: null,
+    template_key: null,
+    is_deletable: true,
+    deleted_at: null,
+    opens_in_new_tab: false,
   };
 }
 
@@ -228,7 +240,8 @@ export async function getAdminMenuCatalog() {
     return getDefaultMenuCatalog();
   }
 
-  return (data?.length ? data : getDefaultMenuCatalog()) as AdminMenuCatalogItem[];
+  const rows = (data?.length ? data : getDefaultMenuCatalog()) as AdminMenuCatalogItem[];
+  return rows.filter((item) => !item.deleted_at);
 }
 
 export async function getEventMenuConfigurations(eventId: string) {
@@ -308,15 +321,17 @@ function appendItem(
   const enabled = !locked;
   const implemented = item.implemented;
 
+  const fallbackRoute = !hasChildren ? `/admin/festa-junina/modulo/${item.item_key}` : undefined;
+
   result.push({
     key: item.item_key,
-    href: item.route_path ?? undefined,
+    href: item.route_path ?? fallbackRoute,
     label,
     depth,
     enabled,
     status,
     implemented,
-    isHeading: hasChildren || !item.route_path,
+    isHeading: hasChildren && !item.route_path,
     hint: locked
       ? "Abra ou selecione um evento para usar esta opção."
       : !implemented
