@@ -25,7 +25,19 @@ function integer(formData: FormData, name: string, fallback = 0) {
 }
 
 function slugify(value: string) {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function revalidateAdminAndPublic() {
+  revalidatePath("/admin/festa-junina");
+  revalidatePath("/admin/festa-junina/eventos");
+  revalidatePath("/festa-junina");
 }
 
 export async function saveEvent(formData: FormData) {
@@ -61,8 +73,23 @@ export async function saveEvent(formData: FormData) {
   const { error } = id ? await supabase.from("events").update(payload).eq("id", id) : await supabase.from("events").insert(payload);
   if (error) throw new Error(error.message);
 
-  revalidatePath("/admin/festa-junina/eventos");
-  revalidatePath("/admin/festa-junina");
-  revalidatePath("/festa-junina");
-  redirect("/admin/festa-junina/eventos?saved=1");
+  revalidateAdminAndPublic();
+  redirect(id ? "/admin/festa-junina/eventos?saved=1" : "/admin/festa-junina/eventos?created=1");
+}
+
+export async function openEvent(formData: FormData) {
+  await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/eventos");
+  const eventId = text(formData, "event_id");
+  if (!eventId) redirect("/admin/festa-junina/eventos?error=missing-event");
+
+  const supabase = createSupabaseAdminClient();
+
+  const { error: clearError } = await supabase.from("events").update({ active_for_sales: false, updated_at: new Date().toISOString() }).neq("id", eventId);
+  if (clearError) throw new Error(clearError.message);
+
+  const { error } = await supabase.from("events").update({ active_for_sales: true, updated_at: new Date().toISOString() }).eq("id", eventId);
+  if (error) throw new Error(error.message);
+
+  revalidateAdminAndPublic();
+  redirect("/admin/festa-junina");
 }

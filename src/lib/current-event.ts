@@ -9,8 +9,18 @@ export function getCurrentEventSlug() {
 
 export async function getCurrentEventForAdmin() {
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase.from("events").select("*").eq("slug", getCurrentEventSlug()).maybeSingle();
 
+  const { data: activeData, error: activeError } = await supabase
+    .from("events")
+    .select("*")
+    .eq("active_for_sales", true)
+    .order("event_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!activeError && activeData) return activeData as EventConfig;
+
+  const { data, error } = await supabase.from("events").select("*").eq("slug", getCurrentEventSlug()).maybeSingle();
   if (error || !data) {
     throw new Error(error?.message ?? "Evento ativo não encontrado.");
   }
@@ -20,8 +30,19 @@ export async function getCurrentEventForAdmin() {
 
 export async function getCurrentEventForPublic() {
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase.from("events").select("*").eq("slug", getCurrentEventSlug()).maybeSingle();
 
+  const { data: activeData, error: activeError } = await supabase
+    .from("events")
+    .select("*")
+    .eq("active_for_sales", true)
+    .eq("status", "published")
+    .order("event_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!activeError && activeData) return activeData as EventConfig;
+
+  const { data, error } = await supabase.from("events").select("*").eq("slug", getCurrentEventSlug()).maybeSingle();
   if (error || !data) {
     throw new Error(error?.message ?? "Evento ativo não encontrado.");
   }
