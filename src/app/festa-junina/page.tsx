@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CalendarDays, Gift, MapPin, PartyPopper, QrCode, Ticket, Utensils, Users } from "lucide-react";
+import { CalendarDays, ExternalLink, Gift, MapPin, PartyPopper, QrCode, Ticket, Utensils, Users } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { getCurrentEventSlug } from "@/lib/current-event";
@@ -115,10 +115,21 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 rounded-2xl bg-white/80 p-4 shadow-sm">
-                <MapPin className="h-5 w-5" />
-                <span>{event.location_name ?? "Local a confirmar"}</span>
-              </div>
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Rua%20Ant%C3%B4nio%20Maur%C3%ADcio%20Ladeira%2C%20474%20Jardim%20Concei%C3%A7%C3%A3o%20Campinas%20SP"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-2 rounded-2xl bg-white/80 p-4 shadow-sm transition hover:bg-white hover:shadow-md"
+              >
+                <MapPin className="mt-0.5 h-5 w-5 shrink-0" />
+                <span>
+                  <strong className="block">{event.location_name ?? "Espaço Santa Fé"}</strong>
+                  <span className="block text-xs font-semibold leading-relaxed text-stone-700">
+                    Rua Antônio Maurício Ladeira, 474 — Jd. Conceição — Campinas/SP
+                  </span>
+                </span>
+                <ExternalLink className="ml-auto mt-1 h-4 w-4 shrink-0 opacity-70" />
+              </a>
             </div>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -174,7 +185,7 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
             <Utensils className="mb-4 h-8 w-8 text-green-800" />
             <h3 className="font-black">Planejamento de compras</h3>
             <p className="mt-2 text-sm text-stone-600">
-              Convites e combos antecipados ajudam a prever alimentos, bebidas e insumos.
+              Convites antecipados ajudam a prever alimentos, bebidas, mesas, voluntários e atendimento.
             </p>
           </div>
 
@@ -221,7 +232,7 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
           <div>
             <h2 className="text-3xl font-black text-green-950">Combos antecipados</h2>
             <p className="mt-1 text-stone-600">
-              Os combos podem incluir convites, comidas, bebidas e cartelas de bingo.
+              Combos podem ser ativados em outros eventos, conforme decisão da organização.
             </p>
           </div>
         </div>
@@ -272,7 +283,7 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
           ))}
         </div>
         ) : (
-          <div className="mt-6 rounded-3xl bg-white p-6 text-sm text-stone-600 shadow-sm">Neste evento, a organização optou por vender somente os ingressos definidos no folder.</div>
+          <div className="mt-6 rounded-3xl bg-white p-6 text-sm text-stone-600 shadow-sm">Neste evento, a organização optou por vender apenas os ingressos individuais.</div>
         )}
       </section>
 

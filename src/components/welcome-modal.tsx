@@ -55,7 +55,10 @@ export function WelcomeModal() {
             Bem-vindo ao sistema da Festa Junina do Tucxa
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-stone-700 sm:text-base">
-            Aqui você pode garantir seu convite, escolher combos, anexar o comprovante, acompanhar sua compra pelo código/QR Code e compartilhar seu link de indicação.
+            Aqui você pode garantir seu convite, escolher combos*, anexar o comprovante, acompanhar sua compra pelo código/QR Code e compartilhar seu link de indicação*.
+          </p>
+          <p className="mt-2 max-w-2xl text-xs font-bold text-green-900 sm:text-sm">
+            *quando disponíveis
           </p>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-700 sm:text-base">
             Comprar antecipadamente não é só reservar a entrada: ajuda o Tucxa a planejar melhor alimentos, bebidas, voluntários, mesas e atendimento para receber todos com mais conforto, menos fila e mais organização.

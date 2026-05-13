@@ -25,16 +25,16 @@ const defaultHelp: HelpContent = {
 const helpByKey: Record<string, HelpContent> = {
   "/festa-junina": {
     title: "Como comprar o convite",
-    description: "Esta é a página pública para registrar convite, combo, forma de pagamento e comprovante.",
+    description: "Esta é a página pública para garantir convite, anexar comprovante, consultar compra e, quando disponíveis, usar combos e indicação.",
     sections: [
       {
         title: "Passo a passo",
-        body: "Escolha convite ou combo, confira o total, faça o pagamento conforme a opção escolhida e anexe o comprovante/registro.",
-        bullets: ["O WhatsApp é obrigatório para contato.", "O e-mail é opcional, mas ajuda a receber o código automaticamente.", "Guarde o código gerado ao final da compra."],
+        body: "Escolha o convite, confira o total, faça o pagamento conforme a opção escolhida e anexe o comprovante/registro. Combos e indicação podem aparecer quando estiverem disponíveis para o evento.",
+        bullets: ["O WhatsApp é obrigatório para contato.", "O e-mail é opcional, mas ajuda a receber o código automaticamente.", "Guarde o código gerado ao final da compra.", "Comprar antecipadamente ajuda o Tucxa a planejar alimentos, bebidas, voluntários, mesas e atendimento com mais conforto, menos fila e mais organização."],
       },
       {
         title: "Indicação",
-        body: "Depois da compra, você pode compartilhar seu link de indicação. Compras confirmadas com seu código podem gerar brindes configurados pela organização.",
+        body: "Depois da compra, você pode compartilhar seu link de indicação quando a organização habilitar esta opção. Compras confirmadas com seu código podem gerar brindes configurados pela organização.",
       },
     ],
   },
@@ -126,11 +126,11 @@ const helpByKey: Record<string, HelpContent> = {
   },
   "/admin/festa-junina/combos": {
     title: "Combos e ofertas",
-    description: "Monte ofertas com convite, comida, bebida, cartelas de bingo ou brindes.",
+    description: "Monte ofertas com convite, comida, bebida, cartelas de bingo ou brindes quando este módulo estiver disponível para o evento.",
     sections: [
       {
         title: "Por que usar combos",
-        body: "Combos ajudam o comprador a ter mais praticidade e ajudam a organização a prever compras e operação.",
+        body: "Combos ajudam o comprador a ter mais praticidade e ajudam a organização a prever compras e operação. Neste evento de 2026, a organização optou por vender apenas ingressos individuais.",
       },
     ],
   },
@@ -228,6 +228,37 @@ const helpByKey: Record<string, HelpContent> = {
       },
     ],
   },
+
+  "/admin/festa-junina/relatorios": {
+    title: "Relatórios e BI",
+    description: "Área planejada para selecionar campos, montar visões e apoiar prestação de contas.",
+    sections: [
+      {
+        title: "Uso esperado",
+        body: "A ideia é permitir relatórios por vendas, pagamentos, convites, público, cardápio, operação e prestação de contas. Nesta etapa, a tela funciona como preparação do módulo.",
+      },
+    ],
+  },
+  "/admin/festa-junina/cliente-resumo": {
+    title: "Versão resumida para clientes",
+    description: "Área planejada para gerar uma versão simples do cardápio/comunicados para o público.",
+    sections: [{ title: "Objetivo", body: "Facilitar a comunicação com clientes, com informações resumidas e objetivas sobre o evento." }],
+  },
+  "/admin/festa-junina/bingo": {
+    title: "Cartelas de Bingo",
+    description: "Área planejada para organizar cartelas, regras e relação com brindes do evento.",
+    sections: [{ title: "2026", body: "Cada ingresso do evento concorre a uma linda Air Fryer por meio do bingo/sorteio definido pela organização." }],
+  },
+  "/admin/festa-junina/atendimento": {
+    title: "Atendimento no dia do evento",
+    description: "Módulo futuro para check-in, pedidos, entrega, caixa e ocorrências.",
+    sections: [{ title: "Status", body: "Ainda não está implementado como operação completa. Pode ser mantido como sugestão ou não usado neste evento." }],
+  },
+  "/admin/festa-junina/prestacao-contas": {
+    title: "Prestação de contas",
+    description: "Área planejada para consolidar vendas, pagamentos, compras, sobras e observações finais.",
+    sections: [{ title: "Objetivo", body: "Apoiar transparência e melhorar o planejamento dos próximos eventos." }],
+  },
 };
 
 export function getHelpContent(pathname: string): HelpContent {
@@ -242,6 +273,11 @@ export function getHelpContent(pathname: string): HelpContent {
   if (normalized.startsWith("/admin/festa-junina/cardapio/")) return helpByKey["/admin/festa-junina/cardapio"];
   if (normalized.startsWith("/admin/festa-junina/upsell/envios")) return helpByKey["/admin/festa-junina/upsell/envios"];
   if (normalized.startsWith("/admin/festa-junina/upsell")) return helpByKey["/admin/festa-junina/upsell"];
+  if (normalized.startsWith("/admin/festa-junina/relatorios")) return helpByKey["/admin/festa-junina/relatorios"];
+  if (normalized.startsWith("/admin/festa-junina/cliente-resumo")) return helpByKey["/admin/festa-junina/cliente-resumo"];
+  if (normalized.startsWith("/admin/festa-junina/bingo")) return helpByKey["/admin/festa-junina/bingo"];
+  if (normalized.startsWith("/admin/festa-junina/atendimento")) return helpByKey["/admin/festa-junina/atendimento"];
+  if (normalized.startsWith("/admin/festa-junina/prestacao-contas")) return helpByKey["/admin/festa-junina/prestacao-contas"];
   if (normalized.startsWith("/admin/festa-junina")) return helpByKey["/admin/festa-junina"];
 
   return defaultHelp;
