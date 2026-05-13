@@ -10,14 +10,18 @@ import {
 } from "@/lib/admin-menu";
 import { requireAdmin } from "@/lib/auth";
 import { getCurrentEventForAdmin } from "@/lib/current-event";
+import { MENU_ROUTE_AUTO_VALUE, MENU_ROUTE_OPTIONS, getRouteLabel } from "@/lib/menu-routes";
 import { MENU_TEMPLATES } from "@/lib/menu-templates";
 import { createEventMenuDefaults, deactivateMenuItem, saveMenuItemComplete } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
+type MenuNode = AdminMenuCatalogItem & { children: MenuNode[] };
+type EventConfigs = Awaited<ReturnType<typeof getEventMenuConfigurations>>;
 
 const MENU_PATH = "/admin/festa-junina/menu";
+const sections = ["Geral", "Evento selecionado", "Conveniências", "Operação"];
 
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -33,13 +37,6 @@ function findMenuItem(catalog: AdminMenuCatalogItem[], itemKey: string | undefin
   return catalog.find((item) => item.item_key === itemKey);
 }
 
-
-type MenuNode = AdminMenuCatalogItem & { children: MenuNode[] };
-
-type EventConfigs = Awaited<ReturnType<typeof getEventMenuConfigurations>>;
-
-const sections = ["Geral", "Evento selecionado", "Conveniências", "Operação"];
-
 async function getData() {
   const [event, catalog] = await Promise.all([getCurrentEventForAdmin(), getAdminMenuCatalog()]);
   const eventConfigs = await getEventMenuConfigurations(event.id);
@@ -51,7 +48,7 @@ function statusLabel(value: string) {
 }
 
 function templateLabel(value: string | null | undefined) {
-  if (!value) return "Sem template";
+  if (!value) return "Sem modelo automático";
   return MENU_TEMPLATES.find((template) => template.key === value)?.label ?? value;
 }
 
@@ -101,11 +98,20 @@ function effectiveRoute(item: MenuNode) {
   return `/admin/festa-junina/modulo/${item.item_key}`;
 }
 
+function routeGroups() {
+  const groups = new Map<string, typeof MENU_ROUTE_OPTIONS>();
+  for (const option of MENU_ROUTE_OPTIONS) {
+    const items = groups.get(option.group) ?? [];
+    items.push(option);
+    groups.set(option.group, items);
+  }
+  return Array.from(groups.entries());
+}
+
 function MenuItemForm({
   item,
   catalog,
   eventId,
-  eventConfigs,
   mode,
   parentKey,
   section,
@@ -114,17 +120,15 @@ function MenuItemForm({
   item?: AdminMenuCatalogItem;
   catalog: AdminMenuCatalogItem[];
   eventId: string;
-  eventConfigs: EventConfigs;
   mode: "edit" | "new";
   parentKey?: string | null;
   section?: string;
   closeHref: string;
 }) {
-  const config = item ? eventConfigs.get(item.item_key) : undefined;
-  const status = config?.status ?? (item?.default_enabled === false ? "not_used" : "suggested");
-  const sortOrder = config?.sort_order ?? item?.sort_order ?? 999;
   const selectedSection = item?.section ?? section ?? "Evento selecionado";
   const parents = parentOptions(catalog, item?.item_key);
+  const selectedRoute = item?.route_path || MENU_ROUTE_AUTO_VALUE;
+  const selectedTemplate = item?.template_key ?? "preparation";
 
   return (
     <form action={saveMenuItemComplete} className="grid gap-4">
@@ -132,21 +136,23 @@ function MenuItemForm({
       {mode === "edit" ? <input type="hidden" name="item_key" value={item?.item_key ?? ""} /> : null}
 
       <div className="grid gap-4 md:grid-cols-2">
-        {mode === "new" ? (
-          <label className="grid gap-1 text-sm font-bold text-green-950">
-            Chave do item
-            <input name="item_key" required className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="ex.: sorteio_air_fryer" />
-          </label>
-        ) : (
+        {mode === "edit" ? (
           <div className="rounded-2xl bg-stone-50 p-3 text-sm text-stone-600">
             <p className="font-black text-green-950">Chave do item</p>
             <p className="mt-1 font-mono text-xs">{item?.item_key}</p>
           </div>
+        ) : (
+          <div className="rounded-2xl bg-green-50 p-3 text-sm text-green-950">
+            <p className="font-black">Chave do item</p>
+            <p className="mt-1 text-xs leading-relaxed">
+              Será criada automaticamente a partir do nome. Ex.: “Sorteio da Air Fryer” vira <span className="font-mono">sorteio_da_air_fryer</span>.
+            </p>
+          </div>
         )}
 
         <label className="grid gap-1 text-sm font-bold text-green-950">
-          Nome
-          <input name="label" defaultValue={item?.label ?? ""} required className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Nome exibido no menu" />
+          Nome exibido no menu
+          <input name="label" defaultValue={item?.label ?? ""} required className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Ex.: Sorteio da Air Fryer" />
         </label>
 
         <label className="grid gap-1 text-sm font-bold text-green-950">
@@ -166,63 +172,44 @@ function MenuItemForm({
 
         <label className="grid gap-1 text-sm font-bold text-green-950">
           Ordem padrão
-          <input name="sort_order" type="number" defaultValue={item?.sort_order ?? sortOrder} className="rounded-2xl border border-stone-200 p-3 font-normal" />
-        </label>
-
-        <label className="grid gap-1 text-sm font-bold text-green-950">
-          Ordem no evento
-          <input name="event_sort_order" type="number" defaultValue={sortOrder} className="rounded-2xl border border-stone-200 p-3 font-normal" />
+          <input name="sort_order" type="number" defaultValue={item?.sort_order ?? 999} className="rounded-2xl border border-stone-200 p-3 font-normal" />
         </label>
 
         <label className="grid gap-1 text-sm font-bold text-green-950 md:col-span-2">
-          Link / rota
-          <input name="route_path" defaultValue={item?.route_path ?? ""} className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="/admin/festa-junina/outros ou deixe em branco para usar template" />
+          Link / página vinculada
+          <select name="route_path" defaultValue={selectedRoute} className="rounded-2xl border border-stone-200 p-3 font-normal">
+            <option value={MENU_ROUTE_AUTO_VALUE}>Usar página automática pelo modelo abaixo</option>
+            {routeGroups().map(([group, options]) => (
+              <optgroup key={group} label={group}>
+                {options.map((option) => (
+                  <option key={option.path} value={option.path}>{option.label} — {option.path}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <span className="text-xs font-normal text-stone-500">
+            Escolha uma página já existente do sistema. Se nenhuma página específica existir, use a página automática pelo modelo.
+          </span>
         </label>
 
-        <label className="grid gap-1 text-sm font-bold text-green-950">
-          Template padrão
-          <select name="template_key" defaultValue={item?.template_key ?? "preparation"} className="rounded-2xl border border-stone-200 p-3 font-normal">
+        <label className="grid gap-1 text-sm font-bold text-green-950 md:col-span-2">
+          Modelo da página automática
+          <select name="template_key" defaultValue={selectedTemplate} className="rounded-2xl border border-stone-200 p-3 font-normal">
             {MENU_TEMPLATES.map((template) => <option key={template.key} value={template.key}>{template.label}</option>)}
           </select>
-        </label>
-
-        <label className="grid gap-1 text-sm font-bold text-green-950">
-          Status no evento
-          <select name="status" defaultValue={status} className="rounded-2xl border border-stone-200 p-3 font-normal">
-            {MENU_STATUS_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
-        </label>
-
-        <label className="grid gap-1 text-sm font-bold text-green-950">
-          Responsável
-          <input name="responsible_name" defaultValue={config?.responsible_name ?? ""} className="rounded-2xl border border-stone-200 p-3 font-normal" />
-        </label>
-
-        <label className="grid gap-1 text-sm font-bold text-green-950">
-          Nome no evento
-          <input name="custom_label" defaultValue={config?.custom_label ?? ""} className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder={item?.label ?? "opcional"} />
+          <span className="text-xs font-normal text-stone-500">
+            Usado somente quando o item não estiver vinculado a uma página específica. Serve para abrir uma tela padrão como “Relatório/BI”, “Cadastro simples” ou “Página em preparação”.
+          </span>
         </label>
 
         <label className="grid gap-1 text-sm font-bold text-green-950 md:col-span-2">
           Descrição
-          <textarea name="description" defaultValue={item?.description ?? ""} className="min-h-24 rounded-2xl border border-stone-200 p-3 font-normal" />
+          <textarea name="description" defaultValue={item?.description ?? ""} className="min-h-24 rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Explique para que serve este item do menu." />
         </label>
 
-        <label className="grid gap-1 text-sm font-bold text-green-950 md:col-span-2">
-          Observações do evento
-          <input name="notes" defaultValue={config?.notes ?? ""} className="rounded-2xl border border-stone-200 p-3 font-normal" />
+        <label className="flex items-center gap-2 rounded-2xl bg-stone-50 p-3 text-sm font-bold text-green-950 md:col-span-2">
+          <input name="opens_in_new_tab" type="checkbox" defaultChecked={item?.opens_in_new_tab ?? false} /> Abrir em nova aba
         </label>
-      </div>
-
-      <input type="hidden" name="icon_key" value={item?.icon_key ?? ""} />
-      <input type="hidden" name="not_implemented_message" value={item?.not_implemented_message ?? ""} />
-
-      <div className="flex flex-wrap gap-3 rounded-2xl bg-stone-50 p-3 text-sm font-bold text-green-950">
-        <label className="flex items-center gap-2"><input name="default_enabled" type="checkbox" defaultChecked={item?.default_enabled ?? true} /> Padrão usado</label>
-        <label className="flex items-center gap-2"><input name="implemented" type="checkbox" defaultChecked={item?.implemented ?? true} /> Página implementada</label>
-        <label className="flex items-center gap-2"><input name="active" type="checkbox" defaultChecked={item?.active ?? true} /> Ativo no catálogo</label>
-        <label className="flex items-center gap-2"><input name="is_deletable" type="checkbox" defaultChecked={item?.is_deletable ?? true} /> Pode desativar</label>
-        <label className="flex items-center gap-2"><input name="opens_in_new_tab" type="checkbox" defaultChecked={item?.opens_in_new_tab ?? false} /> Abrir em nova aba</label>
       </div>
 
       <div className="flex justify-end gap-3 border-t border-stone-100 pt-4">
@@ -247,7 +234,6 @@ function ModalShell({ title, children }: { title: string; children: React.ReactN
     </div>
   );
 }
-
 
 function MenuRow({
   item,
@@ -277,7 +263,7 @@ function MenuRow({
             {item.template_key ? <span className="rounded-full bg-amber-50 px-2 py-1 text-[0.65rem] font-black text-amber-900">{templateLabel(item.template_key)}</span> : null}
           </div>
           <p className="mt-1 text-xs text-stone-500">
-            {item.parent_key ? `Dentro de ${item.parent_key}` : "Raiz da seção"} · Rota: <span className="font-mono">{route ?? "agrupador"}</span>
+            {item.parent_key ? `Dentro de ${item.parent_key}` : "Raiz da seção"} · Página: <span className="font-mono">{getRouteLabel(route)}</span>
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -321,7 +307,7 @@ export default async function AdminMenuPage({ searchParams }: PageProps) {
             <div>
               <h1 className="text-3xl font-black text-green-950">Cadastro do menu do sistema</h1>
               <p className="mt-3 max-w-4xl text-stone-700">
-                Organize todos os itens do menu, sua hierarquia, sequência e página associada. Os formulários ficam ocultos até clicar em <strong>Editar</strong> ou <strong>Novo filho</strong>, deixando a tela mais limpa.
+                Organize todos os itens do menu, sua hierarquia, sequência e página associada. A chave é criada automaticamente para novos itens. Use <strong>Editar</strong> ou <strong>Novo filho</strong> para alterar cada linha.
               </p>
             </div>
             <Link href={menuHref({ new: "1" })} className="inline-flex items-center gap-2 rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-green-800">
@@ -333,14 +319,13 @@ export default async function AdminMenuPage({ searchParams }: PageProps) {
           {params?.error ? <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">Não foi possível salvar. Verifique os campos obrigatórios.</div> : null}
         </div>
 
-
         <div className="mt-8 grid gap-6">
           <div className="rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-black text-green-950">Estrutura visual</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-relaxed text-stone-600">
-                  Use <strong>Editar</strong> para mudar nome, rota, template, pai/indentação e ordem. Use <strong>Novo filho</strong> para criar um item dentro da linha selecionada. O ícone ☰ indica o conceito de arrastar, que pode virar drag-and-drop numa próxima etapa.
+                  Use <strong>Editar</strong> para mudar nome, página vinculada, modelo automático, pai/indentação e ordem. Use <strong>Novo filho</strong> para criar um item dentro da linha selecionada. O ícone ☰ indica o conceito de arrastar, que pode virar drag-and-drop numa próxima etapa.
                 </p>
               </div>
               <form action={createEventMenuDefaults}>
@@ -371,19 +356,19 @@ export default async function AdminMenuPage({ searchParams }: PageProps) {
 
         {showNewRoot ? (
           <ModalShell title="Novo item do menu">
-            <MenuItemForm catalog={catalog} eventId={event.id} eventConfigs={eventConfigs} mode="new" closeHref={MENU_PATH} />
+            <MenuItemForm catalog={catalog} eventId={event.id} mode="new" closeHref={MENU_PATH} />
           </ModalShell>
         ) : null}
 
         {itemToEdit ? (
           <ModalShell title={`Editar: ${itemToEdit.label}`}>
-            <MenuItemForm item={itemToEdit} catalog={catalog} eventId={event.id} eventConfigs={eventConfigs} mode="edit" closeHref={MENU_PATH} />
+            <MenuItemForm item={itemToEdit} catalog={catalog} eventId={event.id} mode="edit" closeHref={MENU_PATH} />
           </ModalShell>
         ) : null}
 
         {parentForNewChild ? (
           <ModalShell title={`Novo item dentro de ${parentForNewChild.label}`}>
-            <MenuItemForm catalog={catalog} eventId={event.id} eventConfigs={eventConfigs} mode="new" parentKey={parentForNewChild.item_key} section={parentForNewChild.section} closeHref={MENU_PATH} />
+            <MenuItemForm catalog={catalog} eventId={event.id} mode="new" parentKey={parentForNewChild.item_key} section={parentForNewChild.section} closeHref={MENU_PATH} />
           </ModalShell>
         ) : null}
 

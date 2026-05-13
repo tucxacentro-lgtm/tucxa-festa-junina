@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { MENU_ROUTE_AUTO_VALUE } from "@/lib/menu-routes";
 import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import type { AdminMenuStatus } from "@/lib/admin-menu";
@@ -13,7 +14,8 @@ function text(formData: FormData, name: string) {
 
 function nullableText(formData: FormData, name: string) {
   const value = text(formData, name);
-  return value || null;
+  if (!value || value === MENU_ROUTE_AUTO_VALUE) return null;
+  return value;
 }
 
 function bool(formData: FormData, name: string) {
@@ -52,15 +54,33 @@ function buildRoutePath(itemKey: string, routePath: string | null, templateKey: 
   return null;
 }
 
+async function createUniqueKey(baseKey: string) {
+  const supabase = createSupabaseAdminClient();
+  let candidate = baseKey || "item_menu";
+
+  for (let index = 1; index <= 50; index += 1) {
+    const { data, error } = await supabase.from("admin_menu_items").select("item_key").eq("item_key", candidate).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return candidate;
+    candidate = `${baseKey || "item_menu"}_${index + 1}`;
+  }
+
+  return `${baseKey || "item_menu"}_${Date.now()}`;
+}
+
 export async function saveMenuItemComplete(formData: FormData) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/menu");
 
   const supabase = createSupabaseAdminClient();
   const rawKey = text(formData, "item_key");
   const label = text(formData, "label");
-  const itemKey = safeKey(rawKey || label);
+  const isEditing = Boolean(rawKey);
+  const baseKey = safeKey(rawKey || label);
+  const itemKey = isEditing ? baseKey : await createUniqueKey(baseKey);
   const eventId = text(formData, "event_id");
-  const templateKey = nullableText(formData, "template_key");
+  const templateKey = nullableText(formData, "template_key") ?? "preparation";
+  const sortOrder = integer(formData, "sort_order", 999);
+  const routePath = buildRoutePath(itemKey, nullableText(formData, "route_path"), templateKey);
 
   if (!itemKey || !label) redirect("/admin/festa-junina/menu?error=missing-menu-item");
 
@@ -70,15 +90,15 @@ export async function saveMenuItemComplete(formData: FormData) {
     description: nullableText(formData, "description"),
     section: text(formData, "section") || "Geral",
     parent_key: nullableText(formData, "parent_key"),
-    route_path: buildRoutePath(itemKey, nullableText(formData, "route_path"), templateKey),
+    route_path: routePath,
     icon_key: nullableText(formData, "icon_key"),
-    sort_order: integer(formData, "sort_order", 0),
-    default_enabled: bool(formData, "default_enabled"),
-    implemented: bool(formData, "implemented"),
-    active: bool(formData, "active"),
+    sort_order: sortOrder,
+    default_enabled: true,
+    implemented: true,
+    active: true,
     not_implemented_message: nullableText(formData, "not_implemented_message"),
     template_key: templateKey,
-    is_deletable: bool(formData, "is_deletable"),
+    is_deletable: true,
     opens_in_new_tab: bool(formData, "opens_in_new_tab"),
     deleted_at: null,
     updated_at: new Date().toISOString(),
@@ -93,16 +113,25 @@ export async function saveMenuItemComplete(formData: FormData) {
   if (error) throw new Error(error.message);
 
   if (eventId) {
+    const { data: existingConfig, error: existingError } = await supabase
+      .from("event_menu_items")
+      .select("status,custom_label,notes,responsible_name")
+      .eq("event_id", eventId)
+      .eq("item_key", itemKey)
+      .maybeSingle();
+
+    if (existingError) throw new Error(existingError.message);
+
     const eventPayload = {
       event_id: eventId,
       menu_item_id: catalogItem?.id ?? null,
       item_key: itemKey,
       enabled: true,
-      status: sanitizeStatus(text(formData, "status")),
-      custom_label: nullableText(formData, "custom_label"),
-      sort_order: integer(formData, "event_sort_order", integer(formData, "sort_order", 0)),
-      notes: nullableText(formData, "notes"),
-      responsible_name: nullableText(formData, "responsible_name"),
+      status: sanitizeStatus(existingConfig?.status ?? "suggested"),
+      custom_label: existingConfig?.custom_label ?? null,
+      sort_order: sortOrder,
+      notes: existingConfig?.notes ?? null,
+      responsible_name: existingConfig?.responsible_name ?? null,
       updated_at: new Date().toISOString(),
     };
 
