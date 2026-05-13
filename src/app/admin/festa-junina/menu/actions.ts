@@ -109,7 +109,7 @@ export async function createEventMenuDefaults(formData: FormData) {
     event_id: eventId,
     menu_item_id: item.id,
     item_key: item.item_key,
-    enabled: item.default_enabled,
+    enabled: true,
     status: item.default_enabled ? "suggested" : "not_used",
     sort_order: item.sort_order,
     updated_at: new Date().toISOString(),

@@ -305,8 +305,7 @@ function appendItem(
   const hasChildren = (childrenByParent.get(item.item_key) ?? []).length > 0;
   const label = config?.custom_label?.trim() || item.label;
   const status = safeAdminMenuStatus(config?.status);
-  const defaultEnabled = item.section === "Geral" ? true : item.default_enabled;
-  const enabled = !locked && (config?.enabled ?? defaultEnabled) && status !== "not_used";
+  const enabled = !locked;
   const implemented = item.implemented;
 
   result.push({
@@ -323,7 +322,7 @@ function appendItem(
       : !implemented
         ? item.not_implemented_message ?? "Funcionalidade em preparação."
         : status === "not_used"
-          ? "Este item está marcado como não usado neste evento."
+          ? "Este item está visível para demonstrar todas as possibilidades, mas foi marcado como não usado neste evento."
           : undefined,
   });
 

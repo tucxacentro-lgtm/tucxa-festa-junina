@@ -90,6 +90,25 @@ const helpByKey: Record<string, HelpContent> = {
       },
     ],
   },
+
+  "/admin/festa-junina/menu": {
+    title: "Cadastro do menu",
+    description: "Configure os itens do menu lateral, a hierarquia, a sequência, a página associada e o status de uso em cada evento.",
+    sections: [
+      {
+        title: "Como organizar",
+        body: "Todos os itens ativos do catálogo aparecem para todos os eventos. Use Item pai / indentação para definir níveis, Ordem para definir a sequência e Rota para indicar qual tela será aberta.",
+      },
+      {
+        title: "Novos itens",
+        body: "Use o bloco Incluir novo item para criar novas opções no menu. Se o item ainda não tiver dados cadastrados para o evento, a tela associada deve abrir pronta para iniciar a configuração.",
+      },
+      {
+        title: "Status por evento",
+        body: "O status Não usado, Sugestão, Em configuração, Em uso ou Concluído orienta a operação, mas não esconde o item do menu. Assim a equipe consegue visualizar tudo que o sistema pode oferecer.",
+      },
+    ],
+  },
   "/admin/festa-junina/pedidos": {
     title: "Compras e comprovantes",
     description: "Acompanhe as reservas, confira comprovantes e aprove ou reprove pagamentos.",
@@ -269,6 +288,7 @@ export function getHelpContent(pathname: string): HelpContent {
   if (normalized.startsWith("/minha-compra/")) return helpByKey["/minha-compra"];
   if (normalized.startsWith("/admin/festa-junina/eventos")) return helpByKey["/admin/festa-junina/eventos"];
   if (normalized.startsWith("/admin/festa-junina/modulos")) return helpByKey["/admin/festa-junina/modulos"];
+  if (normalized.startsWith("/admin/festa-junina/menu")) return helpByKey["/admin/festa-junina/menu"];
   if (normalized.startsWith("/admin/festa-junina/pedidos/")) return helpByKey["/admin/festa-junina/pedidos"];
   if (normalized.startsWith("/admin/festa-junina/cardapio/")) return helpByKey["/admin/festa-junina/cardapio"];
   if (normalized.startsWith("/admin/festa-junina/upsell/envios")) return helpByKey["/admin/festa-junina/upsell/envios"];
