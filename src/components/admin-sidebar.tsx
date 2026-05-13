@@ -4,90 +4,13 @@ import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { HelpButton } from "@/components/help-button";
+import type { AdminSidebarSection } from "@/lib/admin-menu";
 
-type SidebarItem = {
-  href?: string;
-  label: string;
-  depth?: number;
-  enabled?: boolean;
-  hint?: string;
+type AdminSidebarProps = {
+  sections: AdminSidebarSection[];
+  eventName: string | null;
+  hasSelectedEvent: boolean;
 };
-
-type AdminSection = {
-  title: string;
-  items: SidebarItem[];
-  defaultOpen?: boolean;
-  locked?: boolean;
-};
-
-// A seleção real do evento acontece ao clicar em "Abrir evento" na tela Eventos.
-// Mantemos o menu habilitado porque o evento aberto é lido no servidor pelas telas.
-const EVENT_SELECTED = true;
-
-const sections: AdminSection[] = [
-  {
-    title: "Geral",
-    defaultOpen: true,
-    items: [
-      { href: "/admin/festa-junina/eventos", label: "Eventos" },
-      { href: "/admin/festa-junina/eventos/novo", label: "Novo evento" },
-      { href: "/admin/festa-junina/ajuda", label: "Manuais e ajuda" },
-    ],
-  },
-  {
-    title: "Evento selecionado",
-    defaultOpen: true,
-    locked: !EVENT_SELECTED,
-    items: [
-      { href: "/admin/festa-junina", label: "Painel do evento" },
-      { label: "Vendas", depth: 0 },
-      { href: "/admin/festa-junina/convites", label: "Convites", depth: 1 },
-      { href: "/admin/festa-junina/acesso", label: "Acesso ao evento", depth: 1 },
-      { label: "Conveniências", depth: 1 },
-      { href: "/admin/festa-junina/combos", label: "Individuais/Combos", depth: 2 },
-      { href: "/admin/festa-junina/indicacoes", label: "Programa indicações", depth: 2 },
-      { href: "/admin/festa-junina/upsell", label: "Upsell", depth: 2 },
-      { href: "/admin/festa-junina/pagamentos", label: "Pagamentos/Confirmações", depth: 1 },
-      { href: "/admin/festa-junina/relatorios?modulo=vendas", label: "Relatórios", depth: 1 },
-    ],
-  },
-  {
-    title: "Conveniências",
-    defaultOpen: true,
-    locked: !EVENT_SELECTED,
-    items: [
-      { label: "Cardápio de comidas, bebidas e doces", depth: 0 },
-      { href: "/admin/festa-junina/cliente-resumo", label: "Versão resumida para clientes", depth: 1 },
-      { href: "/admin/festa-junina/cardapio", label: "Ficha Técnica/Receitas", depth: 1 },
-      { label: "Outros", depth: 0 },
-      { href: "/admin/festa-junina/bingo", label: "Cartelas de Bingo", depth: 1 },
-      { href: "/admin/festa-junina/outros", label: "Outros", depth: 1 },
-      { href: "/admin/festa-junina/relatorios?modulo=conveniencias", label: "Relatórios", depth: 0 },
-    ],
-  },
-  {
-    title: "Operação",
-    defaultOpen: true,
-    locked: !EVENT_SELECTED,
-    items: [
-      { label: "Voluntários", depth: 0 },
-      { href: "/admin/festa-junina/voluntarios/funcoes", label: "Cadastro por função", depth: 1 },
-      { href: "/admin/festa-junina/voluntarios/necessidade", label: "Necessidade conforme convites vendidos/estimativa", depth: 1 },
-      { label: "Compras", depth: 0 },
-      { href: "/admin/festa-junina/compras/insumos", label: "Insumos", depth: 1 },
-      { href: "/admin/festa-junina/compras/itens-finais", label: "Itens finais", depth: 1 },
-      { href: "/admin/festa-junina/treinamento", label: "Treinamento/Simulação", depth: 0 },
-      { label: "Atendimento no dia do evento", depth: 0 },
-      { href: "/admin/festa-junina/atendimento?aba=checkin", label: "Check-in", depth: 1 },
-      { href: "/admin/festa-junina/pedidos", label: "Pedidos", depth: 1 },
-      { href: "/admin/festa-junina/entrega", label: "Entrega", depth: 1 },
-      { href: "/admin/festa-junina/caixa", label: "Caixa", depth: 1 },
-      { href: "/admin/festa-junina/ocorrencias", label: "Ocorrências", depth: 1 },
-      { href: "/admin/festa-junina/prestacao-contas", label: "Prestação de contas", depth: 0 },
-      { href: "/admin/festa-junina/relatorios?modulo=operacao", label: "Relatórios", depth: 0 },
-    ],
-  },
-];
 
 function isActive(pathname: string, href?: string) {
   if (!href) return false;
@@ -99,12 +22,13 @@ function isActive(pathname: string, href?: string) {
 function itemPadding(depth = 0) {
   if (depth <= 0) return "pl-3";
   if (depth === 1) return "pl-7";
-  return "pl-11";
+  if (depth === 2) return "pl-11";
+  return "pl-14";
 }
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ sections, eventName, hasSelectedEvent, onNavigate }: AdminSidebarProps & { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const initialState = useMemo(() => Object.fromEntries(sections.map((section) => [section.title, Boolean(section.defaultOpen)])), []);
+  const initialState = useMemo(() => Object.fromEntries(sections.map((section) => [section.title, Boolean(section.defaultOpen)])), [sections]);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(initialState);
 
   function toggleSection(title: string) {
@@ -118,7 +42,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white font-black text-green-900">T</span>
           <div>
             <p className="text-sm font-black">Festa Junina Tucxa</p>
-            <p className="text-xs text-white/70">Administração</p>
+            <p className="text-xs text-white/70">{hasSelectedEvent && eventName ? eventName : "Selecione um evento"}</p>
           </div>
         </div>
       </div>
@@ -139,19 +63,34 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
               {isOpen ? (
                 <div className="mt-1 grid gap-1">
-                  {section.items.map((item, index) => {
-                    const enabled = !section.locked && item.enabled !== false;
+                  {section.items.map((item) => {
                     const active = isActive(pathname, item.href);
-                    const key = `${section.title}-${item.href ?? item.label}-${index}`;
                     const depth = item.depth ?? 0;
 
-                    if (!item.href) {
-                      return <div key={key} className={`mt-1 rounded-xl py-1.5 pr-2 text-xs font-black uppercase tracking-[0.08em] text-white/55 ${itemPadding(depth)}`}>{item.label}</div>;
+                    if (!item.href || item.isHeading) {
+                      const content = (
+                        <span
+                          title={item.hint}
+                          className={`block rounded-xl py-1.5 pr-2 text-xs font-black uppercase tracking-[0.08em] ${
+                            item.enabled ? "text-white/60" : "text-white/30"
+                          } ${itemPadding(depth)}`}
+                        >
+                          {item.label}
+                        </span>
+                      );
+
+                      if (!item.href) return <div key={item.key}>{content}</div>;
+
+                      if (!item.enabled || !item.implemented) {
+                        return <div key={item.key} className="cursor-not-allowed">{content}</div>;
+                      }
                     }
 
-                    if (!enabled) {
+                    if (!item.href) return null;
+
+                    if (!item.enabled || !item.implemented) {
                       return (
-                        <span key={key} title={item.hint ?? "Abra ou selecione um evento para usar esta opção."} className={`cursor-not-allowed rounded-xl py-2 pr-3 text-sm font-bold text-white/35 ${itemPadding(depth)}`}>
+                        <span key={item.key} title={item.hint ?? "Abra ou selecione um evento para usar esta opção."} className={`cursor-not-allowed rounded-xl py-2 pr-3 text-sm font-bold text-white/35 ${itemPadding(depth)}`}>
                           {item.label}
                         </span>
                       );
@@ -159,7 +98,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
                     return (
                       <a
-                        key={key}
+                        key={item.key}
                         href={item.href}
                         onClick={onNavigate}
                         className={`rounded-xl py-2 pr-3 text-sm font-bold transition ${itemPadding(depth)} ${
@@ -187,13 +126,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export function AdminSidebar() {
+export function AdminSidebar(props: AdminSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
       <aside className="fixed bottom-0 left-0 top-[4.1rem] z-40 hidden w-72 overflow-hidden border-r border-green-900/20 shadow-xl lg:block">
-        <SidebarContent />
+        <SidebarContent {...props} />
       </aside>
 
       <button
@@ -213,7 +152,7 @@ export function AdminSidebar() {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <SidebarContent onNavigate={() => setIsOpen(false)} />
+            <SidebarContent {...props} onNavigate={() => setIsOpen(false)} />
           </div>
         </div>
       ) : null}
