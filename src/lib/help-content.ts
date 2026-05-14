@@ -307,3 +307,5 @@ export const helpManualSections = Object.entries(helpByKey).map(([path, content]
 
 
 // Nota: o cadastro do evento agora inclui estrutura do local, capacidade e recursos do Espaço Santa Fé. O cadastro do menu é configurável: título, hierarquia, ordem, página vinculada e template automático.
+
+// Atualização: o cardápio agora separa vendas/consumo e preparo/ficha técnica. A simulação usa cenários conservador, provável e máximo.

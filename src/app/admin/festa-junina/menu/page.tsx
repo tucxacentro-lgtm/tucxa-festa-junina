@@ -5,6 +5,7 @@ import { AdminPageShell } from "@/components/admin-page-shell";
 import {
   MENU_STATUS_OPTIONS,
   getAdminMenuCatalog,
+  getDefaultSectionOrder,
   getEventMenuConfigurations,
   type AdminMenuCatalogItem,
 } from "@/lib/admin-menu";
@@ -21,7 +22,7 @@ type MenuNode = AdminMenuCatalogItem & { children: MenuNode[] };
 type EventConfigs = Awaited<ReturnType<typeof getEventMenuConfigurations>>;
 
 const MENU_PATH = "/admin/festa-junina/menu";
-const sections = ["Geral", "Evento selecionado", "Conveniências", "Operação"];
+const sections = getDefaultSectionOrder();
 
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;

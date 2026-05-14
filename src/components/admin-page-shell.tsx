@@ -2,11 +2,12 @@ import { ReactNode } from "react";
 import { AdminSidebar } from "@/components/admin-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { getAdminSidebarSections } from "@/lib/admin-menu";
-import { getCurrentEventForAdmin } from "@/lib/current-event";
+import { getOpenEventForAdmin } from "@/lib/current-event";
 
 async function getShellData() {
   try {
-    const event = await getCurrentEventForAdmin();
+    const event = await getOpenEventForAdmin();
+    if (!event) throw new Error("Nenhum evento aberto.");
     const sections = await getAdminSidebarSections(event.id);
     return { eventName: event.name, hasSelectedEvent: true, sections };
   } catch {

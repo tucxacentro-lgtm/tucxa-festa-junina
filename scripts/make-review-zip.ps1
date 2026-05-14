@@ -54,7 +54,7 @@ foreach ($Item in $ItemsToCopy) {
 
 $OptionalFiles = @(
   "Tucxa-FestaJunina.xlsx",
-  "Tucxa-FestaJunina-menu-atualizado.csv"
+  "Tucxa-FestaJunina(1).xlsx"
 )
 
 foreach ($Item in $OptionalFiles) {

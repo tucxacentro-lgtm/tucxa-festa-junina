@@ -7,6 +7,21 @@ export function getCurrentEventSlug() {
   return process.env.NEXT_PUBLIC_FESTA_JUNINA_EVENT_SLUG || DEFAULT_EVENT_SLUG;
 }
 
+
+export async function getOpenEventForAdmin() {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select("*")
+    .eq("active_for_sales", true)
+    .order("event_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as EventConfig;
+}
+
 export async function getCurrentEventForAdmin() {
   const supabase = createSupabaseAdminClient();
 
