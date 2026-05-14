@@ -24,6 +24,11 @@ function integer(formData: FormData, name: string, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function decimal(formData: FormData, name: string, fallback = 0) {
+  const parsed = Number.parseFloat(text(formData, name).replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 function slugify(value: string) {
   return value
     .normalize("NFD")
@@ -67,6 +72,36 @@ export async function saveEvent(formData: FormData) {
     children_free_age_limit: integer(formData, "children_free_age_limit", 10),
     featured_prize_name: nullableText(formData, "featured_prize_name"),
     featured_prize_description: nullableText(formData, "featured_prize_description"),
+    venue_site_url: nullableText(formData, "venue_site_url"),
+    venue_contact_email: nullableText(formData, "venue_contact_email"),
+    venue_contact_phone: nullableText(formData, "venue_contact_phone"),
+    venue_rating_label: nullableText(formData, "venue_rating_label"),
+    venue_description: nullableText(formData, "venue_description"),
+    covered_hall_capacity: integer(formData, "covered_hall_capacity", 80),
+    operational_capacity: integer(formData, "operational_capacity", 80),
+    event_duration_hours: decimal(formData, "event_duration_hours", 5),
+    average_stay_hours: decimal(formData, "average_stay_hours", 4),
+    safety_margin_percent: decimal(formData, "safety_margin_percent", 15),
+    estimated_tables: integer(formData, "estimated_tables", 20),
+    estimated_chairs: integer(formData, "estimated_chairs", 80),
+    has_gourmet_area: bool(formData, "has_gourmet_area"),
+    has_barbecue_grill: bool(formData, "has_barbecue_grill"),
+    has_freezer: bool(formData, "has_freezer"),
+    freezer_count: integer(formData, "freezer_count", 1),
+    has_refrigerator: bool(formData, "has_refrigerator"),
+    refrigerator_count: integer(formData, "refrigerator_count", 1),
+    has_water_fountain: bool(formData, "has_water_fountain"),
+    has_gas_stove: bool(formData, "has_gas_stove"),
+    has_wood_stove: bool(formData, "has_wood_stove"),
+    has_heated_pool: bool(formData, "has_heated_pool"),
+    has_kids_pool_area: bool(formData, "has_kids_pool_area"),
+    has_covered_hall: bool(formData, "has_covered_hall"),
+    has_tables: bool(formData, "has_tables"),
+    has_chairs: bool(formData, "has_chairs"),
+    has_ventilation: bool(formData, "has_ventilation"),
+    has_sound_system: bool(formData, "has_sound_system"),
+    venue_resources_notes: nullableText(formData, "venue_resources_notes"),
+    capacity_notes: nullableText(formData, "capacity_notes"),
     updated_at: new Date().toISOString(),
   };
 

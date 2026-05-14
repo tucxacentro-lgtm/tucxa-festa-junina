@@ -22,6 +22,36 @@ export type EventConfig = {
   active_for_sales?: boolean | null;
   featured_prize_name?: string | null;
   featured_prize_description?: string | null;
+  venue_site_url?: string | null;
+  venue_contact_email?: string | null;
+  venue_contact_phone?: string | null;
+  venue_rating_label?: string | null;
+  venue_description?: string | null;
+  covered_hall_capacity?: number | null;
+  operational_capacity?: number | null;
+  event_duration_hours?: number | null;
+  average_stay_hours?: number | null;
+  safety_margin_percent?: number | null;
+  estimated_tables?: number | null;
+  estimated_chairs?: number | null;
+  has_gourmet_area?: boolean | null;
+  has_barbecue_grill?: boolean | null;
+  has_freezer?: boolean | null;
+  freezer_count?: number | null;
+  has_refrigerator?: boolean | null;
+  refrigerator_count?: number | null;
+  has_water_fountain?: boolean | null;
+  has_gas_stove?: boolean | null;
+  has_wood_stove?: boolean | null;
+  has_heated_pool?: boolean | null;
+  has_kids_pool_area?: boolean | null;
+  has_covered_hall?: boolean | null;
+  has_tables?: boolean | null;
+  has_chairs?: boolean | null;
+  has_ventilation?: boolean | null;
+  has_sound_system?: boolean | null;
+  venue_resources_notes?: string | null;
+  capacity_notes?: string | null;
 };
 
 export type TicketType = {

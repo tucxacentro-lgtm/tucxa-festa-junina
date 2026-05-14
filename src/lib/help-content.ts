@@ -304,3 +304,6 @@ export function getHelpContent(pathname: string): HelpContent {
 }
 
 export const helpManualSections = Object.entries(helpByKey).map(([path, content]) => ({ path, ...content }));
+
+
+// Nota: o cadastro do evento agora inclui estrutura do local, capacidade e recursos do Espaço Santa Fé. O cadastro do menu é configurável: título, hierarquia, ordem, página vinculada e template automático.

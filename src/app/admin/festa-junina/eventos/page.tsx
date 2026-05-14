@@ -64,6 +64,8 @@ function EventCard({ event }: { event: EventRow }) {
         {event.location_address ? <p className="flex gap-2"><MapPin className="mt-0.5 h-4 w-4 text-green-800" /> <span>{event.location_address}</span></p> : null}
         <p><strong>Slug:</strong> {event.slug}</p>
         {event.featured_prize_name ? <p><strong>Brinde/sorteio:</strong> {event.featured_prize_name}</p> : null}
+        <p><strong>Capacidade salão:</strong> {event.covered_hall_capacity ?? 80} pessoas</p>
+        <p><strong>Capacidade operacional:</strong> {event.operational_capacity ?? 80} pessoas</p>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3">

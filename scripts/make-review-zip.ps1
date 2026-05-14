@@ -52,6 +52,18 @@ foreach ($Item in $ItemsToCopy) {
   }
 }
 
+$OptionalFiles = @(
+  "Tucxa-FestaJunina.xlsx",
+  "Tucxa-FestaJunina-menu-atualizado.csv"
+)
+
+foreach ($Item in $OptionalFiles) {
+  $Source = Join-Path $ProjectRoot $Item
+  if (Test-Path $Source) {
+    Copy-Item $Source (Join-Path $TempDir $Item) -Force
+  }
+}
+
 $ForbiddenDirs = @(
   "node_modules",
   ".next",
