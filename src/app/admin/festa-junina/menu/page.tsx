@@ -13,7 +13,7 @@ import { requireAdmin } from "@/lib/auth";
 import { getCurrentEventForAdmin } from "@/lib/current-event";
 import { MENU_ROUTE_AUTO_VALUE, MENU_ROUTE_OPTIONS, getRouteLabel } from "@/lib/menu-routes";
 import { MENU_TEMPLATES } from "@/lib/menu-templates";
-import { createEventMenuDefaults, deactivateMenuItem, saveMenuItemComplete } from "./actions";
+import { deactivateMenuItem, saveMenuItemComplete } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -306,7 +306,7 @@ export default async function AdminMenuPage({ searchParams }: PageProps) {
           <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-900">Menu configurável</span>
           <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-black text-green-950">Cadastro do menu do sistema</h1>
+              <h1 className="text-3xl font-black text-green-950">Cadastro do menu de gestão</h1>
               <p className="mt-3 max-w-4xl text-stone-700">
                 Organize todos os itens do menu, sua hierarquia, sequência e página associada. A chave é criada automaticamente para novos itens. Use <strong>Editar</strong> ou <strong>Novo filho</strong> para alterar cada linha.
               </p>
@@ -329,12 +329,7 @@ export default async function AdminMenuPage({ searchParams }: PageProps) {
                   Use <strong>Editar</strong> para mudar nome, página vinculada, modelo automático, pai/indentação e ordem. Use <strong>Novo filho</strong> para criar um item dentro da linha selecionada. O ícone ☰ indica o conceito de arrastar, que pode virar drag-and-drop numa próxima etapa.
                 </p>
               </div>
-              <form action={createEventMenuDefaults}>
-                <input type="hidden" name="event_id" value={event.id} />
-                <button className="rounded-full border border-green-100 bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm transition hover:bg-green-50">
-                  Criar/atualizar status do evento
-                </button>
-              </form>
+
             </div>
           </div>
 

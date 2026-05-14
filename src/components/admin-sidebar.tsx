@@ -119,7 +119,7 @@ function SidebarContent({ sections, eventName, hasSelectedEvent, onNavigate }: A
       <div className="border-t border-white/10 p-3">
         <HelpButton compact />
         <a href="/admin/logout" className="mt-3 block rounded-xl bg-white/10 px-3 py-2 text-center text-sm font-black text-white transition hover:bg-white/20">
-          Sair do admin
+          Sair da gestão
         </a>
       </div>
     </div>
@@ -141,14 +141,14 @@ export function AdminSidebar(props: AdminSidebarProps) {
         className="fixed bottom-4 left-4 z-50 inline-flex items-center gap-2 rounded-full bg-green-950 px-4 py-3 text-sm font-black text-white shadow-xl lg:hidden"
       >
         <Menu className="h-4 w-4" />
-        Menu admin
+        Menu gestão
       </button>
 
       {isOpen ? (
         <div className="fixed inset-0 z-[90] bg-black/40 lg:hidden">
           <div className="h-full w-[85vw] max-w-xs shadow-2xl">
             <div className="absolute left-[calc(min(85vw,20rem)-3.25rem)] top-3">
-              <button type="button" onClick={() => setIsOpen(false)} className="rounded-full bg-white p-2 text-green-950 shadow" aria-label="Fechar menu admin">
+              <button type="button" onClick={() => setIsOpen(false)} className="rounded-full bg-white p-2 text-green-950 shadow" aria-label="Fechar menu gestão">
                 <X className="h-5 w-5" />
               </button>
             </div>

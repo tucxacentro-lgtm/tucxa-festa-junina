@@ -44,6 +44,10 @@ function statusClass(status: EventConfig["status"]) {
   return "bg-amber-50 text-amber-800 ring-amber-100";
 }
 
+function yesNo(value: boolean | null | undefined) {
+  return value ? "Sim" : "Não";
+}
+
 function EventCard({ event }: { event: EventRow }) {
   return (
     <article className="rounded-[1.75rem] border border-green-100 bg-white p-6 shadow-sm">
@@ -62,11 +66,35 @@ function EventCard({ event }: { event: EventRow }) {
         <p><strong>Horário:</strong> {formatTime(event.start_time)} às {formatTime(event.end_time)}</p>
         <p><strong>Local:</strong> {event.location_name || "Local não informado"}</p>
         {event.location_address ? <p className="flex gap-2"><MapPin className="mt-0.5 h-4 w-4 text-green-800" /> <span>{event.location_address}</span></p> : null}
-        <p><strong>Slug:</strong> {event.slug}</p>
         {event.featured_prize_name ? <p><strong>Brinde/sorteio:</strong> {event.featured_prize_name}</p> : null}
         <p><strong>Capacidade salão:</strong> {event.covered_hall_capacity ?? 80} pessoas</p>
         <p><strong>Capacidade operacional:</strong> {event.operational_capacity ?? 80} pessoas</p>
       </div>
+
+      <details className="mt-5 rounded-3xl border border-green-100 bg-green-50/40 p-4 text-sm text-stone-700">
+        <summary className="cursor-pointer font-black text-green-950">Ver todas as informações do evento</summary>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <p><strong>Slug:</strong> {event.slug}</p>
+          <p><strong>Ano:</strong> {event.year ?? "Não informado"}</p>
+          <p><strong>Subtítulo:</strong> {event.subtitle ?? "Não informado"}</p>
+          <p><strong>Pix:</strong> {event.pix_key ?? "Não informado"}</p>
+          <p><strong>Recebedor Pix:</strong> {event.pix_receiver_name ?? "Não informado"}</p>
+          <p><strong>Vendas públicas:</strong> {yesNo(event.allow_public_sales)}</p>
+          <p><strong>Combos:</strong> {yesNo(event.allow_combos)}</p>
+          <p><strong>Crianças grátis:</strong> {yesNo(event.allow_children_free)} até {event.children_free_age_limit ?? 10} anos</p>
+          <p><strong>Site do local:</strong> {event.venue_site_url ?? "Não informado"}</p>
+          <p><strong>Contato do local:</strong> {event.venue_contact_phone ?? event.venue_contact_email ?? "Não informado"}</p>
+          <p><strong>Mesas estimadas:</strong> {event.estimated_tables ?? "Não informado"}</p>
+          <p><strong>Cadeiras estimadas:</strong> {event.estimated_chairs ?? "Não informado"}</p>
+          <p><strong>Freezers:</strong> {event.freezer_count ?? "Não informado"}</p>
+          <p><strong>Geladeiras:</strong> {event.refrigerator_count ?? "Não informado"}</p>
+          <p><strong>Margem de segurança:</strong> {event.safety_margin_percent ?? 15}%</p>
+          <p><strong>Permanência média:</strong> {event.average_stay_hours ?? "Não informado"}h</p>
+          <p className="md:col-span-2"><strong>Descrição:</strong> {event.description ?? "Não informada"}</p>
+          <p className="md:col-span-2"><strong>Recursos do local:</strong> {event.venue_resources_notes ?? "Não informado"}</p>
+          <p className="md:col-span-2"><strong>Premissas de capacidade:</strong> {event.capacity_notes ?? "Não informado"}</p>
+        </div>
+      </details>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <form action={openEvent}>

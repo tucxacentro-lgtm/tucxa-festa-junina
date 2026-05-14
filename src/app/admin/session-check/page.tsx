@@ -44,7 +44,7 @@ export default async function AdminSessionCheckPage() {
           <StatusRow label="Cookie de access token encontrado" ok={Boolean(accessCookie)} />
           <StatusRow label="Cookie de refresh token encontrado" ok={Boolean(refreshCookie)} />
           <StatusRow label="Assinatura da sessão admin válida" ok={Boolean(signedPayload)} />
-          <StatusRow label="Admin atual identificado" ok={Boolean(currentAdmin)} />
+          <StatusRow label="Gestor atual identificado" ok={Boolean(currentAdmin)} />
         </div>
 
         <SessionCheckClientDiagnostics />

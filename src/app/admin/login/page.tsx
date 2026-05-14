@@ -30,7 +30,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
                 priority
               />
             </div>
-            <p className="text-sm font-black uppercase tracking-[0.2em] text-green-800">Admin</p>
+            <p className="text-sm font-black uppercase tracking-[0.2em] text-green-800">Gestão</p>
             <h1 className="mt-2 text-3xl font-black text-green-950">Acesso administrativo</h1>
             <p className="mt-2 text-sm text-stone-600">
               Entre com um usuário real do Supabase Auth autorizado em admin_profiles.

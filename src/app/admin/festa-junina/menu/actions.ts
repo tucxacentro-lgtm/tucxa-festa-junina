@@ -102,7 +102,7 @@ export async function saveMenuItemComplete(formData: FormData) {
     item_key: itemKey,
     label,
     description: nullableText(formData, "description"),
-    section: text(formData, "section") || "Geral",
+    section: text(formData, "section") || "Gestão",
     parent_key: nullableText(formData, "parent_key"),
     route_path: routePath,
     icon_key: nullableText(formData, "icon_key"),

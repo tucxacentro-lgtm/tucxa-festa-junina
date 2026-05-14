@@ -53,8 +53,8 @@ const helpByKey: Record<string, HelpContent> = {
     ],
   },
   "/admin/festa-junina": {
-    title: "Painel principal",
-    description: "Ponto de partida do administrador. Use os cards ou o menu lateral para configurar e acompanhar a festa.",
+    title: "Painel de Gestão",
+    description: "Ponto de partida do gestor. Use os cards ou o menu lateral para configurar e acompanhar a festa.",
     sections: [
       {
         title: "Ordem recomendada",
@@ -278,6 +278,47 @@ const helpByKey: Record<string, HelpContent> = {
     description: "Área planejada para consolidar vendas, pagamentos, compras, sobras e observações finais.",
     sections: [{ title: "Objetivo", body: "Apoiar transparência e melhorar o planejamento dos próximos eventos." }],
   },
+
+  "/admin/festa-junina/simulacao/capacidade": {
+    title: "Simulações",
+    description: "Compare cenários conservador, provável e máximo para apoiar compras, equipe e operação.",
+    sections: [{ title: "Cenários", body: "Use conservador para confirmados, provável para confirmados + estimativas e máximo para capacidade operacional planejada." }],
+  },
+  "/admin/festa-junina/compras": {
+    title: "Compras",
+    description: "Acompanhe itens finais, insumos, responsáveis, status e armazenamento.",
+    sections: [{ title: "Validação", body: "As quantidades sugeridas devem ser confirmadas pela coordenação antes da compra." }],
+  },
+  "/admin/festa-junina/compras/insumos": {
+    title: "Insumos",
+    description: "Itens necessários para preparo das receitas e operação de cozinha.",
+    sections: [{ title: "Ficha técnica", body: "Os insumos são calculados a partir do cardápio de preparo e dos cenários de público." }],
+  },
+  "/admin/festa-junina/compras/itens-finais": {
+    title: "Itens finais",
+    description: "Produtos comprados prontos para revenda ou consumo direto.",
+    sections: [{ title: "Conferência", body: "Registre quantidade planejada, comprada, responsável e local de armazenamento." }],
+  },
+  "/admin/festa-junina/treinamento": {
+    title: "Treinamentos",
+    description: "Organize orientações rápidas para voluntários, caixa, atendimento, entrega e cozinha.",
+    sections: [{ title: "Antes do evento", body: "Use a tela para simular fluxos e reduzir dúvidas no dia da festa." }],
+  },
+  "/admin/festa-junina/caixa": {
+    title: "Caixa",
+    description: "Área de preparação para pagamentos e fechamento do caixa do evento.",
+    sections: [{ title: "Pagamento", body: "Conferir Pix, cartão, dinheiro, comprovantes e totais por responsável/mesa." }],
+  },
+  "/admin/festa-junina/entrega": {
+    title: "Entrega",
+    description: "Área de preparação para retirada e entrega de pedidos ao cliente ou garçom.",
+    sections: [{ title: "Confirmação", body: "Cada entrega deve ter confirmação para evitar divergências no caixa e na prestação de contas." }],
+  },
+  "/admin/festa-junina/ocorrencias": {
+    title: "Ocorrências",
+    description: "Registre problemas, ajustes e decisões durante a operação do evento.",
+    sections: [{ title: "Uso", body: "Ajuda a melhorar a prestação de contas e o planejamento dos próximos anos." }],
+  },
 };
 
 export function getHelpContent(pathname: string): HelpContent {
@@ -303,7 +344,39 @@ export function getHelpContent(pathname: string): HelpContent {
   return defaultHelp;
 }
 
-export const helpManualSections = Object.entries(helpByKey).map(([path, content]) => ({ path, ...content }));
+const HELP_MANUAL_ORDER = [
+  "/festa-junina",
+  "/minha-compra",
+  "/admin/festa-junina",
+  "/admin/festa-junina/menu",
+  "/admin/festa-junina/eventos",
+  "/admin/festa-junina/ajuda",
+  "/admin/festa-junina/simulacao/capacidade",
+  "/admin/festa-junina/convites",
+  "/admin/festa-junina/combos",
+  "/admin/festa-junina/indicacoes",
+  "/admin/festa-junina/upsell",
+  "/admin/festa-junina/pagamentos",
+  "/admin/festa-junina/pedidos",
+  "/admin/festa-junina/relatorios",
+  "/admin/festa-junina/cardapio",
+  "/admin/festa-junina/cliente-resumo",
+  "/admin/festa-junina/bingo",
+  "/admin/festa-junina/voluntarios",
+  "/admin/festa-junina/compras",
+  "/admin/festa-junina/compras/insumos",
+  "/admin/festa-junina/compras/itens-finais",
+  "/admin/festa-junina/treinamento",
+  "/admin/festa-junina/atendimento",
+  "/admin/festa-junina/caixa",
+  "/admin/festa-junina/entrega",
+  "/admin/festa-junina/ocorrencias",
+  "/admin/festa-junina/prestacao-contas",
+];
+
+export const helpManualSections = HELP_MANUAL_ORDER
+  .filter((path) => helpByKey[path])
+  .map((path) => ({ path, ...helpByKey[path] }));
 
 
 // Nota: o cadastro do evento agora inclui estrutura do local, capacidade e recursos do Espaço Santa Fé. O cadastro do menu é configurável: título, hierarquia, ordem, página vinculada e template automático.

@@ -20,7 +20,7 @@ export function AdminModulePlaceholder({
             ← Painel do evento
           </Link>
           <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm transition hover:bg-amber-100">
-            Sair do admin
+            Sair da gestão
           </a>
         </div>
 

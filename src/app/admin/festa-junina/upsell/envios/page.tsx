@@ -42,7 +42,7 @@ export default async function UpsellEnviosPage({ searchParams }: PageProps) {
     <AdminPageShell>
       
       <section className="mx-auto max-w-5xl px-5 py-12">
-        <div className="mb-6 flex flex-wrap justify-between gap-3"><Link href="/admin/festa-junina/upsell" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao upsell</Link><a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair do admin</a></div>
+        <div className="mb-6 flex flex-wrap justify-between gap-3"><Link href="/admin/festa-junina/upsell" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao upsell</Link><a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair da gestão</a></div>
         <h1 className="text-3xl font-black text-green-950">Envios de upsell por WhatsApp</h1>
         <p className="mt-2 max-w-3xl text-stone-600">Lista de mensagens prontas para enviar manualmente pelo WhatsApp, sem custo de integração. Também é possível enviar um resumo para o e-mail operacional do Tucxa.</p>
         {params?.sent ? <div className="mt-5 rounded-3xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-900">Resumo enviado para o e-mail operacional do Tucxa.</div> : null}

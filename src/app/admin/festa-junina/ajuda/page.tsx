@@ -13,10 +13,10 @@ export default async function AjudaAdminPage() {
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <Link href="/admin/festa-junina" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm transition hover:bg-amber-100" prefetch={false}>
-            ← Painel principal
+            ← Painel de Gestão
           </Link>
           <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm transition hover:bg-amber-100">
-            Sair do admin
+            Sair da gestão
           </a>
         </div>
 

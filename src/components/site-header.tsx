@@ -8,7 +8,7 @@ const links = [
   { href: "/festa-junina#convites", label: "Convites" },
   { href: "/festa-junina#combos", label: "Combos" },
   { href: "/minha-compra", label: "Minha compra" },
-  { href: "/admin/festa-junina", label: "Admin" },
+  { href: "/admin/festa-junina", label: "Gestão" },
 ];
 
 export function SiteHeader() {

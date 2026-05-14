@@ -47,7 +47,7 @@ export default async function AdminUpsellPage({ searchParams }: PageProps) {
           <Link href="/admin/festa-junina" className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>← Voltar ao admin</Link>
           <div className="flex flex-wrap gap-3">
             <Link href="/admin/festa-junina/upsell/envios" className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm" prefetch={false}>Mensagens para WhatsApp</Link>
-            <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair do admin</a>
+            <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm">Sair da gestão</a>
           </div>
         </div>
 

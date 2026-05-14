@@ -48,7 +48,7 @@ export default async function AdminPedidosPage({ searchParams }: PageProps) {
       <section className="mx-auto max-w-6xl px-5 py-12">
         <div className="mb-6 flex justify-end">
           <a href="/admin/logout" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-green-950 shadow-sm transition hover:bg-amber-100">
-            Sair do admin
+            Sair da gestão
           </a>
         </div>
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">

@@ -68,10 +68,10 @@ export const MENU_STATUS_OPTIONS: Array<{ value: AdminMenuStatus; label: string 
 }));
 
 export const DEFAULT_ADMIN_MENU_ITEMS: AdminMenuCatalogItem[] = [
-  menuItem('menu_configuravel', 'Menu', 'Geral', null, '/admin/festa-junina/menu', 10, 'Cadastro e configuração da estrutura do menu do sistema.', 'module_config'),
-  menuItem('eventos', 'Eventos', 'Geral', null, '/admin/festa-junina/eventos', 20, 'Cadastro e configuração das edições da Festa Junina.', 'list_new'),
-  menuItem('manuais_ajuda', 'Manuais e Ajuda', 'Geral', null, '/admin/festa-junina/ajuda', 30, 'Documentações, procedimentos e orientações de uso do sistema.', 'help'),
-  menuItem('painel_geral', 'Painel Geral', 'Evento selecionado', null, '/admin/festa-junina', 100, 'Visão geral de todos os itens do menu e do evento aberto.', 'module_config'),
+  menuItem('menu_configuravel', 'Menu', 'Gestão', null, '/admin/festa-junina/menu', 10, 'Cadastro e configuração da estrutura do menu do sistema.', 'module_config'),
+  menuItem('eventos', 'Eventos', 'Gestão', null, '/admin/festa-junina/eventos', 20, 'Cadastro e configuração das edições da Festa Junina.', 'list_new'),
+  menuItem('manuais_ajuda', 'Manuais e Ajuda', 'Gestão', null, '/admin/festa-junina/ajuda', 30, 'Documentações, procedimentos e orientações de uso do sistema.', 'help'),
+  menuItem('painel_geral', 'Painel de Gestão', 'Evento selecionado', null, '/admin/festa-junina', 100, 'Visão de gestão de todos os itens do menu e do evento aberto.', 'module_config'),
   menuItem('simulacoes', 'Simulações', 'Evento selecionado', null, '/admin/festa-junina/simulacao/capacidade', 150, 'Módulo Simulacoes da Festa Junina do Tucxa.', 'report_bi'),
   menuItem('vendas', 'Vendas', 'Evento selecionado', null, null, 200, 'Aquisição de receitas para realização do evento.', 'module_config'),
   menuItem('vendas_convites', 'Convites', 'Evento selecionado', 'vendas', '/admin/festa-junina/convites', 210, 'Acesso ao evento e controle dos convites.', 'list_new'),
@@ -88,27 +88,27 @@ export const DEFAULT_ADMIN_MENU_ITEMS: AdminMenuCatalogItem[] = [
   menuItem('vendas_conveniencias_cardapio_preparo', 'Cardápio Preparo', 'Evento selecionado', 'vendas_conveniencias_cardapio', '/admin/festa-junina/cardapio', 233, 'Ficha técnica, receitas e preparo.', 'list_new'),
   menuItem('vendas_conveniencias_bingo', 'Bingo', 'Evento selecionado', 'vendas_conveniencias', '/admin/festa-junina/bingo', 234, 'Aquisição de cartelas e ações de bingo vinculadas ao evento.', 'module_config'),
   menuItem('vendas_conveniencias_relatorios', 'Relatórios', 'Evento selecionado', 'vendas_conveniencias', '/admin/festa-junina/relatorios?modulo=conveniencias', 235, 'Base de dados para informações das conveniências.', 'report_bi'),
-  menuItem('operacao', 'Operação', 'Operação', null, null, 400, 'Ações para que o evento aconteça.', 'module_config'),
-  menuItem('operacao_voluntarios', 'Voluntários', 'Operação', 'operacao', '/admin/festa-junina/voluntarios', 410, 'Equipe mão na massa.', 'list_new'),
-  menuItem('operacao_voluntarios_funcoes', 'Funções', 'Operação', 'operacao_voluntarios', '/admin/festa-junina/voluntarios/funcoes', 411, 'Cadastro de funções dos voluntários.', 'list_new'),
-  menuItem('operacao_voluntarios_equipe', 'Equipe', 'Operação', 'operacao_voluntarios', '/admin/festa-junina/voluntarios/necessidade', 412, 'Necessidade por função conforme convites vendidos/estimativa.', 'module_config'),
-  menuItem('operacao_voluntarios_relatorios', 'Relatórios', 'Operação', 'operacao_voluntarios', '/admin/festa-junina/relatorios?modulo=voluntarios', 413, 'Base de dados para informações dos voluntários.', 'report_bi'),
-  menuItem('operacao_compras', 'Compras', 'Operação', 'operacao', '/admin/festa-junina/compras', 420, 'Necessidades de compra para o evento.', 'module_config'),
-  menuItem('operacao_compras_insumos', 'Insumos', 'Operação', 'operacao_compras', '/admin/festa-junina/compras/insumos', 421, 'Itens para preparo das receitas.', 'list_new'),
-  menuItem('operacao_compras_itens_finais', 'Itens finais', 'Operação', 'operacao_compras', '/admin/festa-junina/compras/itens-finais', 422, 'Produtos que serão apenas revendidos.', 'list_new'),
-  menuItem('operacao_compras_relatorios', 'Relatórios', 'Operação', 'operacao_compras', '/admin/festa-junina/relatorios?modulo=compras', 423, 'Base de dados para informações de compras.', 'report_bi'),
-  menuItem('operacao_treinamentos', 'Treinamentos', 'Operação', 'operacao', '/admin/festa-junina/treinamento', 430, 'Simulação do que cada função deve realizar.', 'checklist'),
-  menuItem('operacao_simulacao_capacidade', 'Simulação de capacidade', 'Operação', 'operacao_treinamentos', '/admin/festa-junina/simulacao/capacidade', 431, 'Simulação de convites, estrutura do local, voluntários e compras.', 'report_bi'),
-  menuItem('operacao_atendimento', 'Atendimento', 'Operação', 'operacao', '/admin/festa-junina/atendimento', 440, 'Fluxo de atendimento no dia do evento.', 'operation'),
-  menuItem('operacao_atendimento_checkin', 'Check-in', 'Operação', 'operacao_atendimento', '/admin/festa-junina/atendimento?aba=checkin', 441, 'Recepção e acomodação dos participantes.', 'operation'),
-  menuItem('operacao_atendimento_pedidos', 'Pedidos', 'Operação', 'operacao_atendimento', '/admin/festa-junina/pedidos', 442, 'Vendas de itens do cardápio no dia do evento.', 'operation'),
-  menuItem('operacao_atendimento_preparo', 'Preparo', 'Operação', 'operacao_atendimento', '/admin/festa-junina/modulo/operacao_atendimento_preparo', 443, 'Produção conforme pedido e receita.', 'operation'),
-  menuItem('operacao_atendimento_retirada', 'Retirada', 'Operação', 'operacao_atendimento', '/admin/festa-junina/modulo/operacao_atendimento_retirada', 444, 'Retirada pelo garçom ou diretamente pelo cliente.', 'operation'),
-  menuItem('operacao_atendimento_entrega', 'Entrega', 'Operação', 'operacao_atendimento', '/admin/festa-junina/entrega', 445, 'Entrega do garçom para o cliente.', 'operation'),
-  menuItem('operacao_atendimento_caixa', 'Caixa', 'Operação', 'operacao_atendimento', '/admin/festa-junina/caixa', 446, 'Pagamentos e fechamento de caixa.', 'operation'),
-  menuItem('operacao_atendimento_ocorrencias', 'Ocorrências', 'Operação', 'operacao_atendimento', '/admin/festa-junina/ocorrencias', 447, 'Registro de problemas e ocorrências.', 'operation'),
-  menuItem('operacao_prestacao_contas', 'Prestação de Contas', 'Operação', 'operacao', '/admin/festa-junina/prestacao-contas', 460, 'Prestação de contas financeira e operacional.', 'report_bi'),
-  menuItem('operacao_prestacao_relatorios', 'Relatórios', 'Operação', 'operacao_prestacao_contas', '/admin/festa-junina/relatorios?modulo=prestacao', 461, 'Base de dados para informações da prestação de contas.', 'report_bi')
+  menuItem('operacao', 'Evento selecionado', 'Evento selecionado', null, null, 400, 'Ações para que o evento aconteça.', 'module_config'),
+  menuItem('operacao_voluntarios', 'Voluntários', 'Evento selecionado', 'operacao', '/admin/festa-junina/voluntarios', 410, 'Equipe mão na massa.', 'list_new'),
+  menuItem('operacao_voluntarios_funcoes', 'Funções', 'Evento selecionado', 'operacao_voluntarios', '/admin/festa-junina/voluntarios/funcoes', 411, 'Cadastro de funções dos voluntários.', 'list_new'),
+  menuItem('operacao_voluntarios_equipe', 'Equipe', 'Evento selecionado', 'operacao_voluntarios', '/admin/festa-junina/voluntarios/necessidade', 412, 'Necessidade por função conforme convites vendidos/estimativa.', 'module_config'),
+  menuItem('operacao_voluntarios_relatorios', 'Relatórios', 'Evento selecionado', 'operacao_voluntarios', '/admin/festa-junina/relatorios?modulo=voluntarios', 413, 'Base de dados para informações dos voluntários.', 'report_bi'),
+  menuItem('operacao_compras', 'Compras', 'Evento selecionado', 'operacao', '/admin/festa-junina/compras', 420, 'Necessidades de compra para o evento.', 'module_config'),
+  menuItem('operacao_compras_insumos', 'Insumos', 'Evento selecionado', 'operacao_compras', '/admin/festa-junina/compras/insumos', 421, 'Itens para preparo das receitas.', 'list_new'),
+  menuItem('operacao_compras_itens_finais', 'Itens finais', 'Evento selecionado', 'operacao_compras', '/admin/festa-junina/compras/itens-finais', 422, 'Produtos que serão apenas revendidos.', 'list_new'),
+  menuItem('operacao_compras_relatorios', 'Relatórios', 'Evento selecionado', 'operacao_compras', '/admin/festa-junina/relatorios?modulo=compras', 423, 'Base de dados para informações de compras.', 'report_bi'),
+  menuItem('operacao_treinamentos', 'Treinamentos', 'Evento selecionado', 'operacao', '/admin/festa-junina/treinamento', 430, 'Simulação do que cada função deve realizar.', 'checklist'),
+  menuItem('operacao_simulacao_capacidade', 'Simulação de capacidade', 'Evento selecionado', 'operacao_treinamentos', '/admin/festa-junina/simulacao/capacidade', 431, 'Simulação de convites, estrutura do local, voluntários e compras.', 'report_bi'),
+  menuItem('operacao_atendimento', 'Atendimento', 'Evento selecionado', 'operacao', '/admin/festa-junina/atendimento', 440, 'Fluxo de atendimento no dia do evento.', 'operation'),
+  menuItem('operacao_atendimento_checkin', 'Check-in', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/atendimento?aba=checkin', 441, 'Recepção e acomodação dos participantes.', 'operation'),
+  menuItem('operacao_atendimento_pedidos', 'Pedidos', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/pedidos', 442, 'Vendas de itens do cardápio no dia do evento.', 'operation'),
+  menuItem('operacao_atendimento_preparo', 'Preparo', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/modulo/operacao_atendimento_preparo', 443, 'Produção conforme pedido e receita.', 'operation'),
+  menuItem('operacao_atendimento_retirada', 'Retirada', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/modulo/operacao_atendimento_retirada', 444, 'Retirada pelo garçom ou diretamente pelo cliente.', 'operation'),
+  menuItem('operacao_atendimento_entrega', 'Entrega', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/entrega', 445, 'Entrega do garçom para o cliente.', 'operation'),
+  menuItem('operacao_atendimento_caixa', 'Caixa', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/caixa', 446, 'Pagamentos e fechamento de caixa.', 'operation'),
+  menuItem('operacao_atendimento_ocorrencias', 'Ocorrências', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/ocorrencias', 447, 'Registro de problemas e ocorrências.', 'operation'),
+  menuItem('operacao_prestacao_contas', 'Prestação de Contas', 'Evento selecionado', 'operacao', '/admin/festa-junina/prestacao-contas', 460, 'Prestação de contas financeira e operacional.', 'report_bi'),
+  menuItem('operacao_prestacao_relatorios', 'Relatórios', 'Evento selecionado', 'operacao_prestacao_contas', '/admin/festa-junina/relatorios?modulo=prestacao', 461, 'Base de dados para informações da prestação de contas.', 'report_bi')
 ];
 
 function menuItem(
@@ -153,7 +153,14 @@ export function getDefaultMenuCatalog() {
 }
 
 export function getDefaultSectionOrder() {
-  return Array.from(new Set(DEFAULT_ADMIN_MENU_ITEMS.map((item) => item.section)));
+  return ['Gestão', 'Evento selecionado'];
+}
+
+
+function normalizeMenuCatalogItem(item: AdminMenuCatalogItem): AdminMenuCatalogItem {
+  const section = item.section === "Gestão" || item.section === "Admin" ? "Gestão" : item.section === "Operação" ? "Evento selecionado" : item.section;
+  const label = item.label === "Painel Geral" ? "Painel de Gestão" : item.label === "Admin" ? "Gestão" : item.label === "Geral" ? "Gestão" : item.label;
+  return { ...item, section, label };
 }
 
 export async function getAdminMenuCatalog() {
@@ -166,7 +173,7 @@ export async function getAdminMenuCatalog() {
 
   if (error) return getDefaultMenuCatalog();
   const rows = (data?.length ? data : getDefaultMenuCatalog()) as AdminMenuCatalogItem[];
-  return rows;
+  return rows.map(normalizeMenuCatalogItem);
 }
 
 export async function getEventMenuConfigurations(eventId: string) {
@@ -202,7 +209,7 @@ export async function getAdminSidebarSections(eventId?: string | null): Promise<
   }
 
   const sectionOrder = Array.from(new Set([...getDefaultSectionOrder(), ...catalog.map((item) => item.section)]));
-  const visibleSections = eventId ? sectionOrder : sectionOrder.filter((section) => section === "Geral");
+  const visibleSections = eventId ? sectionOrder : sectionOrder.filter((section) => section === "Gestão");
 
   const sections = visibleSections.map((sectionTitle) => {
     const roots = catalog
@@ -216,7 +223,7 @@ export async function getAdminSidebarSections(eventId?: string | null): Promise<
 
     return {
       title: sectionTitle,
-      defaultOpen: sectionTitle === "Geral" || Boolean(eventId),
+      defaultOpen: sectionTitle === "Gestão" || Boolean(eventId),
       locked: false,
       items,
     } satisfies AdminSidebarSection;
