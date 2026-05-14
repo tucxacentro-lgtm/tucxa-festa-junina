@@ -24,25 +24,33 @@ function integer(formData: FormData, name: string, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function refresh() {
+  revalidatePath("/admin/festa-junina/indicacoes");
+  revalidatePath("/festa-junina");
+}
+
 export async function saveReferralCampaign(formData: FormData) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/indicacoes");
   const supabase = createSupabaseAdminClient();
   const id = text(formData, "id");
+  const eventId = text(formData, "event_id");
 
-  const { error } = await supabase
-    .from("referral_campaigns")
-    .update({
-      name: text(formData, "name"),
-      description: nullableText(formData, "description"),
-      share_message: nullableText(formData, "share_message"),
-      active: bool(formData, "active"),
-      count_only_paid_orders: bool(formData, "count_only_paid_orders"),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
+  const payload = {
+    event_id: eventId,
+    name: text(formData, "name"),
+    description: nullableText(formData, "description"),
+    share_message: nullableText(formData, "share_message"),
+    active: bool(formData, "active"),
+    count_only_paid_orders: bool(formData, "count_only_paid_orders"),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = id
+    ? await supabase.from("referral_campaigns").update(payload).eq("id", id)
+    : await supabase.from("referral_campaigns").insert(payload);
 
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/festa-junina/indicacoes");
+  refresh();
   redirect("/admin/festa-junina/indicacoes?saved=campaign");
 }
 
@@ -68,6 +76,6 @@ export async function saveReferralRewardRule(formData: FormData) {
     : await supabase.from("referral_reward_rules").insert(payload);
 
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/festa-junina/indicacoes");
+  refresh();
   redirect("/admin/festa-junina/indicacoes?saved=rule");
 }

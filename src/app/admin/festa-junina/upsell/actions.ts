@@ -22,20 +22,23 @@ function bool(formData: FormData, name: string) {
 export async function saveUpsellCampaign(formData: FormData) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/upsell");
   const id = text(formData, "id");
+  const eventId = text(formData, "event_id");
   const supabase = createSupabaseAdminClient();
 
-  const { error } = await supabase
-    .from("upsell_campaigns")
-    .update({
-      name: text(formData, "name"),
-      description: text(formData, "description") || null,
-      active: bool(formData, "active"),
-      show_after_purchase: bool(formData, "show_after_purchase"),
-      email_after_days: number(formData, "email_after_days", 3),
-      whatsapp_message: text(formData, "whatsapp_message") || null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
+  const payload = {
+    event_id: eventId,
+    name: text(formData, "name"),
+    description: text(formData, "description") || null,
+    active: bool(formData, "active"),
+    show_after_purchase: bool(formData, "show_after_purchase"),
+    email_after_days: number(formData, "email_after_days", 3),
+    whatsapp_message: text(formData, "whatsapp_message") || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = id
+    ? await supabase.from("upsell_campaigns").update(payload).eq("id", id)
+    : await supabase.from("upsell_campaigns").insert(payload);
 
   if (error) throw new Error(error.message);
   revalidatePath("/admin/festa-junina/upsell");
