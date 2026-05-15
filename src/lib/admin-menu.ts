@@ -252,16 +252,17 @@ function appendItem(
   const status = safeAdminMenuStatus(config?.status);
   const implemented = item.implemented;
   const fallbackRoute = !hasChildren ? `/admin/festa-junina/modulo/${item.item_key}` : undefined;
+  const href = hasChildren ? undefined : (item.route_path ?? fallbackRoute);
 
   result.push({
     key: item.item_key,
-    href: item.route_path ?? fallbackRoute,
+    href,
     label,
     depth,
     enabled: !locked,
     status,
     implemented,
-    isHeading: hasChildren && !item.route_path,
+    isHeading: hasChildren,
     hint: !implemented
       ? item.not_implemented_message ?? "Funcionalidade em preparação."
       : status === "not_used"

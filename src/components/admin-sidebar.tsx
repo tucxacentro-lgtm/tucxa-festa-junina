@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { HelpButton } from "@/components/help-button";
 import type { AdminSidebarSection } from "@/lib/admin-menu";
 
@@ -19,6 +19,10 @@ function isActive(pathname: string, href?: string) {
   return pathname === cleanHref || pathname.startsWith(`${cleanHref}/`);
 }
 
+function sectionHasActive(section: AdminSidebarSection, pathname: string) {
+  return section.items.some((item) => isActive(pathname, item.href));
+}
+
 function itemPadding(depth = 0) {
   if (depth <= 0) return "pl-3";
   if (depth === 1) return "pl-7";
@@ -28,8 +32,34 @@ function itemPadding(depth = 0) {
 
 function SidebarContent({ sections, eventName, hasSelectedEvent, onNavigate }: AdminSidebarProps & { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const initialState = useMemo(() => Object.fromEntries(sections.map((section) => [section.title, Boolean(section.defaultOpen)])), [sections]);
+  const navRef = useRef<HTMLElement | null>(null);
+  const activeItemRef = useRef<HTMLAnchorElement | null>(null);
+
+  const initialState = useMemo(
+    () => Object.fromEntries(sections.map((section) => [section.title, Boolean(section.defaultOpen) || sectionHasActive(section, pathname)])),
+    [sections, pathname],
+  );
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(initialState);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setOpenSections((current) => {
+        const next = { ...current };
+        for (const section of sections) {
+          if (sectionHasActive(section, pathname)) next[section.title] = true;
+        }
+        return next;
+      });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [pathname, sections]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      activeItemRef.current?.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [pathname, openSections]);
 
   function toggleSection(title: string) {
     setOpenSections((current) => ({ ...current, [title]: !current[title] }));
@@ -47,7 +77,7 @@ function SidebarContent({ sections, eventName, hasSelectedEvent, onNavigate }: A
         </div>
       </div>
 
-      <nav className="flex-1 space-y-3 overflow-y-auto p-3">
+      <nav ref={navRef} className="flex-1 space-y-3 overflow-y-auto p-3">
         {sections.map((section) => {
           const isOpen = openSections[section.title] ?? false;
           return (
@@ -68,25 +98,18 @@ function SidebarContent({ sections, eventName, hasSelectedEvent, onNavigate }: A
                     const depth = item.depth ?? 0;
 
                     if (!item.href || item.isHeading) {
-                      const content = (
-                        <span
+                      return (
+                        <div
+                          key={item.key}
                           title={item.hint}
                           className={`block rounded-xl py-1.5 pr-2 text-xs font-black uppercase tracking-[0.08em] ${
                             item.enabled ? "text-white/60" : "text-white/30"
                           } ${itemPadding(depth)}`}
                         >
                           {item.label}
-                        </span>
+                        </div>
                       );
-
-                      if (!item.href) return <div key={item.key}>{content}</div>;
-
-                      if (!item.enabled || !item.implemented) {
-                        return <div key={item.key} className="cursor-not-allowed">{content}</div>;
-                      }
                     }
-
-                    if (!item.href) return null;
 
                     if (!item.enabled || !item.implemented) {
                       return (
@@ -99,6 +122,7 @@ function SidebarContent({ sections, eventName, hasSelectedEvent, onNavigate }: A
                     return (
                       <a
                         key={item.key}
+                        ref={active ? activeItemRef : undefined}
                         href={item.href}
                         onClick={onNavigate}
                         className={`rounded-xl py-2 pr-3 text-sm font-bold transition ${itemPadding(depth)} ${

@@ -19,8 +19,11 @@ export default async function NovoCardapioPage() {
             <label className="grid gap-2 text-sm font-bold text-green-950">Consumo por adulto<input name="consumption_per_adult" defaultValue="0.5" className="rounded-2xl border p-3 font-normal" /></label>
             <label className="grid gap-2 text-sm font-bold text-green-950">Consumo por criança<input name="consumption_per_child" defaultValue="0.3" className="rounded-2xl border p-3 font-normal" /></label>
             <label className="grid gap-2 text-sm font-bold text-green-950">Unidade<input name="unit_label" defaultValue="un" className="rounded-2xl border p-3 font-normal" /></label>
+            <label className="grid gap-2 text-sm font-bold text-green-950">Preço de venda<input name="sales_price" defaultValue="0" className="rounded-2xl border p-3 font-normal" /></label>
             <label className="grid gap-2 text-sm font-bold text-green-950">Ordem<input name="sort_order" defaultValue="100" className="rounded-2xl border p-3 font-normal" /></label>
             <label className="flex items-center gap-2 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-green-950"><input type="checkbox" name="active" defaultChecked /> Ativo</label>
+            <label className="flex items-center gap-2 rounded-2xl bg-green-50 p-3 text-sm font-bold text-green-950"><input type="checkbox" name="is_sales_item" defaultChecked /> Aparece no cardápio de vendas</label>
+            <label className="flex items-center gap-2 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-green-950"><input type="checkbox" name="requires_preparation" defaultChecked /> Requer preparo</label>
           </div>
           <button className="mt-6 w-full rounded-2xl bg-green-900 px-5 py-3 font-black text-white">Criar item</button>
         </form>

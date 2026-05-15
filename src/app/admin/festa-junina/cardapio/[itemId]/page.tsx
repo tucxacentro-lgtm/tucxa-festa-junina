@@ -20,6 +20,9 @@ type MenuPlanningItem = {
   consumption_per_child: number | string;
   unit_label: string;
   editable_quantity: number | string | null;
+  sales_price?: number | string | null;
+  requires_preparation?: boolean | null;
+  is_sales_item?: boolean | null;
   active: boolean;
   sort_order: number;
 };
@@ -78,8 +81,11 @@ export default async function CardapioDetalhePage({ params, searchParams }: Page
             <label className="grid gap-2 text-sm font-bold text-green-950">Consumo adulto<input name="consumption_per_adult" defaultValue={item.consumption_per_adult} className="rounded-2xl border p-3 font-normal" /></label>
             <label className="grid gap-2 text-sm font-bold text-green-950">Consumo criança<input name="consumption_per_child" defaultValue={item.consumption_per_child} className="rounded-2xl border p-3 font-normal" /></label>
             <label className="grid gap-2 text-sm font-bold text-green-950">Qtd. ajustada<input name="editable_quantity" defaultValue={item.editable_quantity ?? ""} className="rounded-2xl border p-3 font-normal" /></label>
+            <label className="grid gap-2 text-sm font-bold text-green-950">Preço de venda<input name="sales_price" defaultValue={item.sales_price ?? "0"} className="rounded-2xl border p-3 font-normal" /></label>
             <label className="grid gap-2 text-sm font-bold text-green-950">Ordem<input name="sort_order" defaultValue={item.sort_order} className="rounded-2xl border p-3 font-normal" /></label>
             <label className="flex items-center gap-2 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-green-950"><input type="checkbox" name="active" defaultChecked={item.active} /> Ativo</label>
+            <label className="flex items-center gap-2 rounded-2xl bg-green-50 p-3 text-sm font-bold text-green-950"><input type="checkbox" name="is_sales_item" defaultChecked={item.is_sales_item !== false} /> Aparece no cardápio de vendas</label>
+            <label className="flex items-center gap-2 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-green-950"><input type="checkbox" name="requires_preparation" defaultChecked={Boolean(item.requires_preparation)} /> Requer preparo</label>
           </div>
           <button className="mt-6 w-full rounded-2xl bg-green-900 px-5 py-3 font-black text-white">Salvar item</button>
         </form>
