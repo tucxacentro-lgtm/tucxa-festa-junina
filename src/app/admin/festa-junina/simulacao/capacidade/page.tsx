@@ -5,6 +5,7 @@ import { getCurrentEventForAdmin } from "@/lib/current-event";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { suggestVolunteers } from "@/lib/volunteer-simulation";
 import { getSuggestedUnitCost } from "@/lib/average-prices";
+import { buildSupplierSuggestions } from "@/lib/supplier-suggestions";
 
 export const dynamic = "force-dynamic";
 
@@ -165,6 +166,14 @@ export default async function SimulacaoCapacidadePage({ searchParams }: PageProp
     const ticketRevenue = scenario.adults * avgTicket;
     return {
       ...scenario,
+      eventName: event.name,
+      eventDate: event.event_date,
+      eventLocation: event.location_name,
+      hallCapacity,
+      operationalCapacity,
+      safetyMargin,
+      tableCount,
+      chairCount,
       people,
       ticketRevenue,
       consumptionRevenue,
@@ -172,6 +181,7 @@ export default async function SimulacaoCapacidadePage({ searchParams }: PageProp
       estimatedBalance: ticketRevenue + consumptionRevenue - estimatedCosts,
       items: itemLines,
       ingredients: ingredientLines,
+      suppliers: buildSupplierSuggestions(itemLines.map((line) => ({ name: line.name, category: line.category, quantity: line.quantity, unit: line.unit })), ingredientLines),
       volunteers: suggestVolunteers(people),
     };
   });

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { CalendarDays, ExternalLink, Gift, MapPin, PartyPopper, QrCode, Ticket, Utensils, Users } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
@@ -139,12 +140,13 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
               >
                 Garantir meu convite
               </a>
-              <a
-                href="#combos"
+              <Link
+                href="/cardapio/arraia-tucxa-2026"
                 className="rounded-2xl bg-white px-6 py-4 text-center font-bold text-green-900 shadow-lg transition hover:bg-amber-50"
+                prefetch={false}
               >
-                Ver combos
-              </a>
+                Ver cardápio
+              </Link>
             </div>
           </div>
 
@@ -161,11 +163,11 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
             </div>
 
             <div className="rounded-3xl bg-amber-100 p-5">
-              <h2 className="text-2xl font-black text-green-950">Comprar antes ajuda todo mundo</h2>
-              <p className="mt-3 text-sm leading-relaxed text-stone-700">
-                Comprar antes ajuda a organizar melhor a festa e garante sua participação no sorteio/bingo da Air Fryer.
-                Assim, todo mundo chega com mais tranquilidade, menos fila e mais tempo para aproveitar.
-              </p>
+              <h2 className="text-2xl font-black text-green-950">Antes e no dia da festa</h2>
+              <div className="mt-3 grid gap-3 text-sm leading-relaxed text-stone-700">
+                <p><strong>Antes da festa:</strong> caso seja orientado pela coordenação do evento, registre seu convite, envie o comprovante e guarde o código da compra.</p>
+                <p><strong>No dia do evento:</strong> apresente o código/QR Code ou convite na entrada e acompanhe as próximas etapas conforme orientação. O cardápio pode ser consultado em <Link href="/cardapio/arraia-tucxa-2026" className="font-black text-green-900 underline" prefetch={false}>/cardapio/arraia-tucxa-2026</Link>.</p>
+              </div>
             </div>
           </div>
         </div>
