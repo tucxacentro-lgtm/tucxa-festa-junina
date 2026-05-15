@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { PublicSalesMenu, type PublicSalesMenuItem } from "@/components/public-sales-menu";
@@ -41,6 +42,23 @@ export default async function PublicCardapioPage({ params, searchParams }: PageP
   return (
     <main className="min-h-screen bg-[#fff9e6] text-green-950">
       <section className="mx-auto max-w-3xl px-4 py-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/"
+            className="rounded-full bg-white px-4 py-2 text-sm font-black text-green-950 shadow-sm transition hover:bg-amber-50"
+            prefetch={false}
+          >
+            ← Voltar para a página inicial
+          </Link>
+          <Link
+            href="/festa-junina"
+            className="rounded-full border border-green-100 bg-white px-4 py-2 text-sm font-black text-green-950 shadow-sm transition hover:bg-amber-50"
+            prefetch={false}
+          >
+            Ver convites
+          </Link>
+        </div>
+
         <div className="rounded-[2rem] bg-gradient-to-br from-amber-400 to-yellow-300 p-6 shadow-sm">
           <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black text-green-900">Cardápio público</span>
           <h1 className="mt-4 text-3xl font-black">{event.name}</h1>

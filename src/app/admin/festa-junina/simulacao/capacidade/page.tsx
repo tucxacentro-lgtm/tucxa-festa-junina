@@ -189,6 +189,7 @@ export default async function SimulacaoCapacidadePage({ searchParams }: PageProp
   return (
     <AdminPageShell>
       <section className="mx-auto max-w-7xl px-5 py-10">
+        <div className="print:hidden">
         <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-900">Simulações</span>
         <h1 className="mt-4 text-3xl font-black text-green-950">Simulação de compras, funções e voluntários</h1>
         <p className="mt-3 max-w-4xl text-stone-700">
@@ -218,6 +219,8 @@ export default async function SimulacaoCapacidadePage({ searchParams }: PageProp
           </div>
           <button className="mt-5 rounded-2xl bg-green-900 px-5 py-3 font-black text-white">Atualizar simulação</button>
         </form>
+
+        </div>
 
         <ScenarioResultModal scenarios={scenarioReports} />
       </section>
