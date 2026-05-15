@@ -319,9 +319,39 @@ const helpByKey: Record<string, HelpContent> = {
     sections: [{ title: "Conferência", body: "Registre quantidade planejada, comprada, responsável e local de armazenamento." }],
   },
   "/admin/festa-junina/treinamento": {
-    title: "Treinamentos",
-    description: "Organize orientações rápidas para voluntários, caixa, atendimento, entrega e cozinha.",
-    sections: [{ title: "Antes do evento", body: "Use a tela para simular fluxos e reduzir dúvidas no dia da festa." }],
+    title: "Materiais de treinamento",
+    description: "Gere roteiros curtos para clientes e voluntários, cadastre mensagens de WhatsApp e organize links da playlist de vídeos ou áudios.",
+    sections: [
+      {
+        title: "Como usar",
+        body: "Clique em Gerar roteiros padrão para criar a primeira lista de treinamentos. Depois edite cada roteiro, grave o vídeo ou áudio em uma ferramenta gratuita e cadastre o link do YouTube.",
+        bullets: ["Use vídeos curtos, de 30 a 90 segundos.", "Separe os treinamentos por público: cliente, garçom, caixa, cozinha, entrega e coordenação.", "Para WhatsApp, use as mensagens prontas e copie/cole manualmente para não ter custo com API."],
+      },
+      {
+        title: "Fluxo recomendado",
+        body: "O sistema gera roteiro, texto para narração, descrição do YouTube, tags e mensagem de WhatsApp. A coordenação grava e publica manualmente, depois cadastra o link.",
+      },
+    ],
+  },
+  "/admin/festa-junina/treinamento/materiais": {
+    title: "Roteiros de treinamento",
+    description: "Cadastre e edite roteiros de vídeos ou áudios curtos para orientar clientes e voluntários.",
+    sections: [
+      {
+        title: "Campos principais",
+        body: "O roteiro tem título, público, objetivo, passo a passo, texto para narração, mensagem de WhatsApp, descrição do YouTube e link do vídeo publicado.",
+      },
+    ],
+  },
+  "/admin/festa-junina/treinamento/playlist": {
+    title: "Playlist YouTube",
+    description: "Organize a playlist oficial de treinamentos da Festa Junina do Tucxa.",
+    sections: [
+      {
+        title: "Publicação",
+        body: "Depois de gravar e publicar manualmente os vídeos ou áudios no YouTube, cadastre o link da playlist e os links individuais nos roteiros.",
+      },
+    ],
   },
   "/admin/festa-junina/caixa": {
     title: "Caixa",
@@ -351,6 +381,9 @@ export function getHelpContent(pathname: string): HelpContent {
   if (normalized.startsWith("/admin/festa-junina/menu")) return helpByKey["/admin/festa-junina/menu"];
   if (normalized.startsWith("/admin/festa-junina/pedidos/")) return helpByKey["/admin/festa-junina/pedidos"];
   if (normalized.startsWith("/admin/festa-junina/cardapio/")) return helpByKey["/admin/festa-junina/cardapio"];
+  if (normalized.startsWith("/admin/festa-junina/treinamento/materiais")) return helpByKey["/admin/festa-junina/treinamento/materiais"];
+  if (normalized.startsWith("/admin/festa-junina/treinamento/playlist")) return helpByKey["/admin/festa-junina/treinamento/playlist"];
+  if (normalized.startsWith("/admin/festa-junina/treinamento")) return helpByKey["/admin/festa-junina/treinamento"];
   if (normalized.startsWith("/admin/festa-junina/upsell/envios")) return helpByKey["/admin/festa-junina/upsell/envios"];
   if (normalized.startsWith("/admin/festa-junina/upsell")) return helpByKey["/admin/festa-junina/upsell"];
   if (normalized.startsWith("/admin/festa-junina/relatorios")) return helpByKey["/admin/festa-junina/relatorios"];
@@ -386,6 +419,8 @@ const HELP_MANUAL_ORDER = [
   "/admin/festa-junina/compras/insumos",
   "/admin/festa-junina/compras/itens-finais",
   "/admin/festa-junina/treinamento",
+  "/admin/festa-junina/treinamento/materiais",
+  "/admin/festa-junina/treinamento/playlist",
   "/admin/festa-junina/atendimento",
   "/admin/festa-junina/caixa",
   "/admin/festa-junina/entrega",

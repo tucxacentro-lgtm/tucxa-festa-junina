@@ -31,6 +31,8 @@ export const MENU_ROUTE_OPTIONS: MenuRouteOption[] = [
   { group: "Evento selecionado", label: "Insumos", path: "/admin/festa-junina/compras/insumos", description: "Insumos para preparo." },
   { group: "Evento selecionado", label: "Itens finais", path: "/admin/festa-junina/compras/itens-finais", description: "Produtos prontos para revenda." },
   { group: "Evento selecionado", label: "Treinamentos", path: "/admin/festa-junina/treinamento", description: "Treinamento e simulações." },
+  { group: "Evento selecionado", label: "Materiais de treinamento", path: "/admin/festa-junina/treinamento/materiais", description: "Roteiros, textos de narração e mensagens de WhatsApp para clientes e voluntários." },
+  { group: "Evento selecionado", label: "Playlist YouTube", path: "/admin/festa-junina/treinamento/playlist", description: "Cadastro da playlist e links dos vídeos/áudios publicados." },
   { group: "Evento selecionado", label: "Atendimento", path: "/admin/festa-junina/atendimento", description: "Atendimento no dia do evento." },
   { group: "Evento selecionado", label: "Check-in", path: "/admin/festa-junina/atendimento?aba=checkin", description: "Recepção e entrada." },
   { group: "Evento selecionado", label: "Pedidos", path: "/admin/festa-junina/cliente-resumo", description: "Pedidos de consumo no dia." },
