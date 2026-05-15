@@ -97,7 +97,7 @@ export default async function AdminIndicacoesPage({ searchParams }: PageProps) {
             <h1 className="mt-3 text-3xl font-black text-green-950">Campanhas, indicações e brindes</h1>
             <p className="mt-2 max-w-3xl text-stone-600">Configure campanhas opcionais para incentivar compras antecipadas, indicações e ações manuais de WhatsApp.</p>
           </div>
-          <div className="flex flex-wrap gap-3"><Link href="/admin/festa-junina/indicacoes?new=1" className="rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white" prefetch={false}>Nova campanha</Link><Link href="/admin/festa-junina" className="rounded-full bg-white px-5 py-3 text-sm font-bold text-green-950 shadow-sm" prefetch={false}>Voltar à gestão</Link></div>
+          <div className="flex flex-wrap items-center justify-end gap-3"><Link href="/admin/festa-junina/indicacoes?new=1" className="inline-flex h-12 items-center justify-center rounded-2xl bg-green-900 px-5 text-sm font-black text-white shadow-sm transition hover:bg-green-800" prefetch={false}>Nova campanha</Link><Link href="/admin/festa-junina" className="inline-flex h-12 items-center justify-center rounded-2xl border border-green-100 bg-white px-5 text-sm font-black text-green-950 shadow-sm transition hover:bg-green-50" prefetch={false}>Voltar à gestão</Link></div>
         </div>
         {message ? <div className="rounded-3xl border border-green-200 bg-green-50 p-5 text-sm font-bold text-green-900">{message}</div> : null}
         <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950"><strong>Tipos sugeridos:</strong><ul className="mt-2 list-disc space-y-1 pl-5">{campaignTypes.map((item) => <li key={item}>{item}</li>)}</ul></div>

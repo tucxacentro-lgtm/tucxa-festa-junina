@@ -11,12 +11,25 @@ type PageProps = {
   searchParams?: Promise<{ error?: string; mesa?: string; table?: string; grupo?: string }>;
 };
 
-type EventRow = { id: string; slug: string; name: string; event_date: string | null; pix_key: string | null; pix_receiver_name: string | null };
+type EventRow = {
+  id: string;
+  slug: string;
+  name: string;
+  event_date: string | null;
+  pix_key: string | null;
+  pix_receiver_name: string | null;
+};
 
 async function getData(eventSlug: string) {
   const supabase = createSupabaseAdminClient();
-  const { data: event } = await supabase.from("events").select("id, slug, name, event_date, pix_key, pix_receiver_name").eq("slug", eventSlug).maybeSingle();
+  const { data: event } = await supabase
+    .from("events")
+    .select("id, slug, name, event_date, pix_key, pix_receiver_name")
+    .eq("slug", eventSlug)
+    .maybeSingle();
+
   if (!event) return null;
+
   const { data: items } = await supabase
     .from("event_sales_menu_items")
     .select("id, name, category, description, price, unit_label, requires_preparation")
@@ -24,6 +37,7 @@ async function getData(eventSlug: string) {
     .eq("active", true)
     .order("category")
     .order("sort_order");
+
   return { event: event as EventRow, items: (items ?? []) as PublicSalesMenuItem[] };
 }
 
@@ -36,26 +50,16 @@ export default async function PublicCardapioPage({ params, searchParams }: PageP
   const query = await searchParams;
   const data = await getData(eventSlug);
   if (!data) notFound();
+
   const { event, items } = data;
   const tableLabel = firstParam(query?.mesa) || firstParam(query?.table) || firstParam(query?.grupo);
 
   return (
     <main className="min-h-screen bg-[#fff9e6] text-green-950">
       <section className="mx-auto max-w-3xl px-4 py-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <Link
-            href="/"
-            className="rounded-full bg-white px-4 py-2 text-sm font-black text-green-950 shadow-sm transition hover:bg-amber-50"
-            prefetch={false}
-          >
+        <div className="mb-4 flex flex-wrap items-center justify-start gap-3">
+          <Link href="/" className="rounded-full bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm" prefetch={false}>
             ← Voltar para a página inicial
-          </Link>
-          <Link
-            href="/festa-junina"
-            className="rounded-full border border-green-100 bg-white px-4 py-2 text-sm font-black text-green-950 shadow-sm transition hover:bg-amber-50"
-            prefetch={false}
-          >
-            Ver convites
           </Link>
         </div>
 
