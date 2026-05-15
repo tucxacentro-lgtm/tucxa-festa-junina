@@ -217,6 +217,25 @@ const helpByKey: Record<string, HelpContent> = {
       },
     ],
   },
+
+  "/admin/festa-junina/operacao/configuracao": {
+    title: "Configuração Operacional",
+    description: "Defina como a operação da festa funcionará antes e durante o evento, sem obrigar a coordenação a usar um fluxo único.",
+    sections: [
+      {
+        title: "Flexibilidade por evento",
+        body: "Use esta tela para escolher se as vendas serão registradas pelo sistema, por planilha, por quantidade manual ou de forma mista. Também defina QR Codes, mesas, pedidos, preparo, entrega, caixa e comprovantes.",
+      },
+      {
+        title: "Pedidos e cardápio",
+        body: "O cardápio pode ser acessado por QR Code único, por mesa ou por convidado. Os pedidos podem ser feitos pelo convidado, garçom, caixa ou lançados depois a partir de comanda em papel.",
+      },
+      {
+        title: "Caixa e comprovantes",
+        body: "Configure pagamento por pedido ou fechamento final por mesa/responsável. Quando necessário, permita dividir o total entre várias pessoas e exigir upload de comprovante ou recibo.",
+      },
+    ],
+  },
   "/admin/festa-junina/operacao": {
     title: "Operação e simulação",
     description: "Registre locais de armazenamento, responsáveis e testes práticos antes da festa.",

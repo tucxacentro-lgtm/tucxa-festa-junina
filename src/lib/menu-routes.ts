@@ -11,6 +11,7 @@ export const MENU_ROUTE_OPTIONS: MenuRouteOption[] = [
   { group: "Gestão", label: "Manuais e Ajuda", path: "/admin/festa-junina/ajuda", description: "Documentações, procedimentos e orientações de uso." },
   { group: "Evento", label: "Painel de Gestão", path: "/admin/festa-junina", description: "Visão de gestão do evento aberto." },
   { group: "Evento", label: "Simulações", path: "/admin/festa-junina/simulacao/capacidade", description: "Cenários conservador, provável e máximo para compras e equipe." },
+  { group: "Operação", label: "Configuração Operacional", path: "/admin/festa-junina/operacao/configuracao", description: "Regras flexíveis de convites, mesas, pedidos, preparo, entrega, caixa e comprovantes." },
   { group: "Vendas", label: "Convites", path: "/admin/festa-junina/convites", description: "Controle de convites e acesso ao evento." },
   { group: "Vendas", label: "Combos", path: "/admin/festa-junina/combos", description: "Combos quando disponíveis." },
   { group: "Vendas", label: "Campanhas", path: "/admin/festa-junina/indicacoes", description: "Programa de indicações." },

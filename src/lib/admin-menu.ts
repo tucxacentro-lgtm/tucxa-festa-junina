@@ -89,6 +89,7 @@ export const DEFAULT_ADMIN_MENU_ITEMS: AdminMenuCatalogItem[] = [
   menuItem('vendas_conveniencias_bingo', 'Bingo', 'Evento selecionado', 'vendas_conveniencias', '/admin/festa-junina/bingo', 234, 'Aquisição de cartelas e ações de bingo vinculadas ao evento.', 'module_config'),
   menuItem('vendas_conveniencias_relatorios', 'Relatórios', 'Evento selecionado', 'vendas_conveniencias', '/admin/festa-junina/relatorios?modulo=conveniencias', 235, 'Base de dados para informações das conveniências.', 'report_bi'),
   menuItem('operacao', 'Evento selecionado', 'Evento selecionado', null, null, 400, 'Ações para que o evento aconteça.', 'module_config'),
+  menuItem('operacao_configuracao', 'Configuração Operacional', 'Evento selecionado', 'operacao', '/admin/festa-junina/operacao/configuracao', 401, 'Regras flexíveis para convites, mesas, pedidos, preparo, entrega, caixa e comprovantes.', 'module_config'),
   menuItem('operacao_voluntarios', 'Voluntários', 'Evento selecionado', 'operacao', '/admin/festa-junina/voluntarios', 410, 'Equipe mão na massa.', 'list_new'),
   menuItem('operacao_voluntarios_funcoes', 'Funções', 'Evento selecionado', 'operacao_voluntarios', '/admin/festa-junina/voluntarios/funcoes', 411, 'Cadastro de funções dos voluntários.', 'list_new'),
   menuItem('operacao_voluntarios_equipe', 'Equipe', 'Evento selecionado', 'operacao_voluntarios', '/admin/festa-junina/voluntarios/necessidade', 412, 'Necessidade por função conforme convites vendidos/estimativa.', 'module_config'),
