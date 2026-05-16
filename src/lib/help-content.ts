@@ -289,8 +289,28 @@ const helpByKey: Record<string, HelpContent> = {
   },
   "/admin/festa-junina/atendimento": {
     title: "Atendimento no dia do evento",
-    description: "Módulo futuro para check-in, pedidos, entrega, caixa e ocorrências.",
-    sections: [{ title: "Status", body: "Ainda não está implementado como operação completa. Pode ser mantido como sugestão ou não usado neste evento." }],
+    description: "Agrupador das etapas de operação: check-in, pedidos, preparo, retirada, entrega e ocorrências.",
+    sections: [{ title: "Como usar", body: "Use os itens internos do menu para abrir cada etapa da operação. Garçom e Caixa ficam fora do login, em Gestão do Evento." }],
+  },
+  "/admin/festa-junina/checkin": {
+    title: "Check-in",
+    description: "Conferência de código/QR Code, convite impresso ou lista manual na entrada.",
+    sections: [{ title: "Entrada", body: "Busque por código, nome ou WhatsApp. Depois registre a entrada e observações quando necessário." }],
+  },
+  "/admin/festa-junina/atendimento/pedidos": {
+    title: "Pedidos de consumo",
+    description: "Visão geral dos pedidos do cardápio durante o evento.",
+    sections: [{ title: "Acompanhamento", body: "Veja mesa, responsável, itens, total, status de preparo, entrega e pagamento." }],
+  },
+  "/admin/festa-junina/preparo": {
+    title: "Preparo",
+    description: "Fila da cozinha/preparo para pedidos recebidos ou em preparo.",
+    sections: [{ title: "Cozinha", body: "Marque o pedido como em preparo e depois como pronto para retirada ou entrega." }],
+  },
+  "/admin/festa-junina/retirada": {
+    title: "Retirada",
+    description: "Pedidos prontos aguardando retirada pelo cliente ou responsável.",
+    sections: [{ title: "Balcão", body: "Confira número do pedido, cliente e mesa antes de confirmar a retirada." }],
   },
   "/admin/festa-junina/prestacao-contas": {
     title: "Prestação de contas",
@@ -389,6 +409,12 @@ export function getHelpContent(pathname: string): HelpContent {
   if (normalized.startsWith("/admin/festa-junina/relatorios")) return helpByKey["/admin/festa-junina/relatorios"];
   if (normalized.startsWith("/admin/festa-junina/cliente-resumo")) return helpByKey["/admin/festa-junina/cliente-resumo"];
   if (normalized.startsWith("/admin/festa-junina/bingo")) return helpByKey["/admin/festa-junina/bingo"];
+  if (normalized.startsWith("/admin/festa-junina/checkin")) return helpByKey["/admin/festa-junina/checkin"];
+  if (normalized.startsWith("/admin/festa-junina/atendimento/pedidos")) return helpByKey["/admin/festa-junina/atendimento/pedidos"];
+  if (normalized.startsWith("/admin/festa-junina/preparo")) return helpByKey["/admin/festa-junina/preparo"];
+  if (normalized.startsWith("/admin/festa-junina/retirada")) return helpByKey["/admin/festa-junina/retirada"];
+  if (normalized.startsWith("/admin/festa-junina/entrega")) return helpByKey["/admin/festa-junina/entrega"];
+  if (normalized.startsWith("/admin/festa-junina/ocorrencias")) return helpByKey["/admin/festa-junina/ocorrencias"];
   if (normalized.startsWith("/admin/festa-junina/atendimento")) return helpByKey["/admin/festa-junina/atendimento"];
   if (normalized.startsWith("/admin/festa-junina/prestacao-contas")) return helpByKey["/admin/festa-junina/prestacao-contas"];
   if (normalized.startsWith("/admin/festa-junina")) return helpByKey["/admin/festa-junina"];
@@ -422,7 +448,10 @@ const HELP_MANUAL_ORDER = [
   "/admin/festa-junina/treinamento/materiais",
   "/admin/festa-junina/treinamento/playlist",
   "/admin/festa-junina/atendimento",
-  "/admin/festa-junina/caixa",
+  "/admin/festa-junina/checkin",
+  "/admin/festa-junina/atendimento/pedidos",
+  "/admin/festa-junina/preparo",
+  "/admin/festa-junina/retirada",
   "/admin/festa-junina/entrega",
   "/admin/festa-junina/ocorrencias",
   "/admin/festa-junina/prestacao-contas",

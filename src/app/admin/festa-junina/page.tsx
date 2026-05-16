@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CreditCard, LayoutGrid, UserRoundCheck, type LucideIcon } from "lucide-react";
+import { LayoutGrid, type LucideIcon } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { AdminFamiliarizationBox } from "@/components/admin-familiarization-box";
 import { AdminPageShell } from "@/components/admin-page-shell";
@@ -60,25 +60,6 @@ export default async function AdminFestaJuninaPage() {
 
         <AdminFamiliarizationBox />
 
-        <section className="mt-8 rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
-          <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-900">Acessos rápidos da operação</span>
-          <h2 className="mt-4 text-2xl font-black text-green-950">Garçom e Caixa</h2>
-          <p className="mt-2 max-w-3xl text-sm text-stone-600">
-            Use estes acessos no dia do evento para acompanhar pedidos do cardápio, mesas, clientes, entrega e pagamentos.
-          </p>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <Link href="/gestao-evento/garcom" prefetch={false} className="rounded-3xl border border-green-100 bg-green-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-              <UserRoundCheck className="mb-4 h-8 w-8 text-green-800" />
-              <h3 className="text-xl font-black text-green-950">Garçom / Atendimento</h3>
-              <p className="mt-2 text-sm text-stone-600">Ver pedidos, mesas e clientes associados, com itens e status de preparo/entrega.</p>
-            </Link>
-            <Link href="/gestao-evento/caixa" prefetch={false} className="rounded-3xl border border-green-100 bg-amber-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
-              <CreditCard className="mb-4 h-8 w-8 text-green-800" />
-              <h3 className="text-xl font-black text-green-950">Caixa</h3>
-              <p className="mt-2 text-sm text-stone-600">Conferir pedidos por mesa/responsável, itens consumidos, pagamentos, comprovantes e pendências.</p>
-            </Link>
-          </div>
-        </section>
 
         <div className="mt-8 grid gap-8">
           {sections.map((section) => (
