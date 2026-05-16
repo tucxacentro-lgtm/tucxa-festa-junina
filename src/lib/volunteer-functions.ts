@@ -155,3 +155,37 @@ export function countVolunteersForFunction(roleCounts: Map<string, number>, func
   }
   return total;
 }
+
+export type EventVolunteer = {
+  id: string;
+  event_id: string;
+  name: string;
+  whatsapp: string | null;
+  email: string | null;
+  role: string;
+  availability: string | null;
+  notes: string | null;
+  active: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export async function getEventVolunteers(eventId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("event_volunteers")
+    .select("*")
+    .eq("event_id", eventId)
+    .order("role", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (error) return [] as EventVolunteer[];
+  return (data ?? []) as EventVolunteer[];
+}
+
+export function volunteerMatchesFunction(volunteer: EventVolunteer, functionName: string, area?: string | null) {
+  const role = volunteer.role.toLowerCase();
+  const normalizedName = functionName.toLowerCase();
+  const normalizedArea = (area ?? "").toLowerCase();
+  return role.includes(normalizedName) || normalizedName.includes(role) || Boolean(normalizedArea && role.includes(normalizedArea));
+}

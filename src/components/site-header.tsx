@@ -9,7 +9,7 @@ const links = [
   { href: "/festa-junina#combos", label: "Combos" },
   { href: "/cardapio/arraia-tucxa-2026", label: "Cardápio" },
   { href: "/minha-compra", label: "Minha compra" },
-  { href: "/admin/festa-junina", label: "Gestão" },
+  { href: "/gestao-evento", label: "Gestão do Evento" },
 ];
 
 export function SiteHeader() {

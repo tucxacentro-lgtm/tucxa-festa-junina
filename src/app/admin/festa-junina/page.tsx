@@ -67,12 +67,12 @@ export default async function AdminFestaJuninaPage() {
             Use estes acessos no dia do evento para acompanhar pedidos do cardápio, mesas, clientes, entrega e pagamentos.
           </p>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <Link href="/admin/festa-junina/garcom" prefetch={false} className="rounded-3xl border border-green-100 bg-green-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <Link href="/gestao-evento/garcom" prefetch={false} className="rounded-3xl border border-green-100 bg-green-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
               <UserRoundCheck className="mb-4 h-8 w-8 text-green-800" />
               <h3 className="text-xl font-black text-green-950">Garçom / Atendimento</h3>
               <p className="mt-2 text-sm text-stone-600">Ver pedidos, mesas e clientes associados, com itens e status de preparo/entrega.</p>
             </Link>
-            <Link href="/admin/festa-junina/caixa" prefetch={false} className="rounded-3xl border border-green-100 bg-amber-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+            <Link href="/gestao-evento/caixa" prefetch={false} className="rounded-3xl border border-green-100 bg-amber-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
               <CreditCard className="mb-4 h-8 w-8 text-green-800" />
               <h3 className="text-xl font-black text-green-950">Caixa</h3>
               <p className="mt-2 text-sm text-stone-600">Conferir pedidos por mesa/responsável, itens consumidos, pagamentos, comprovantes e pendências.</p>
