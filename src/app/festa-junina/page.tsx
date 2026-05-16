@@ -166,7 +166,7 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
               <h2 className="text-2xl font-black text-green-950">Antes e no dia da festa</h2>
               <div className="mt-3 grid gap-3 text-sm leading-relaxed text-stone-700">
                 <p><strong>Antes da festa:</strong> caso seja orientado pela coordenação do evento, registre seu convite, envie o comprovante e guarde o código da compra.</p>
-                <p><strong>No dia do evento:</strong> apresente o código/QR Code ou convite na entrada e acompanhe as próximas etapas conforme orientação. O cardápio pode ser consultado em <Link href="/cardapio/arraia-tucxa-2026" className="font-black text-green-900 underline" prefetch={false}>/cardapio/arraia-tucxa-2026</Link>.</p>
+                <p><strong>No dia do evento:</strong> apresente o código/QR Code ou convite na entrada e acompanhe as próximas etapas conforme orientação. Acesse o <Link href="/cardapio/arraia-tucxa-2026" className="font-black text-green-900 underline" prefetch={false}>Cardápio</Link>.</p>
               </div>
             </div>
           </div>

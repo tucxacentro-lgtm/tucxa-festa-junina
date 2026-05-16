@@ -5,6 +5,7 @@ import { ShareReferralCard } from "@/components/share-referral-card";
 import { getPaymentStatusLabel, PaymentStatusBadge } from "@/components/payment-status-badge";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { formatCurrency } from "@/lib/format";
+import { deliveryStatusLabel, getConsumptionOrdersForEvent, paymentStatusLabel } from "@/lib/operation-dashboard";
 import { getServerPublicSiteUrl } from "@/lib/site-url";
 import type { TicketOrder } from "@/types/festa-junina";
 
@@ -31,6 +32,18 @@ async function getOrder(code: string) {
 
   if (error || !data) return null;
   return data as TicketOrder;
+}
+
+
+function onlyDigits(value: string | null | undefined) {
+  return (value ?? "").replace(/\D/g, "");
+}
+
+function samePhone(left: string | null | undefined, right: string | null | undefined) {
+  const a = onlyDigits(left);
+  const b = onlyDigits(right);
+  if (!a || !b) return false;
+  return a.endsWith(b) || b.endsWith(a);
 }
 
 async function getReferralInfo(code: string) {
@@ -83,6 +96,13 @@ export default async function MinhaCompraCodigoPage({ params }: PageProps) {
   }
 
   const baseUrl = await getServerPublicSiteUrl();
+  const consumptionOrders = (await getConsumptionOrdersForEvent(order.event_id)).filter((consumptionOrder) => {
+    if (samePhone(consumptionOrder.customer_phone, order.buyer_whatsapp)) return true;
+    if (!consumptionOrder.customer_phone && consumptionOrder.customer_name && order.buyer_name) {
+      return consumptionOrder.customer_name.trim().toLowerCase() === order.buyer_name.trim().toLowerCase();
+    }
+    return false;
+  });
   const myPurchaseUrl = `${baseUrl}/minha-compra/${order.buyer_code}`;
   const referralUrl = `${baseUrl}/festa-junina?ref=${encodeURIComponent(order.buyer_code)}#reserva`;
   const qrCode = await QRCode.toDataURL(myPurchaseUrl, { margin: 1, width: 240 });
@@ -153,8 +173,29 @@ export default async function MinhaCompraCodigoPage({ params }: PageProps) {
           <div className="mt-8 rounded-3xl border border-dashed border-green-300 p-5">
             <h2 className="font-black text-green-950">Consumo durante a festa</h2>
             <p className="mt-2 text-sm text-stone-600">
-              Área reservada para a próxima etapa: gestão de cardápio, pedidos por mesa, cozinha, entrega e caixa.
+              Quando houver pedidos feitos pelo cardápio com o mesmo WhatsApp desta compra, eles aparecerão aqui com status de entrega e pagamento.
             </p>
+            <div className="mt-4 grid gap-3">
+              {consumptionOrders.map((consumptionOrder) => (
+                <div key={consumptionOrder.id} className="rounded-2xl bg-amber-50 p-4 text-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-black text-green-950">Pedido {consumptionOrder.id.slice(0, 8).toUpperCase()}{consumptionOrder.table_label ? ` · ${consumptionOrder.table_label}` : ""}</p>
+                      <p className="mt-1 text-stone-600">{consumptionOrder.items.map((item) => `${Number(item.quantity)} ${item.item_name}`).join(", ")}</p>
+                    </div>
+                    <p className="text-lg font-black text-green-950">{formatCurrency(consumptionOrder.total_amount)}</p>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-black">
+                    <span className="rounded-full bg-white px-3 py-1 text-green-950">Entrega: {deliveryStatusLabel(consumptionOrder.delivery_status)}</span>
+                    <span className="rounded-full bg-white px-3 py-1 text-green-950">Pagamento: {paymentStatusLabel(consumptionOrder.payment_status)}</span>
+                    <Link href={`/cardapio/arraia-tucxa-2026/pedido/${consumptionOrder.id}`} className="rounded-full bg-green-900 px-3 py-1 text-white" prefetch={false}>Abrir pedido</Link>
+                  </div>
+                </div>
+              ))}
+              {consumptionOrders.length === 0 ? (
+                <p className="rounded-2xl bg-amber-50 p-4 text-sm text-stone-600">Ainda não há pedidos de consumo vinculados ao WhatsApp desta compra.</p>
+              ) : null}
+            </div>
           </div>
         </div>
       </section>
