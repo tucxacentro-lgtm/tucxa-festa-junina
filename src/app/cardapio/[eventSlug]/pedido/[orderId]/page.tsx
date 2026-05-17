@@ -1,8 +1,8 @@
-import QRCode from "qrcode";
 import { notFound } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { formatCurrency } from "@/lib/format";
-import { buildStaticPixPayload } from "@/lib/pix";
+import { buildPixCopyPastePayload } from "@/lib/pix";
+import { PublicConsumptionPaymentForm } from "@/components/public-consumption-payment-form";
 import { confirmPublicConsumptionDelivery, registerPublicConsumptionPayment } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +48,14 @@ export default async function PublicConsumptionOrderPage({ params, searchParams 
   const { order, items, event } = data;
   const pixKey = event.pix_key ?? "58.392.598/0001-91";
   const pixReceiver = event.pix_receiver_name ?? "Tucxa";
-  const qrCode = await QRCode.toDataURL(buildStaticPixPayload(pixKey, Number(order.total_amount ?? 0)), { margin: 1, width: 240 });
+  const pixCopyPaste = buildPixCopyPastePayload({
+    pixKey,
+    amount: order.total_amount,
+    receiverName: pixReceiver,
+    receiverCity: "CAMPINAS",
+    txid: `PED${order.id.slice(0, 12)}`,
+    description: `Pedido ${order.id.slice(0, 8)}`,
+  });
 
   return (
     <main className="min-h-screen bg-[#fff9e6] text-green-950">
@@ -75,29 +82,16 @@ export default async function PublicConsumptionOrderPage({ params, searchParams 
         <div className="mt-5 rounded-[2rem] bg-white p-5 shadow-sm">
           <p className="text-sm font-bold text-stone-600">Total</p>
           <p className="text-4xl font-black">{formatCurrency(order.total_amount)}</p>
-          <div className="mt-4 rounded-3xl bg-green-50 p-4 text-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrCode} alt="QR Code Pix" className="mx-auto rounded-2xl bg-white p-2" />
-            <p className="mt-2 text-xs font-bold">Pix: {pixKey} · {pixReceiver}</p>
-          </div>
-          <form action={registerPublicConsumptionPayment.bind(null, eventSlug)} className="mt-5 grid gap-3" encType="multipart/form-data">
-            <input type="hidden" name="order_id" value={order.id} />
-            <input type="hidden" name="event_id" value={order.event_id} />
-            <input type="hidden" name="amount" value={String(order.total_amount)} />
-            <label className="grid gap-1 text-sm font-bold">Forma de pagamento
-              <select name="method" className="rounded-2xl border border-stone-200 p-3 font-normal">
-                <option value="pix">Pix</option>
-                <option value="credit">Cartão de crédito</option>
-                <option value="debit">Cartão de débito</option>
-                <option value="cash">Dinheiro</option>
-              </select>
-            </label>
-            <label className="grid gap-1 text-sm font-bold">Enviar comprovante/recibo
-              <input name="proof_file" type="file" className="rounded-2xl border border-stone-200 p-3 font-normal" />
-            </label>
-            <textarea name="notes" className="min-h-20 rounded-2xl border border-stone-200 p-3" placeholder="Observação do pagamento, se necessário." />
-            <button className="rounded-2xl bg-green-900 px-5 py-4 font-black text-white">Registrar comprovante</button>
-          </form>
+          <PublicConsumptionPaymentForm
+            eventSlug={eventSlug}
+            orderId={order.id}
+            eventId={order.event_id}
+            amount={order.total_amount}
+            pixCopyPaste={pixCopyPaste}
+            pixKey={pixKey}
+            pixReceiver={pixReceiver}
+            action={registerPublicConsumptionPayment}
+          />
         </div>
 
         <div className="mt-5 rounded-[2rem] bg-white p-5 shadow-sm">

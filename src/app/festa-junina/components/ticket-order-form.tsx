@@ -2,8 +2,9 @@
 
 import { useMemo, useState, useActionState } from "react";
 import { createTicketOrder } from "../actions";
-import { CopyButton } from "@/components/copy-button";
+import { PixPaymentBox } from "@/components/pix-payment-box";
 import { formatCurrency } from "@/lib/format";
+import { buildPixCopyPastePayload, getPaymentInstruction } from "@/lib/pix";
 import type { Combo, EventConfig, PaymentOption, TicketType } from "@/types/festa-junina";
 
 type Props = {
@@ -40,7 +41,6 @@ export function TicketOrderForm({
   const selectedCombo = combos.find((combo) => combo.id === selectedComboId);
   const selectedPaymentOption = paymentOptions.find((option) => option.id === selectedPaymentOptionId);
   const isPixPayment = selectedPaymentOption?.method === "pix";
-  const isResponsiblePayment = selectedPaymentOption?.method === "manual";
   const pixKey = event.pix_key?.trim();
   const pixReceiverName = event.pix_receiver_name?.trim() || "Tucxa";
 
@@ -52,6 +52,24 @@ export function TicketOrderForm({
     if (selectedTicketType?.is_free) return 0;
     return Number(selectedTicketType?.price ?? 0) * Math.max(adultsQuantity, 1);
   }, [adultsQuantity, comboQuantity, purchaseType, selectedCombo, selectedTicketType]);
+
+  const pixCopyPaste = useMemo(
+    () => buildPixCopyPastePayload({
+      pixKey,
+      amount: estimatedTotal,
+      receiverName: pixReceiverName,
+      receiverCity: "CAMPINAS",
+      txid: "TUCXA2026",
+      description: "Arraia Tucxa 2026",
+    }),
+    [estimatedTotal, pixKey, pixReceiverName],
+  );
+
+  const selectedPaymentInstruction = getPaymentInstruction({
+    method: selectedPaymentOption?.method,
+    instructions: selectedPaymentOption?.instructions,
+    pixCopyPaste: isPixPayment ? pixCopyPaste : null,
+  });
 
   return (
     <form action={formAction} className="mt-6 grid gap-5">
@@ -276,63 +294,27 @@ export function TicketOrderForm({
         </p>
       </div>
 
-      {isPixPayment ? (
-        <div className="rounded-3xl border border-green-200 bg-green-50 p-5 shadow-sm">
-          <p className="text-sm font-black uppercase tracking-wide text-green-900">Pagamento via Pix</p>
-          <h3 className="mt-1 text-2xl font-black text-green-950">Chave Pix do Tucxa</h3>
+      <div className={`rounded-3xl border p-5 shadow-sm ${isPixPayment ? "border-green-200 bg-green-50" : "border-amber-200 bg-amber-50"}`}>
+        <p className="text-sm font-black uppercase tracking-wide text-green-900">{selectedPaymentInstruction.subtitle}</p>
+        <h3 className="mt-1 text-2xl font-black text-green-950">{selectedPaymentInstruction.title}</h3>
+        <p className="mt-3 text-sm leading-relaxed text-stone-700">{selectedPaymentInstruction.body}</p>
+        <p className="mt-3 rounded-2xl bg-white p-3 text-sm text-stone-700">{selectedPaymentInstruction.helper}</p>
 
-          {pixKey ? (
-            <div className="mt-4 grid gap-3 rounded-2xl bg-white p-4 md:grid-cols-[1fr_auto] md:items-center">
-              <div>
-                <p className="text-xs font-bold uppercase text-stone-500">Chave Pix</p>
-                <p className="break-all text-xl font-black text-green-950">{pixKey}</p>
-                <p className="mt-2 text-sm text-stone-600">
-                  Recebedor: <strong>{pixReceiverName}</strong>
-                </p>
-              </div>
+        {isPixPayment && pixKey ? (
+          <PixPaymentBox
+            pixCopyPaste={pixCopyPaste}
+            amount={estimatedTotal}
+            pixKey={pixKey}
+            receiverName={pixReceiverName}
+          />
+        ) : null}
 
-              <CopyButton
-                value={pixKey}
-                label="Copiar chave Pix"
-                className="bg-green-900 text-white hover:bg-green-800"
-              />
-            </div>
-          ) : (
-            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-900">
-              A chave Pix ainda não foi configurada pela organização. Escolha outra forma de pagamento ou fale com um responsável.
-            </div>
-          )}
-
-          <p className="mt-4 text-sm leading-relaxed text-green-950">
-            Faça o pagamento no aplicativo do seu banco usando a chave acima. Depois anexe abaixo o comprovante Pix para a organização validar sua compra.
-          </p>
-
-          {selectedPaymentOption?.instructions ? (
-            <p className="mt-3 rounded-2xl bg-white p-3 text-sm text-stone-700">{selectedPaymentOption.instructions}</p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {isResponsiblePayment ? (
-        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
-          <p className="text-sm font-black uppercase tracking-wide text-amber-900">Pagamento com responsável</p>
-          <h3 className="mt-1 text-2xl font-black text-green-950">Anexe o registro do pagamento combinado</h3>
-          <p className="mt-3 text-sm leading-relaxed text-stone-700">
-            Anexe uma foto do recibo do cartão de crédito, recibo do pagamento em dinheiro ou outro registro autorizado.
-            Nas observações, informe o nome e o celular de quem pagou e, se possível, o nome de quem recebeu o pagamento.
-          </p>
-          {selectedPaymentOption?.instructions ? (
-            <p className="mt-3 rounded-2xl bg-white p-3 text-sm text-stone-700">{selectedPaymentOption.instructions}</p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {!isPixPayment && !isResponsiblePayment && selectedPaymentOption?.instructions ? (
-        <div className="rounded-3xl border border-green-100 bg-white p-5 shadow-sm">
-          <p className="text-sm font-black text-green-950">Orientações de pagamento</p>
-          <p className="mt-2 text-sm text-stone-600">{selectedPaymentOption.instructions}</p>
-        </div>
-      ) : null}
+        {isPixPayment && !pixKey ? (
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-white p-4 text-sm font-semibold text-amber-900">
+            A chave Pix ainda não foi configurada pela organização. Escolha outra forma de pagamento ou fale com um responsável.
+          </div>
+        ) : null}
+      </div>
 
       <label className="rounded-3xl border border-green-100 bg-white p-4 shadow-sm">
         <span className="text-sm font-black text-green-950">Comprovante/registro do pagamento</span>
