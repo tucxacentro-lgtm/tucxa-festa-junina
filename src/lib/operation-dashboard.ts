@@ -7,6 +7,8 @@ export type ConsumptionOrderRow = {
   customer_name: string | null;
   customer_phone: string | null;
   table_label: string | null;
+  waiter_name: string | null;
+  settlement_mode: string | null;
   status: string;
   payment_status: string;
   delivery_status: string;

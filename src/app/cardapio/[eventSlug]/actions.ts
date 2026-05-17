@@ -53,11 +53,17 @@ export async function createPublicConsumptionOrder(eventSlug: string, formData: 
       customer_name: text(formData, "customer_name") || null,
       customer_phone: text(formData, "customer_phone") || null,
       table_label: text(formData, "table_label") || null,
+      waiter_name: text(formData, "waiter_name") || null,
+      settlement_mode: text(formData, "settlement_mode") || "por_pedido",
       total_amount: totalAmount,
       status: "received",
       payment_status: "pending",
       delivery_status: "pending",
-      notes: text(formData, "notes") || null,
+      notes: [
+        text(formData, "notes"),
+        text(formData, "waiter_name") ? `Garçom: ${text(formData, "waiter_name")}` : "",
+        text(formData, "settlement_mode") ? `Fechamento: ${text(formData, "settlement_mode") === "fechamento_final" ? "somente no final" : "pedido a pedido"}` : "",
+      ].filter(Boolean).join(" | ") || null,
     })
     .select("id")
     .single();

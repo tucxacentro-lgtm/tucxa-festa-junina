@@ -19,6 +19,8 @@ type CustomerSession = {
   customerName: string;
   customerPhone: string;
   tableLabel: string;
+  waiterName: string;
+  settlementMode: string;
 };
 
 type LastOrderDraft = {
@@ -32,6 +34,9 @@ type Props = {
   eventSlug: string;
   items: PublicSalesMenuItem[];
   defaultTableLabel?: string;
+  defaultCustomerName?: string;
+  defaultWaiterName?: string;
+  defaultSettlementMode?: string;
   error?: string;
   action: (formData: FormData) => void | Promise<void>;
 };
@@ -64,12 +69,12 @@ function countFromQuantities(quantities: Record<string, number>) {
   return Object.values(quantities).reduce((sum, quantity) => sum + quantity, 0);
 }
 
-export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", error, action }: Props) {
+export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", defaultCustomerName = "", defaultWaiterName = "", defaultSettlementMode = "", error, action }: Props) {
   const categories = useMemo(() => Array.from(new Set(items.map((item) => item.category || "Outros"))), [items]);
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [search, setSearch] = useState("");
   const [quantities, setQuantities] = useState<Record<string, number>>({});
-  const [session, setSession] = useState<CustomerSession>({ orderMode: defaultTableLabel ? "table" : "individual", customerName: "", customerPhone: "", tableLabel: defaultTableLabel });
+  const [session, setSession] = useState<CustomerSession>({ orderMode: defaultTableLabel ? "table" : "individual", customerName: defaultCustomerName, customerPhone: "", tableLabel: defaultTableLabel, waiterName: defaultWaiterName, settlementMode: defaultSettlementMode || "por_pedido" });
   const [lastOrder, setLastOrder] = useState<LastOrderDraft | null>(null);
   const [notes, setNotes] = useState("");
   const [sessionLoaded, setSessionLoaded] = useState(false);
@@ -82,9 +87,11 @@ export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", erro
           const parsed = JSON.parse(savedSession) as CustomerSession;
           setSession({
             orderMode: defaultTableLabel ? "table" : parsed.orderMode || "individual",
-            customerName: parsed.customerName || "",
+            customerName: defaultCustomerName || parsed.customerName || "",
             customerPhone: parsed.customerPhone || "",
             tableLabel: defaultTableLabel || parsed.tableLabel || "",
+            waiterName: defaultWaiterName || parsed.waiterName || "",
+            settlementMode: defaultSettlementMode || parsed.settlementMode || "por_pedido",
           });
         }
         const savedLastOrder = window.localStorage.getItem(getLastOrderKey(eventSlug));
@@ -96,7 +103,7 @@ export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", erro
       }
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [eventSlug, defaultTableLabel]);
+  }, [eventSlug, defaultTableLabel, defaultCustomerName, defaultWaiterName, defaultSettlementMode]);
 
   const visibleItems = useMemo(() => {
     const query = normalize(search.trim());
@@ -152,6 +159,32 @@ export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", erro
       </div>
 
       {error === "no-items" ? <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-800">Selecione pelo menos um item para criar o pedido.</div> : null}
+
+      {(session.waiterName || session.tableLabel || session.customerName) ? (
+        <div className="mt-4 rounded-3xl border border-amber-100 bg-amber-50 p-4 text-sm text-stone-700">
+          <p className="font-black text-green-950">Atendimento iniciado pelo garçom</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <label className="grid gap-1 font-bold">Garçom
+              <input name="waiter_name" value={session.waiterName} onChange={(event) => setSession((current) => ({ ...current, waiterName: event.target.value }))} className="rounded-2xl border border-amber-100 bg-white p-3 font-normal" placeholder="Nome do garçom" />
+            </label>
+            <label className="grid gap-1 font-bold">Fechamento
+              <select name="settlement_mode" value={session.settlementMode} onChange={(event) => setSession((current) => ({ ...current, settlementMode: event.target.value }))} className="rounded-2xl border border-amber-100 bg-white p-3 font-normal">
+                <option value="por_pedido">Pedido a pedido</option>
+                <option value="fechamento_final">Somente no final</option>
+              </select>
+            </label>
+            <div className="rounded-2xl bg-white p-3">
+              <p className="text-xs font-bold text-stone-500">Mesa/responsável</p>
+              <p className="font-black text-green-950">{session.tableLabel || "Mesa não informada"} · {session.customerName || "Responsável a definir"}</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <input type="hidden" name="waiter_name" value={session.waiterName} />
+          <input type="hidden" name="settlement_mode" value={session.settlementMode} />
+        </>
+      )}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <label className="grid gap-1 text-sm font-bold">Tipo

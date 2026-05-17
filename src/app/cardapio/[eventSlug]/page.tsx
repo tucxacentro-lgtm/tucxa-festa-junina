@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ eventSlug: string }>;
-  searchParams?: Promise<{ error?: string; mesa?: string; table?: string; grupo?: string }>;
+  searchParams?: Promise<{ error?: string; mesa?: string; table?: string; grupo?: string; responsavel?: string; customer?: string; garcom?: string; fechamento?: string }>;
 };
 
 type EventRow = {
@@ -53,6 +53,9 @@ export default async function PublicCardapioPage({ params, searchParams }: PageP
 
   const { event, items } = data;
   const tableLabel = firstParam(query?.mesa) || firstParam(query?.table) || firstParam(query?.grupo);
+  const responsibleName = firstParam(query?.responsavel) || firstParam(query?.customer);
+  const waiterName = firstParam(query?.garcom);
+  const settlementMode = firstParam(query?.fechamento);
 
   return (
     <main className="min-h-screen bg-[#fff9e6] text-green-950">
@@ -76,7 +79,7 @@ export default async function PublicCardapioPage({ params, searchParams }: PageP
             O cardápio de vendas ainda não foi liberado para este evento. Aguarde orientação da coordenação.
           </div>
         ) : (
-          <PublicSalesMenu eventSlug={event.slug} items={items} defaultTableLabel={tableLabel} error={query?.error} action={createPublicConsumptionOrder.bind(null, event.slug)} />
+          <PublicSalesMenu eventSlug={event.slug} items={items} defaultTableLabel={tableLabel} defaultCustomerName={responsibleName} defaultWaiterName={waiterName} defaultSettlementMode={settlementMode} error={query?.error} action={createPublicConsumptionOrder.bind(null, event.slug)} />
         )}
       </section>
     </main>
