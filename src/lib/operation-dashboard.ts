@@ -15,6 +15,8 @@ export type ConsumptionOrderRow = {
   total_amount: number | string;
   notes: string | null;
   delivered_at: string | null;
+  cancelled_at?: string | null;
+  cancellation_reason?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -46,14 +48,19 @@ export type ConsumptionOrderWithDetails = ConsumptionOrderRow & {
   payments: ConsumptionPaymentRow[];
 };
 
-export async function getConsumptionOrdersForEvent(eventId: string): Promise<ConsumptionOrderWithDetails[]> {
+export async function getConsumptionOrdersForEvent(eventId: string, options: { includeCancelled?: boolean } = {}): Promise<ConsumptionOrderWithDetails[]> {
   const supabase = createSupabaseAdminClient();
 
-  const { data: orders, error: ordersError } = await supabase
+  let ordersQuery = supabase
     .from("event_consumption_orders")
     .select("*")
-    .eq("event_id", eventId)
-    .order("created_at", { ascending: false });
+    .eq("event_id", eventId);
+
+  if (!options.includeCancelled) {
+    ordersQuery = ordersQuery.neq("status", "cancelled");
+  }
+
+  const { data: orders, error: ordersError } = await ordersQuery.order("created_at", { ascending: false });
 
   if (ordersError) return [];
 
@@ -121,6 +128,7 @@ export function deliveryStatusLabel(value: string) {
   const labels: Record<string, string> = {
     pending: "Pendente",
     delivered: "Entregue",
+    cancelled: "Cancelado",
   };
   return labels[value] ?? value;
 }

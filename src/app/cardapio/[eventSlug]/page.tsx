@@ -56,13 +56,16 @@ export default async function PublicCardapioPage({ params, searchParams }: PageP
   const responsibleName = firstParam(query?.responsavel) || firstParam(query?.customer);
   const waiterName = firstParam(query?.garcom);
   const settlementMode = firstParam(query?.fechamento);
+  const isTableService = Boolean(tableLabel || responsibleName || waiterName || settlementMode);
+  const backHref = isTableService ? "/gestao-evento/garcom" : "/";
+  const backLabel = isTableService ? "← Voltar para Garçom/Atendimento" : "← Voltar para a página inicial";
 
   return (
     <main className="min-h-screen bg-[#fff9e6] text-green-950">
       <section className="mx-auto max-w-3xl px-4 py-6">
         <div className="mb-4 flex flex-wrap items-center justify-start gap-3">
-          <Link href="/" className="rounded-full bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm" prefetch={false}>
-            ← Voltar para a página inicial
+          <Link href={backHref} className="rounded-full bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm" prefetch={false}>
+            {backLabel}
           </Link>
         </div>
 

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { CreditCard, ReceiptText, Search, QrCode, Wheat } from "lucide-react";
 import { PixPaymentBox } from "@/components/pix-payment-box";
 import { SiteHeader } from "@/components/site-header";
+import { cancelConsumptionGroup, cancelConsumptionOrder } from "@/app/gestao-evento/actions";
 import { getCurrentEventForPublic } from "@/lib/current-event";
 import { formatCurrency } from "@/lib/format";
 import { buildPixCopyPastePayload } from "@/lib/pix";
@@ -11,7 +12,7 @@ import { deliveryStatusLabel, getConsumptionOrdersForEvent, orderStatusLabel, pa
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  searchParams?: Promise<{ view?: string; sort?: string }>;
+  searchParams?: Promise<{ view?: string; sort?: string; cancelado?: string }>;
 };
 
 type CashierGroup = {
@@ -126,6 +127,12 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
           </div>
         </div>
 
+        {params?.cancelado ? (
+          <div className="mt-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-900">
+            Registro cancelado. Ele não aparece mais para Garçom/Atendimento nem para Caixa; ficará disponível apenas na área logada em Atendimento &gt; Cancelados.
+          </div>
+        ) : null}
+
         <section className="mt-8 rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div><h2 className="text-2xl font-black">Mesas e responsáveis</h2><p className="mt-1 text-sm text-stone-600">Visualize por mesa, responsável ou pedidos. Se ainda não houver pedidos, aparecem exemplos para apresentação aos coordenadores.</p></div>
@@ -151,7 +158,7 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
                 <article key={group.key} className="rounded-[2rem] border border-green-100 bg-stone-50 p-5">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex items-start gap-3"><div className="rounded-2xl bg-amber-100 p-3"><Wheat className="h-6 w-6 text-amber-800" /></div><div><p className="text-xs font-black uppercase tracking-[0.16em] text-green-800">{group.demo ? "Exemplo de fechamento" : "Mesa/responsável"}</p><h3 className="mt-1 text-2xl font-black">{group.tableLabel} · {group.responsible}</h3><p className="mt-1 text-sm text-stone-600">{settlementLabel(group.settlementMode)} · {group.demo ? "dados demonstrativos" : `${group.orders.length} pedido(s)`}</p></div></div>
-                    <div className="text-right"><p className="text-xs font-bold text-stone-500">Total</p><p className="text-2xl font-black">{formatCurrency(groupTotal)}</p><p className="text-xs font-bold text-red-800">Pendente: {formatCurrency(groupPending)}</p></div>
+                    <div className="grid gap-3 text-right"><div><p className="text-xs font-bold text-stone-500">Total</p><p className="text-2xl font-black">{formatCurrency(groupTotal)}</p><p className="text-xs font-bold text-red-800">Pendente: {formatCurrency(groupPending)}</p></div>{!group.demo ? (<form action={cancelConsumptionGroup} className="justify-self-end"><input type="hidden" name="event_id" value={event.id} /><input type="hidden" name="event_slug" value={event.slug} /><input type="hidden" name="table_label" value={view === "responsavel" ? "" : group.tableLabel} /><input type="hidden" name="responsible" value={group.responsible} /><input type="hidden" name="return_to" value="/gestao-evento/caixa" /><input type="hidden" name="reason" value="Mesa/responsável cancelado na tela Caixa." /><button className="rounded-full bg-red-50 px-4 py-2 text-sm font-black text-red-800">Cancelar mesa/responsável</button></form>) : null}</div>
                   </div>
 
                   {groupPending > 0 ? (
@@ -180,7 +187,7 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
                             <div className="flex flex-wrap gap-2 text-xs font-black"><span className={`rounded-full px-3 py-1 ${statusClass(order.status)}`}>{orderStatusLabel(order.status)}</span><span className={`rounded-full px-3 py-1 ${statusClass(order.delivery_status)}`}>Entrega: {deliveryStatusLabel(order.delivery_status)}</span><span className={`rounded-full px-3 py-1 ${statusClass(order.payment_status)}`}>Pagamento: {paymentStatusLabel(order.payment_status)}</span></div>
                           </div>
                           <div className="mt-4 overflow-x-auto rounded-2xl border border-stone-100"><table className="w-full min-w-[640px] text-left text-sm"><thead className="bg-green-950 text-white"><tr><th className="p-3">Item</th><th className="p-3">Qtd.</th><th className="p-3">Unitário</th><th className="p-3">Total</th><th className="p-3">Status</th></tr></thead><tbody>{order.items.map((item) => <tr key={item.id} className="border-b border-stone-100 last:border-0"><td className="p-3 font-bold">{item.item_name}</td><td className="p-3">{Number(item.quantity)}</td><td className="p-3">{formatCurrency(item.unit_price)}</td><td className="p-3 font-black">{formatCurrency(item.total_price)}</td><td className="p-3">{orderStatusLabel(item.status)}</td></tr>)}</tbody></table></div>
-                          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-center"><div className="rounded-2xl bg-stone-50 p-3 text-sm"><p className="font-black"><CreditCard className="mr-1 inline h-4 w-4" /> Pagamentos registrados</p>{order.payments.length > 0 ? <ul className="mt-2 space-y-1 text-stone-700">{order.payments.map((payment) => <li key={payment.id}>{paymentMethodLabel(payment.method)} · {formatCurrency(payment.amount)} · {paymentStatusLabel(payment.status)}{payment.proof_file_path ? " · comprovante anexado" : ""}</li>)}</ul> : <p className="mt-2 text-stone-600">Nenhum pagamento registrado.</p>}</div><Link href={`/cardapio/${event.slug}/pedido/${order.id}`} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white" prefetch={false}><ReceiptText className="h-4 w-4" /> Abrir pedido</Link></div>
+                          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto] md:items-center"><div className="rounded-2xl bg-stone-50 p-3 text-sm"><p className="font-black"><CreditCard className="mr-1 inline h-4 w-4" /> Pagamentos registrados</p>{order.payments.length > 0 ? <ul className="mt-2 space-y-1 text-stone-700">{order.payments.map((payment) => <li key={payment.id}>{paymentMethodLabel(payment.method)} · {formatCurrency(payment.amount)} · {paymentStatusLabel(payment.status)}{payment.proof_file_path ? " · comprovante anexado" : ""}</li>)}</ul> : <p className="mt-2 text-stone-600">Nenhum pagamento registrado.</p>}</div><div className="flex flex-wrap gap-2"><Link href={`/cardapio/${event.slug}/pedido/${order.id}`} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white" prefetch={false}><ReceiptText className="h-4 w-4" /> Abrir pedido</Link><form action={cancelConsumptionOrder}><input type="hidden" name="order_id" value={order.id} /><input type="hidden" name="event_slug" value={event.slug} /><input type="hidden" name="return_to" value="/gestao-evento/caixa" /><input type="hidden" name="reason" value="Pedido cancelado na tela Caixa." /><button className="rounded-2xl bg-red-50 px-5 py-3 text-sm font-black text-red-800">Cancelar pedido</button></form></div></div>
                         </article>
                       ))}
                     </div>

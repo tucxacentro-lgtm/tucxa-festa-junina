@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Search, Utensils, UsersRound, Wheat, ReceiptText } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
+import { cancelConsumptionGroup, cancelConsumptionOrder } from "@/app/gestao-evento/actions";
 import { getCurrentEventForPublic } from "@/lib/current-event";
 import { formatCurrency } from "@/lib/format";
 import { deliveryStatusLabel, getConsumptionOrdersForEvent, orderStatusLabel, paymentStatusLabel, type ConsumptionOrderWithDetails } from "@/lib/operation-dashboard";
@@ -9,7 +10,7 @@ import { deliveryStatusLabel, getConsumptionOrdersForEvent, orderStatusLabel, pa
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  searchParams?: Promise<{ view?: string; sort?: string }>;
+  searchParams?: Promise<{ view?: string; sort?: string; cancelado?: string }>;
 };
 
 type ServiceGroup = {
@@ -128,6 +129,12 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
           </div>
         </div>
 
+        {params?.cancelado ? (
+          <div className="mt-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-900">
+            Registro cancelado. Ele não aparece mais para Garçom/Atendimento nem para Caixa; ficará disponível apenas na área logada em Atendimento &gt; Cancelados.
+          </div>
+        ) : null}
+
         <form action={`/cardapio/${event.slug}`} className="mt-8 rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3"><UsersRound className="h-6 w-6 text-green-800" /><div><h2 className="text-2xl font-black">Iniciar atendimento de mesa</h2><p className="mt-1 text-sm text-stone-600">O link abre o cardápio já preenchido para a mesa/responsável.</p></div></div>
           <div className="mt-5 grid gap-3 md:grid-cols-4">
@@ -167,6 +174,17 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
                   <div className="mt-4 flex flex-wrap gap-2">
                     <Link href={cardapioUrl(event.slug, group.tableLabel, group.responsible, group.waiterName, group.settlementMode)} className="rounded-full bg-green-900 px-4 py-2 text-sm font-black text-white" prefetch={false}>Abrir cardápio desta mesa</Link>
                     {!group.demo && group.orders[0] ? <Link href={`/cardapio/${event.slug}/pedido/${group.orders[0].id}`} className="rounded-full bg-white px-4 py-2 text-sm font-black text-green-950 shadow-sm" prefetch={false}>Ver último pedido</Link> : null}
+                    {!group.demo ? (
+                      <form action={cancelConsumptionGroup}>
+                        <input type="hidden" name="event_id" value={event.id} />
+                        <input type="hidden" name="event_slug" value={event.slug} />
+                        <input type="hidden" name="table_label" value={view === "responsavel" ? "" : group.tableLabel} />
+                        <input type="hidden" name="responsible" value={group.responsible} />
+                        <input type="hidden" name="return_to" value="/gestao-evento/garcom" />
+                        <input type="hidden" name="reason" value="Mesa/responsável cancelado na tela Garçom/Atendimento." />
+                        <button className="rounded-full bg-red-50 px-4 py-2 text-sm font-black text-red-800">Cancelar mesa/responsável</button>
+                      </form>
+                    ) : null}
                   </div>
                 </article>
               );
@@ -189,7 +207,7 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
                 <div className="mt-4 grid gap-2 md:grid-cols-2">
                   {order.items.map((item) => <div key={item.id} className="rounded-2xl bg-white p-3 text-sm"><div className="flex items-start gap-2"><Utensils className="mt-0.5 h-4 w-4 text-green-800" /><div><strong>{item.item_name}</strong><p className="text-stone-600">{Number(item.quantity)} × {formatCurrency(item.unit_price)} = {formatCurrency(item.total_price)}</p></div></div></div>)}
                 </div>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4"><strong>Total: {formatCurrency(order.total_amount)}</strong><Link href={`/cardapio/${event.slug}/pedido/${order.id}`} className="rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white" prefetch={false}><ReceiptText className="mr-1 inline h-4 w-4" /> Abrir pedido</Link></div>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4"><strong>Total: {formatCurrency(order.total_amount)}</strong><div className="flex flex-wrap gap-2"><Link href={`/cardapio/${event.slug}/pedido/${order.id}`} className="rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white" prefetch={false}><ReceiptText className="mr-1 inline h-4 w-4" /> Abrir pedido</Link><form action={cancelConsumptionOrder}><input type="hidden" name="order_id" value={order.id} /><input type="hidden" name="event_slug" value={event.slug} /><input type="hidden" name="return_to" value="/gestao-evento/garcom" /><input type="hidden" name="reason" value="Pedido cancelado na tela Garçom/Atendimento." /><button className="rounded-full bg-red-50 px-5 py-3 text-sm font-black text-red-800">Cancelar pedido</button></form></div></div>
               </article>
             ))}
             {orders.length === 0 ? <div className="rounded-3xl border border-dashed border-green-200 bg-green-50 p-8 text-center text-sm text-stone-700">Nenhum pedido registrado ainda. Use os cards de exemplo acima para simular o atendimento.</div> : null}

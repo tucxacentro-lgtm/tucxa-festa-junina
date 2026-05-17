@@ -302,6 +302,14 @@ const helpByKey: Record<string, HelpContent> = {
     description: "Visão geral dos pedidos do cardápio durante o evento.",
     sections: [{ title: "Acompanhamento", body: "Veja mesa, responsável, itens, total, status de preparo, entrega e pagamento." }],
   },
+  "/admin/festa-junina/atendimento/cancelados": {
+    title: "Cancelados",
+    description: "Histórico logado de mesas, responsáveis e pedidos cancelados na operação.",
+    sections: [
+      { title: "Uso", body: "Quando uma mesa/responsável ou pedido for cancelado na operação, ele deixa de aparecer para Garçom/Atendimento e Caixa e fica disponível aqui para conferência." },
+      { title: "Restauração", body: "Se o cancelamento foi feito por engano, a coordenação pode restaurar o pedido para que ele volte à operação." },
+    ],
+  },
   "/admin/festa-junina/preparo": {
     title: "Preparo",
     description: "Fila da cozinha/preparo para pedidos recebidos ou em preparo.",
@@ -410,6 +418,7 @@ export function getHelpContent(pathname: string): HelpContent {
   if (normalized.startsWith("/admin/festa-junina/cliente-resumo")) return helpByKey["/admin/festa-junina/cliente-resumo"];
   if (normalized.startsWith("/admin/festa-junina/bingo")) return helpByKey["/admin/festa-junina/bingo"];
   if (normalized.startsWith("/admin/festa-junina/checkin")) return helpByKey["/admin/festa-junina/checkin"];
+  if (normalized.startsWith("/admin/festa-junina/atendimento/cancelados")) return helpByKey["/admin/festa-junina/atendimento/cancelados"];
   if (normalized.startsWith("/admin/festa-junina/atendimento/pedidos")) return helpByKey["/admin/festa-junina/atendimento/pedidos"];
   if (normalized.startsWith("/admin/festa-junina/preparo")) return helpByKey["/admin/festa-junina/preparo"];
   if (normalized.startsWith("/admin/festa-junina/retirada")) return helpByKey["/admin/festa-junina/retirada"];
@@ -450,6 +459,7 @@ const HELP_MANUAL_ORDER = [
   "/admin/festa-junina/atendimento",
   "/admin/festa-junina/checkin",
   "/admin/festa-junina/atendimento/pedidos",
+  "/admin/festa-junina/atendimento/cancelados",
   "/admin/festa-junina/preparo",
   "/admin/festa-junina/retirada",
   "/admin/festa-junina/entrega",

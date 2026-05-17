@@ -36,6 +36,7 @@ export const MENU_ROUTE_OPTIONS: MenuRouteOption[] = [
   { group: "Evento selecionado", label: "Atendimento", path: "/admin/festa-junina/atendimento", description: "Atendimento no dia do evento." },
   { group: "Evento selecionado", label: "Check-in", path: "/admin/festa-junina/checkin", description: "Recepção e entrada." },
   { group: "Evento selecionado", label: "Pedidos", path: "/admin/festa-junina/atendimento/pedidos", description: "Pedidos de consumo no dia." },
+  { group: "Evento selecionado", label: "Cancelados", path: "/admin/festa-junina/atendimento/cancelados", description: "Histórico de mesas/responsáveis e pedidos cancelados." },
   { group: "Evento selecionado", label: "Preparo", path: "/admin/festa-junina/preparo", description: "Fila e preparo." },
   { group: "Evento selecionado", label: "Retirada", path: "/admin/festa-junina/retirada", description: "Retirada no balcão." },
   { group: "Evento selecionado", label: "Entrega", path: "/admin/festa-junina/entrega", description: "Entrega ao cliente." },

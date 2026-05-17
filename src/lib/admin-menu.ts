@@ -105,6 +105,7 @@ export const DEFAULT_ADMIN_MENU_ITEMS: AdminMenuCatalogItem[] = [
   menuItem('operacao_atendimento', 'Atendimento', 'Evento selecionado', 'operacao', '/admin/festa-junina/atendimento', 440, 'Fluxo de atendimento no dia do evento.', 'operation'),
   menuItem('operacao_atendimento_checkin', 'Check-in', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/checkin', 441, 'Recepção e acomodação dos participantes.', 'operation'),
   menuItem('operacao_atendimento_pedidos', 'Pedidos', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/atendimento/pedidos', 443, 'Pedidos do cardápio no dia do evento.', 'operation'),
+  menuItem('operacao_atendimento_cancelados', 'Cancelados', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/atendimento/cancelados', 4435, 'Mesas, responsáveis e pedidos cancelados ocultos da operação pública.', 'operation'),
   menuItem('operacao_atendimento_preparo', 'Preparo', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/preparo', 444, 'Produção conforme pedido e receita.', 'operation'),
   menuItem('operacao_atendimento_retirada', 'Retirada', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/retirada', 445, 'Retirada pelo cliente no balcão.', 'operation'),
   menuItem('operacao_atendimento_entrega', 'Entrega', 'Evento selecionado', 'operacao_atendimento', '/admin/festa-junina/entrega', 446, 'Entrega do garçom para o cliente.', 'operation'),
