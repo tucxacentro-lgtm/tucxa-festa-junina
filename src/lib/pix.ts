@@ -77,7 +77,12 @@ export function buildStaticPixPayload(pixKey: string | null | undefined, amount?
   return buildPixCopyPastePayload({ pixKey, amount, receiverName: "TUCXA", receiverCity: "CAMPINAS", txid: "TUCXA" });
 }
 
+function normalizePaymentMethod(method: string | null | undefined) {
+  return method?.trim().toLowerCase() || "";
+}
+
 export function paymentMethodLabel(method: string | null | undefined) {
+  const normalizedMethod = normalizePaymentMethod(method);
   const labels: Record<string, string> = {
     pix: "Pix",
     credit: "Cartão de crédito",
@@ -86,77 +91,85 @@ export function paymentMethodLabel(method: string | null | undefined) {
     manual: "Pagamento com responsável",
     free: "Cortesia",
   };
-  return labels[method || ""] ?? method ?? "Pagamento";
+  return labels[normalizedMethod] ?? method ?? "Pagamento";
+}
+
+function normalizePaymentInstructionText(value: string) {
+  return value
+    .replace(/equipe do caixa/gi, "equipe da coordenação")
+    .replace(/presencialmente no caixa/gi, "presencialmente com a coordenação")
+    .replace(/no caixa/gi, "com a coordenação");
 }
 
 function paymentBody(method: string | null | undefined, instructions: string | null | undefined, fallback: string) {
   const configured = instructions?.trim();
-  if (!configured) return fallback;
+  if (!configured) return normalizePaymentInstructionText(fallback);
   const normalized = configured.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const looksLikePix = normalized.includes("pix") || normalized.includes("chave");
-  if (method !== "pix" && looksLikePix) return fallback;
-  return configured;
+  if (method !== "pix" && looksLikePix) return normalizePaymentInstructionText(fallback);
+  return normalizePaymentInstructionText(configured);
 }
 
 export function getPaymentInstruction({ method, instructions, pixCopyPaste }: PaymentInstructionInput) {
+  const normalizedMethod = normalizePaymentMethod(method);
 
-  if (method === "pix") {
+  if (normalizedMethod === "pix") {
     return {
       title: "Pagamento via Pix",
       subtitle: "Use o QR Code ou Pix Copia e Cola com o valor total já preenchido.",
       body:
-        paymentBody(method, instructions, "Faça o pagamento via Pix pelo valor total informado, usando o QR Code ou Pix Copia e Cola. Depois anexe o comprovante na tela da compra/pedido para conferência da equipe."),
+        paymentBody(normalizedMethod, instructions, "Faça o pagamento via Pix pelo valor total informado, usando o QR Code ou Pix Copia e Cola. Depois anexe o comprovante na tela da compra/pedido para conferência da equipe."),
       helper: pixCopyPaste
         ? "O código Pix abaixo já inclui a chave do Tucxa e o valor total. Se o app do banco permitir alteração, não altere o valor antes de pagar."
         : "Confira o valor total antes de pagar e anexe o comprovante depois.",
     };
   }
 
-  if (method === "credit") {
+  if (normalizedMethod === "credit") {
     return {
       title: "Pagamento com cartão de crédito",
-      subtitle: "Pagamento presencial com a equipe do caixa.",
+      subtitle: "Pagamento presencial com a equipe da coordenação.",
       body:
-        paymentBody(method, instructions, "O pagamento por cartão de crédito será realizado presencialmente com a equipe do caixa. Apresente o código/QR Code da compra ou pedido e guarde o comprovante da maquininha até a confirmação pela equipe."),
+        paymentBody(normalizedMethod, instructions, "O pagamento por cartão de crédito será realizado presencialmente com a equipe da coordenação. Apresente o código/QR Code da compra ou pedido e guarde o comprovante da maquininha até a confirmação pela equipe."),
       helper: "O status será atualizado pela equipe após conferência do pagamento.",
     };
   }
 
-  if (method === "debit") {
+  if (normalizedMethod === "debit") {
     return {
       title: "Pagamento com débito",
-      subtitle: "Pagamento presencial com a equipe do caixa.",
+      subtitle: "Pagamento presencial com a equipe da coordenação.",
       body:
-        paymentBody(method, instructions, "O pagamento por débito será realizado presencialmente com a equipe do caixa. Após aprovação na maquininha, a equipe confirmará o pagamento no sistema. Apresente o código/QR Code quando solicitado."),
+        paymentBody(normalizedMethod, instructions, "O pagamento por débito será realizado presencialmente com a equipe da coordenação. Após aprovação na maquininha, a equipe confirmará o pagamento no sistema. Apresente o código/QR Code quando solicitado."),
       helper: "Guarde o comprovante até a confirmação pela equipe.",
     };
   }
 
-  if (method === "cash") {
+  if (normalizedMethod === "cash") {
     return {
       title: "Pagamento em dinheiro",
-      subtitle: "Pagamento presencial no caixa.",
+      subtitle: "Pagamento presencial com a coordenação.",
       body:
-        paymentBody(method, instructions, "O pagamento em dinheiro será realizado presencialmente no caixa. Se possível, leve o valor aproximado para facilitar o troco e agilizar o atendimento. Apresente o código/QR Code quando solicitado."),
+        paymentBody(normalizedMethod, instructions, "O pagamento em dinheiro será realizado presencialmente com a coordenação. Se possível, leve o valor aproximado para facilitar o troco e agilizar o atendimento. Apresente o código/QR Code quando solicitado."),
       helper: "A equipe registrará a quitação no sistema após receber o valor.",
     };
   }
 
-  if (method === "manual") {
+  if (normalizedMethod === "manual") {
     return {
       title: "Pagamento com responsável",
       subtitle: "Anexe o registro do pagamento combinado.",
       body:
-        paymentBody(method, instructions, "Anexe uma foto do recibo do cartão, comprovante de pagamento em dinheiro ou outro registro autorizado. Nas observações, informe o nome e o celular de quem pagou e, se possível, o nome de quem recebeu o pagamento."),
+        paymentBody(normalizedMethod, instructions, "Anexe uma foto do recibo do cartão, comprovante de pagamento em dinheiro ou outro registro autorizado. Nas observações, informe o nome e o celular de quem pagou e, se possível, o nome de quem recebeu o pagamento."),
       helper: "Use esta opção somente quando a coordenação orientar o pagamento com um responsável.",
     };
   }
 
-  if (method === "free") {
+  if (normalizedMethod === "free") {
     return {
       title: "Cortesia",
       subtitle: "Sem pagamento financeiro.",
-      body: paymentBody(method, instructions, "Esta opção não exige pagamento. Siga as orientações da coordenação para registrar a cortesia."),
+      body: paymentBody(normalizedMethod, instructions, "Esta opção não exige pagamento. Siga as orientações da coordenação para registrar a cortesia."),
       helper: "A equipe poderá conferir a cortesia no dia do evento.",
     };
   }
@@ -164,7 +177,7 @@ export function getPaymentInstruction({ method, instructions, pixCopyPaste }: Pa
   return {
     title: "Orientações de pagamento",
     subtitle: "Siga as orientações da coordenação.",
-    body: paymentBody(method, instructions, "Confira o valor total, siga a forma de pagamento escolhida e anexe o comprovante/registro quando solicitado."),
+    body: paymentBody(normalizedMethod, instructions, "Confira o valor total, siga a forma de pagamento escolhida e anexe o comprovante/registro quando solicitado."),
     helper: "Guarde seu código/QR Code para acompanhamento em Minha compra.",
   };
 }

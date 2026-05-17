@@ -34,13 +34,13 @@ export function TicketOrderForm({
   const [adultsQuantity, setAdultsQuantity] = useState(1);
   const [comboQuantity, setComboQuantity] = useState(1);
   const [selectedPaymentOptionId, setSelectedPaymentOptionId] = useState(
-    paymentOptions.find((option) => option.method === "pix")?.id ?? paymentOptions[0]?.id ?? "",
+    paymentOptions.find((option) => option.method?.toLowerCase() === "pix")?.id ?? paymentOptions[0]?.id ?? "",
   );
 
   const selectedTicketType = ticketTypes.find((ticket) => ticket.id === selectedTicketTypeId);
   const selectedCombo = combos.find((combo) => combo.id === selectedComboId);
   const selectedPaymentOption = paymentOptions.find((option) => option.id === selectedPaymentOptionId);
-  const isPixPayment = selectedPaymentOption?.method === "pix";
+  const isPixPayment = selectedPaymentOption?.method?.toLowerCase() === "pix";
   const pixKey = event.pix_key?.trim();
   const pixReceiverName = event.pix_receiver_name?.trim() || "Tucxa";
 

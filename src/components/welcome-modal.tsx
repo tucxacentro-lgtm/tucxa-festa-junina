@@ -68,7 +68,11 @@ export function WelcomeModal() {
             <article className="rounded-2xl border border-green-100 bg-amber-50 p-4">
               <h3 className="font-black text-green-950">Antes da festa</h3>
               <p className="mt-2 text-sm leading-relaxed text-stone-700">
-                Caso seja orientado pela coordenação do evento, registre seu convite, envie o comprovante e guarde o código da compra.
+                Caso seja orientado pela coordenação do evento, registre seu{' '}
+                <Link href="/festa-junina#reserva" className="font-black text-green-900 underline" onClick={close} prefetch={false}>
+                  convite
+                </Link>
+                {", envie o comprovante e guarde o código da compra."}
               </p>
             </article>
             <article className="rounded-2xl border border-green-100 bg-amber-50 p-4">
