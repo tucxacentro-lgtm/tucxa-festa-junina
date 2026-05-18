@@ -84,7 +84,7 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
           </details>
         </section>
 
-        <section className="mt-8 grid gap-5 lg:grid-cols-[420px_1fr]">
+        <section className="mt-8 grid gap-5 lg:grid-cols-[360px_1fr]">
           <div className="rounded-[2rem] border border-green-100 bg-white p-5 shadow-sm">
             <div className="flex items-center gap-3"><Search className="h-5 w-5 text-green-800" /><h2 className="text-xl font-black">Responsáveis</h2></div>
             <form className="mt-4 grid gap-2">
@@ -99,10 +99,11 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
               {filteredRows.map((row) => {
                 const rowPending = pendingFromOrders(row.orders);
                 return (
-                  <Link key={row.id} href={`/gestao-evento/caixa${buildQuery({ responsavel: row.id, q: params?.q, garcom: params?.garcom })}`} className={`block p-4 hover:bg-green-50 ${current?.id === row.id ? "bg-green-50" : ""}`} prefetch={false}>
+                  <Link key={row.id} href={`/gestao-evento/caixa${buildQuery({ responsavel: row.id, q: params?.q, garcom: params?.garcom })}#fechamento-responsavel`} className={`block p-4 hover:bg-green-50 ${current?.id === row.id ? "bg-green-50" : ""}`} prefetch={false}>
                     <p className="font-black text-green-950">{row.responsibleName}</p>
                     <p className="mt-1 text-xs text-stone-600">Garçom: {row.waiterName || "—"} · {row.orders.length} pedido(s)</p>
                     <p className="mt-1 text-sm font-black text-red-800">Pendente: {formatCurrency(rowPending)}</p>
+                    <p className="mt-2 inline-flex rounded-full bg-green-900 px-3 py-1 text-xs font-black text-white">Ver fechamento</p>
                   </Link>
                 );
               })}
@@ -110,7 +111,7 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-green-100 bg-white p-5 shadow-sm">
+          <div id="fechamento-responsavel" className="scroll-mt-24 rounded-[2rem] border border-green-100 bg-white p-5 shadow-sm">
             {current ? (
               <>
                 <div className="flex flex-wrap items-start justify-between gap-4">

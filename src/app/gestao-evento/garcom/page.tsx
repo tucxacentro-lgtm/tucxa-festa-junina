@@ -86,8 +86,8 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
       <SiteHeader />
       <section className="mx-auto max-w-7xl px-5 py-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <Link href="/gestao-evento" className="rounded-full bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm" prefetch={false}>← Gestão do Evento</Link>
-          <Link href="/gestao-evento/caixa" className="rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm" prefetch={false}>Ir para Caixa</Link>
+          <Link href="/gestao-evento" className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm" prefetch={false}>← Gestão do Evento</Link>
+          <Link href="/gestao-evento/caixa" className="inline-flex min-h-12 items-center justify-center rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm" prefetch={false}>Ir para Caixa</Link>
         </div>
 
         <div className="rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
@@ -126,7 +126,7 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
             <label className="grid gap-1 text-sm font-bold">WhatsApp opcional<input name="responsible_phone" className="rounded-2xl border border-green-100 p-3 font-normal" placeholder="Opcional" /></label>
             <label className="grid gap-1 text-sm font-bold">Pagamento<select name="settlement_mode" defaultValue="fechamento_final" className="rounded-2xl border border-green-100 p-3 font-normal"><option value="fechamento_final">Somente no final</option><option value="por_pedido">Pedido a pedido</option></select></label>
           </div>
-          <button className="mt-5 rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white">Cadastrar e abrir cardápio</button>
+          <button className="mt-5 w-full rounded-2xl bg-green-900 px-5 py-4 text-sm font-black text-white md:w-auto">Cadastrar e abrir cardápio</button>
         </form>
 
         <section className="mt-8 rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
@@ -135,7 +135,7 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
               <h2 className="text-2xl font-black">Lista de responsáveis</h2>
               <p className="mt-1 text-sm text-stone-600">Lista em ordem alfabética, com busca por nome e filtro por garçom.</p>
             </div>
-            <form className="grid gap-2 md:grid-cols-[1fr_1fr_auto]">
+            <form className="grid w-full gap-2 md:w-auto md:grid-cols-[1fr_1fr_auto]">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
                 <input name="q" defaultValue={params?.q ?? ""} className="w-full rounded-full border border-green-100 bg-white py-3 pl-9 pr-4 text-sm" placeholder="Buscar responsável" />
@@ -148,7 +148,42 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
             </form>
           </div>
 
-          <div className="mt-6 overflow-x-auto rounded-3xl border border-green-100">
+          <div className="mt-6 grid gap-3 md:hidden">
+            {filteredRows.map((row) => {
+              const total = totalFromOrders(row.orders);
+              const pending = pendingFromOrders(row.orders);
+              const publicTrackingUrl = trackingUrl(row);
+              return (
+                <article key={row.id} className="rounded-3xl border border-green-100 bg-white p-4 shadow-sm">
+                  <Link href={cardapioUrl(event.slug, row)} className="block text-lg font-black text-green-900 underline" prefetch={false}>{row.responsibleName}</Link>
+                  <p className="mt-1 text-xs text-stone-500">{statusText(row)}</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="rounded-2xl bg-stone-50 p-3"><p className="text-xs font-bold text-stone-500">Garçom</p><p className="font-black">{row.waiterName || "—"}</p></div>
+                    <div className="rounded-2xl bg-stone-50 p-3"><p className="text-xs font-bold text-stone-500">Pedidos</p><p className="font-black">{row.orders.length}</p></div>
+                    <div className="rounded-2xl bg-stone-50 p-3"><p className="text-xs font-bold text-stone-500">Total</p><p className="font-black">{formatCurrency(total)}</p></div>
+                    <div className="rounded-2xl bg-red-50 p-3"><p className="text-xs font-bold text-red-700">Pendente</p><p className="font-black text-red-800">{formatCurrency(pending)}</p></div>
+                  </div>
+                  <details className="mt-3 rounded-2xl bg-green-50 p-3">
+                    <summary className="cursor-pointer font-black text-green-900"><QrCode className="mr-1 inline h-4 w-4" /> QR Code único</summary>
+                    <div className="mt-3"><QrCodeInline value={publicTrackingUrl} /><p className="mt-2 break-all text-xs text-stone-600">{publicTrackingUrl}</p></div>
+                  </details>
+                  <div className="mt-3 grid gap-2">
+                    <Link href={cardapioUrl(event.slug, row)} className="rounded-full bg-green-900 px-4 py-3 text-center text-sm font-black text-white" prefetch={false}>Abrir pedidos</Link>
+                    <form action={cancelConsumptionGroup}>
+                      <input type="hidden" name="event_id" value={event.id} />
+                      <input type="hidden" name="responsible" value={row.responsibleName} />
+                      <input type="hidden" name="return_to" value="/gestao-evento/garcom" />
+                      <input type="hidden" name="reason" value="Responsável cancelado na tela Garçom/Atendimento." />
+                      <ConfirmSubmitButton className="w-full rounded-full bg-red-50 px-4 py-3 text-sm font-black text-red-800" message={`Tem certeza que deseja cancelar o responsável ${row.responsibleName} e ocultar seus pedidos das telas de Garçom/Atendimento e Caixa? Os registros continuarão salvos no sistema.`}>Cancelar</ConfirmSubmitButton>
+                    </form>
+                  </div>
+                </article>
+              );
+            })}
+            {filteredRows.length === 0 ? <p className="rounded-2xl bg-stone-50 p-4 text-center text-sm text-stone-600">Nenhum responsável encontrado. Cadastre o primeiro responsável acima.</p> : null}
+          </div>
+
+          <div className="mt-6 hidden overflow-x-auto rounded-3xl border border-green-100 md:block">
             <table className="w-full min-w-[980px] text-left text-sm">
               <thead className="bg-green-950 text-white">
                 <tr>

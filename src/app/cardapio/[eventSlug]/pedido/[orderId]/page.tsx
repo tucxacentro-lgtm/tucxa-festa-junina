@@ -103,7 +103,7 @@ export default async function PublicConsumptionOrderPage({ params, searchParams 
           )}
           {isTableService ? (
             <Link href={cardapioBackUrl(eventSlug, order)} className="rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm" prefetch={false}>
-              Novo pedido para esta mesa
+              Novo Pedido
             </Link>
           ) : null}
         </div>
@@ -134,13 +134,13 @@ export default async function PublicConsumptionOrderPage({ params, searchParams 
           <p className="text-4xl font-black">{formatCurrency(order.total_amount)}</p>
           {isFinalSettlement ? (
             <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-950">
-              <p className="text-xs font-black uppercase tracking-wide">Fechamento final da mesa</p>
+              <p className="text-xs font-black uppercase tracking-wide">Fechamento final do cliente</p>
               <h2 className="mt-2 text-xl font-black text-green-950">Pagamento será feito no caixa ao final</h2>
               <p className="mt-2 leading-relaxed">
-                Este pedido foi registrado para ser somado ao fechamento final da mesa/responsável. Por isso, não exibimos QR Code Pix ou Pix Copia e Cola neste pedido individual.
+                Este pedido foi registrado para ser somado ao fechamento final do responsável. Por isso, não exibimos QR Code Pix ou Pix Copia e Cola neste pedido individual.
               </p>
               <p className="mt-3 rounded-2xl bg-white p-3 text-stone-700">
-                Quando a mesa/responsável for fechar a conta, acesse <strong>Gestão do Evento &gt; Caixa</strong> para gerar o Pix com o total pendente.
+                Quando o responsável for fechar a conta, acesse <strong>Gestão do Evento &gt; Caixa</strong> para gerar o Pix com o total pendente.
               </p>
             </div>
           ) : (
