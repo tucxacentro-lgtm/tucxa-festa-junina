@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ClipboardList, QrCode, Search, UserPlus } from "lucide-react";
+import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { SiteHeader } from "@/components/site-header";
 import { QrCodeInline } from "@/components/qr-code-inline";
 import { cancelConsumptionGroup, cancelConsumptionOrder, createServiceResponsible } from "@/app/gestao-evento/actions";
@@ -35,12 +36,50 @@ function statusText(row: ServiceResponsibleRow) {
   return "Pago";
 }
 
+function normalizeResponsibleKey(value: string) {
+  return value.trim().toLocaleLowerCase("pt-BR");
+}
+
+function mergeRowsByResponsible(rows: ServiceResponsibleRow[]) {
+  const map = new Map<string, ServiceResponsibleRow>();
+
+  for (const row of rows) {
+    const key = normalizeResponsibleKey(row.responsibleName);
+    const current = map.get(key);
+
+    if (!current) {
+      map.set(key, {
+        ...row,
+        waiterName: row.waiterName ?? null,
+        orders: [...row.orders],
+      });
+      continue;
+    }
+
+    current.orders.push(...row.orders);
+
+    const waiterNames = new Set(
+      [current.waiterName, row.waiterName]
+        .flatMap((value) => (value ?? "").split("/"))
+        .map((value) => value.trim())
+        .filter(Boolean),
+    );
+
+    current.waiterName = Array.from(waiterNames).join(" / ") || current.waiterName || row.waiterName;
+    current.responsiblePhone = current.responsiblePhone || row.responsiblePhone;
+    current.tableLabel = current.tableLabel || row.tableLabel;
+    current.settlementMode = current.settlementMode || row.settlementMode;
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.responsibleName.localeCompare(b.responsibleName, "pt-BR"));
+}
+
 export default async function GarcomPublicPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const event = await getCurrentEventForPublic();
   const rows = await getServiceResponsiblesForEvent(event.id);
   const waiters = getWaiterOptions(rows);
-  const filteredRows = filterServiceRows(rows, params?.q, params?.garcom);
+  const filteredRows = mergeRowsByResponsible(filterServiceRows(rows, params?.q, params?.garcom));
 
   return (
     <main className="min-h-screen bg-amber-50 text-green-950">
@@ -137,14 +176,13 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
                       <td className="p-3"><details><summary className="cursor-pointer font-black text-green-900"><QrCode className="mr-1 inline h-4 w-4" /> QR Code</summary><div className="mt-3 rounded-2xl bg-stone-50 p-3"><QrCodeInline value={publicTrackingUrl} /><p className="mt-2 break-all text-xs text-stone-600">{publicTrackingUrl}</p></div></details></td>
                       <td className="p-3">
                         <div className="flex flex-wrap gap-2">
-                          <Link href={cardapioUrl(event.slug, row)} className="rounded-full bg-green-900 px-4 py-2 text-xs font-black text-white" prefetch={false}>Abrir cardápio</Link>
+                          <Link href={cardapioUrl(event.slug, row)} className="rounded-full bg-green-900 px-4 py-2 text-xs font-black text-white" prefetch={false}>Abrir pedidos</Link>
                           <form action={cancelConsumptionGroup}>
                             <input type="hidden" name="event_id" value={event.id} />
-                            <input type="hidden" name="service_session_id" value={row.id} />
                             <input type="hidden" name="responsible" value={row.responsibleName} />
                             <input type="hidden" name="return_to" value="/gestao-evento/garcom" />
                             <input type="hidden" name="reason" value="Responsável cancelado na tela Garçom/Atendimento." />
-                            <button className="rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-800">Cancelar</button>
+                            <ConfirmSubmitButton className="rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-800" message={`Tem certeza que deseja cancelar o responsável ${row.responsibleName} e ocultar seus pedidos das telas de Garçom/Atendimento e Caixa? Os registros continuarão salvos no sistema.`}>Cancelar</ConfirmSubmitButton>
                           </form>
                         </div>
                       </td>
@@ -166,7 +204,7 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
               <article key={order.id} className="rounded-2xl border border-stone-100 bg-stone-50 p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div><p className="font-black">{row.responsibleName} · Pedido {order.id.slice(0, 8).toUpperCase()}</p><p className="mt-1 text-sm text-stone-600">{order.items.map((item) => `${Number(item.quantity)} ${item.item_name}`).join(" · ")}</p></div>
-                  <div className="flex flex-wrap gap-2"><strong>{formatCurrency(order.total_amount)}</strong><form action={cancelConsumptionOrder}><input type="hidden" name="order_id" value={order.id} /><input type="hidden" name="event_slug" value={event.slug} /><input type="hidden" name="return_to" value="/gestao-evento/garcom" /><input type="hidden" name="reason" value="Pedido cancelado na tela Garçom/Atendimento." /><button className="rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-800">Cancelar pedido</button></form></div>
+                  <div className="flex flex-wrap gap-2"><strong>{formatCurrency(order.total_amount)}</strong><form action={cancelConsumptionOrder}><input type="hidden" name="order_id" value={order.id} /><input type="hidden" name="event_slug" value={event.slug} /><input type="hidden" name="return_to" value="/gestao-evento/garcom" /><input type="hidden" name="reason" value="Pedido cancelado na tela Garçom/Atendimento." /><ConfirmSubmitButton className="rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-800" message="Tem certeza que deseja cancelar este pedido? Ele não será apagado; apenas deixará de aparecer nas telas de Garçom/Atendimento e Caixa.">Cancelar pedido</ConfirmSubmitButton></form></div>
                 </div>
               </article>
             )))}

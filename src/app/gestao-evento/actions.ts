@@ -213,6 +213,12 @@ export async function cancelConsumptionGroup(formData: FormData) {
       .from("event_table_service_sessions")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .eq("id", serviceSessionId);
+  } else if (responsible) {
+    await supabase
+      .from("event_table_service_sessions")
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("event_id", eventId)
+      .ilike("responsible_name", responsible);
   }
 
   revalidatePath("/gestao-evento/garcom");
