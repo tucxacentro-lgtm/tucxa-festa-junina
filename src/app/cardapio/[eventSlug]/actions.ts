@@ -49,6 +49,7 @@ export async function createPublicConsumptionOrder(eventSlug: string, formData: 
     .from("event_consumption_orders")
     .insert({
       event_id: event.id,
+      service_session_id: text(formData, "service_session_id") || null,
       order_mode: text(formData, "order_mode") || "individual",
       customer_name: text(formData, "customer_name") || null,
       customer_phone: text(formData, "customer_phone") || null,

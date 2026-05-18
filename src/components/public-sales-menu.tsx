@@ -33,6 +33,7 @@ type LastOrderDraft = {
 type Props = {
   eventSlug: string;
   items: PublicSalesMenuItem[];
+  defaultServiceSessionId?: string;
   defaultTableLabel?: string;
   defaultCustomerName?: string;
   defaultWaiterName?: string;
@@ -69,7 +70,7 @@ function countFromQuantities(quantities: Record<string, number>) {
   return Object.values(quantities).reduce((sum, quantity) => sum + quantity, 0);
 }
 
-export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", defaultCustomerName = "", defaultWaiterName = "", defaultSettlementMode = "", error, action }: Props) {
+export function PublicSalesMenu({ eventSlug, items, defaultServiceSessionId = "", defaultTableLabel = "", defaultCustomerName = "", defaultWaiterName = "", defaultSettlementMode = "", error, action }: Props) {
   const categories = useMemo(() => Array.from(new Set(items.map((item) => item.category || "Outros"))), [items]);
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [search, setSearch] = useState("");
@@ -117,6 +118,7 @@ export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", defa
 
   const total = totalFromQuantities(items, quantities);
   const itemCount = countFromQuantities(quantities);
+  const isWaiterFlow = Boolean(defaultServiceSessionId || defaultWaiterName || defaultCustomerName);
 
   function setQuantity(itemId: string, quantity: number) {
     setQuantities((current) => ({ ...current, [itemId]: Math.max(0, quantity) }));
@@ -146,10 +148,11 @@ export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", defa
 
   return (
     <form action={action} onSubmit={storeBeforeSubmit} className="mt-5 rounded-[2rem] bg-white p-4 shadow-sm">
+      <input type="hidden" name="service_session_id" value={defaultServiceSessionId} />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-black">Novo pedido</h2>
-          <p className="mt-1 text-sm text-stone-600">Informe seus dados uma vez. Neste celular, eles serão sugeridos nos próximos pedidos.</p>
+          <p className="mt-1 text-sm text-stone-600">Selecione os itens solicitados. Quando aberto pelo garçom, o responsável já vem preenchido.</p>
         </div>
         {sessionLoaded && lastOrder ? (
           <button type="button" onClick={applyLastOrder} className="inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-black text-green-950">
@@ -186,29 +189,40 @@ export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", defa
         </>
       )}
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <label className="grid gap-1 text-sm font-bold">Tipo
-          <select name="order_mode" value={session.orderMode} onChange={(event) => setSession((current) => ({ ...current, orderMode: event.target.value }))} className="rounded-2xl border border-stone-200 p-3 font-normal">
-            <option value="individual">Individual</option>
-            <option value="group">Grupo/família</option>
-            <option value="table">Mesa</option>
-          </select>
-        </label>
-        <label className="grid gap-1 text-sm font-bold">Nome/responsável
-          <input required name="customer_name" value={session.customerName} onChange={(event) => setSession((current) => ({ ...current, customerName: event.target.value }))} className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Seu nome" />
-        </label>
-        <label className="grid gap-1 text-sm font-bold">WhatsApp
-          <input name="customer_phone" value={session.customerPhone} onChange={(event) => setSession((current) => ({ ...current, customerPhone: event.target.value }))} className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Opcional" />
-        </label>
-        <label className="grid gap-1 text-sm font-bold">Mesa/grupo
-          <input name="table_label" value={session.tableLabel} onChange={(event) => setSession((current) => ({ ...current, tableLabel: event.target.value }))} className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Ex.: Mesa 4" />
-        </label>
-      </div>
+      {isWaiterFlow ? (
+        <div className="mt-4 rounded-3xl border border-green-100 bg-green-50 p-4 text-sm text-green-950">
+          <input type="hidden" name="order_mode" value="group" />
+          <input type="hidden" name="customer_name" value={session.customerName} />
+          <input type="hidden" name="customer_phone" value={session.customerPhone} />
+          <input type="hidden" name="table_label" value={session.tableLabel || session.customerName} />
+          <p className="font-black">Pedido para {session.customerName || "responsável"}</p>
+          <p className="mt-1 text-stone-700">Garçom: {session.waiterName || "não informado"} · Fechamento no caixa ao final.</p>
+        </div>
+      ) : (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className="grid gap-1 text-sm font-bold">Tipo
+            <select name="order_mode" value={session.orderMode} onChange={(event) => setSession((current) => ({ ...current, orderMode: event.target.value }))} className="rounded-2xl border border-stone-200 p-3 font-normal">
+              <option value="individual">Individual</option>
+              <option value="group">Grupo/família</option>
+              <option value="table">Mesa</option>
+            </select>
+          </label>
+          <label className="grid gap-1 text-sm font-bold">Nome/responsável
+            <input required name="customer_name" value={session.customerName} onChange={(event) => setSession((current) => ({ ...current, customerName: event.target.value }))} className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Seu nome" />
+          </label>
+          <label className="grid gap-1 text-sm font-bold">WhatsApp
+            <input name="customer_phone" value={session.customerPhone} onChange={(event) => setSession((current) => ({ ...current, customerPhone: event.target.value }))} className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Opcional" />
+          </label>
+          <label className="grid gap-1 text-sm font-bold">Mesa/grupo
+            <input name="table_label" value={session.tableLabel} onChange={(event) => setSession((current) => ({ ...current, tableLabel: event.target.value }))} className="rounded-2xl border border-stone-200 p-3 font-normal" placeholder="Ex.: Mesa 4" />
+          </label>
+        </div>
+      )}
 
       <div className="sticky top-2 z-20 mt-5 rounded-[1.5rem] border border-amber-100 bg-white/95 p-3 shadow-sm backdrop-blur">
         <div className="flex items-center gap-2 rounded-2xl border border-stone-200 bg-stone-50 px-3 py-2">
           <Search className="h-4 w-4 text-stone-500" />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Buscar pastel, bebida, doce, bingo..." />
+          <input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Buscar cachorro-quente, batata, cerveja..." />
         </div>
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
           {["Todos", ...categories].map((category) => (
@@ -267,7 +281,7 @@ export function PublicSalesMenu({ eventSlug, items, defaultTableLabel = "", defa
           </div>
           <button className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white">Criar pedido</button>
         </div>
-        <p className="mt-2 flex items-center gap-1 text-xs text-stone-500"><UserRound className="h-3 w-3" /> Dados salvos somente neste navegador para facilitar próximos pedidos.</p>
+        <p className="mt-2 flex items-center gap-1 text-xs text-stone-500"><UserRound className="h-3 w-3" /> Pedido registrado para conferência do garçom/caixa.</p>
       </div>
     </form>
   );

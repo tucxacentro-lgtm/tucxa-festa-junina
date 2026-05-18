@@ -4,7 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { formatCurrency } from "@/lib/format";
 import { buildPixCopyPastePayload } from "@/lib/pix";
 import { PublicConsumptionPaymentForm } from "@/components/public-consumption-payment-form";
-import { confirmPublicConsumptionDelivery, registerPublicConsumptionPayment } from "../../actions";
+import { registerPublicConsumptionPayment } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -161,10 +161,9 @@ export default async function PublicConsumptionOrderPage({ params, searchParams 
           <h2 className="text-xl font-black">Status</h2>
           <p className="mt-2 text-sm">Pagamento: <strong>{statusLabel(order.payment_status)}</strong></p>
           <p className="text-sm">Entrega: <strong>{statusLabel(order.delivery_status)}</strong></p>
-          <form action={confirmPublicConsumptionDelivery.bind(null, eventSlug)} className="mt-4">
-            <input type="hidden" name="order_id" value={order.id} />
-            <button className="w-full rounded-2xl bg-green-900 px-5 py-4 font-black text-white">Confirmo que recebi meu pedido</button>
-          </form>
+          <p className="mt-4 rounded-2xl bg-amber-50 p-3 text-sm text-amber-950">
+            O recebimento será controlado pela equipe com as fichas em papel. O cliente não precisa confirmar a entrega no sistema.
+          </p>
         </div>
       </section>
     </main>
