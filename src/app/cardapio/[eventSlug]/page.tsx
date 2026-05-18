@@ -1,14 +1,35 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  ArrowRight,
+  HeartHandshake,
+  Search,
+  Sparkles,
+  Utensils,
+} from "lucide-react";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
-import { PublicSalesMenu, type PublicSalesMenuItem } from "@/components/public-sales-menu";
+import { formatCurrency } from "@/lib/format";
+import {
+  PublicSalesMenu,
+  type PublicSalesMenuItem,
+} from "@/components/public-sales-menu";
 import { createPublicConsumptionOrder } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ eventSlug: string }>;
-  searchParams?: Promise<{ error?: string; sessao?: string; mesa?: string; table?: string; grupo?: string; responsavel?: string; customer?: string; garcom?: string; fechamento?: string }>;
+  searchParams?: Promise<{
+    error?: string;
+    sessao?: string;
+    mesa?: string;
+    table?: string;
+    grupo?: string;
+    responsavel?: string;
+    customer?: string;
+    garcom?: string;
+    fechamento?: string;
+  }>;
 };
 
 type EventRow = {
@@ -32,20 +53,269 @@ async function getData(eventSlug: string) {
 
   const { data: items } = await supabase
     .from("event_sales_menu_items")
-    .select("id, name, category, description, price, unit_label, requires_preparation")
+    .select(
+      "id, name, category, description, price, unit_label, requires_preparation",
+    )
     .eq("event_id", event.id)
     .eq("active", true)
     .order("category")
     .order("sort_order");
 
-  return { event: event as EventRow, items: (items ?? []) as PublicSalesMenuItem[] };
+  return {
+    event: event as EventRow,
+    items: (items ?? []) as PublicSalesMenuItem[],
+  };
 }
 
 function firstParam(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+  return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-export default async function PublicCardapioPage({ params, searchParams }: PageProps) {
+function priceOf(item: PublicSalesMenuItem) {
+  return formatCurrency(Number(item.price) || 0);
+}
+
+function categoryMessage(category: string) {
+  const key = category
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  if (key.includes("bebida")) {
+    return {
+      title: "Bebidas para refrescar e acompanhar a festa",
+      subtitle:
+        "Do refrigerante à cerveja, opções para manter o clima leve enquanto você aproveita o arraiá.",
+      why: "Ajuda a evitar filas e facilita a retirada: escolha antes, peça com o garçom e siga para aproveitar a festa.",
+    };
+  }
+
+  if (key.includes("doce")) {
+    return {
+      title: "Doces com gostinho de Festa Junina",
+      subtitle:
+        "Maçã do amor, canjica, bolo e doces diversos para fechar o pedido com carinho de festa de comunidade.",
+      why: "Ideal para agradar crianças, família e amigos sem perder tempo decidindo na hora da retirada.",
+    };
+  }
+
+  if (key.includes("bingo")) {
+    return {
+      title: "Bingo para entrar no clima",
+      subtitle:
+        "Cartelas e itens ligados ao bingo para deixar a festa ainda mais participativa.",
+      why: "Além de se divertir, você ajuda o Tucxa a organizar melhor a arrecadação e a operação do evento.",
+    };
+  }
+
+  return {
+    title: "Comidas de arraiá para matar a fome com alegria",
+    subtitle:
+      "Cachorro-quente, pastel, espetinho, milho, caldo e outras opções para comer bem durante a festa.",
+    why: "Você escolhe com tranquilidade, o garçom registra o pedido e a ficha em papel orienta a retirada.",
+  };
+}
+
+function groupItems(items: PublicSalesMenuItem[]) {
+  return Array.from(
+    new Set(items.map((item) => item.category || "Outros")),
+  ).map((category) => ({
+    category,
+    items: items.filter((item) => (item.category || "Outros") === category),
+    message: categoryMessage(category),
+  }));
+}
+
+function PublicPersuasiveMenu({
+  event,
+  items,
+}: {
+  event: EventRow;
+  items: PublicSalesMenuItem[];
+}) {
+  const groups = groupItems(items);
+
+  return (
+    <main className="min-h-screen bg-[#fff9e6] text-green-950">
+      <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">
+        <div className="mb-4">
+          <Link
+            href="/festa-junina"
+            className="inline-flex rounded-full bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm"
+            prefetch={false}
+          >
+            ← Voltar para a Festa Junina
+          </Link>
+        </div>
+
+        <div className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-amber-400 via-orange-300 to-yellow-300 shadow-sm">
+          <div className="grid gap-6 p-6 md:grid-cols-[1.2fr_0.8fr] md:p-8">
+            <div>
+              <span className="rounded-full bg-white/85 px-3 py-1 text-xs font-black text-green-900">
+                Cardápio do evento
+              </span>
+              <h1 className="mt-4 text-4xl font-black tracking-tight text-green-950 md:text-5xl">
+                Sabores do {event.name}
+              </h1>
+              <p className="mt-4 max-w-2xl text-base font-semibold leading-relaxed text-green-950/85 md:text-lg">
+                Escolha com calma o que você quer provar, combine com a família
+                e, no dia da festa, faça seu pedido com um garçom.
+              </p>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-800 md:text-base">
+                O garçom registra os itens no sistema e entrega as fichas em
+                papel para retirada. Assim todo mundo aproveita mais: menos
+                confusão, menos fila e mais tempo para curtir a Festa Junina do
+                Tucxa.
+              </p>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/gestao-evento/garcom"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-900 px-6 py-4 text-center font-black text-white shadow-lg transition hover:bg-green-800"
+                  prefetch={false}
+                >
+                  Fazer pedido com um garçom <ArrowRight className="h-4 w-4" />
+                </Link>
+                <a
+                  href="#itens"
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 text-center font-black text-green-950 shadow-lg transition hover:bg-amber-50"
+                >
+                  Ver itens e valores
+                </a>
+              </div>
+            </div>
+
+            <div className="rounded-[1.5rem] bg-white/80 p-5 shadow-sm backdrop-blur">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-900 text-white">
+                <HeartHandshake className="h-6 w-6" />
+              </div>
+              <h2 className="mt-4 text-2xl font-black">
+                Por que pedir pelo garçom?
+              </h2>
+              <div className="mt-4 grid gap-3 text-sm leading-relaxed text-stone-700">
+                <p>
+                  <strong className="text-green-950">Mais simples:</strong> você
+                  fala o pedido, o garçom registra e entrega a ficha.
+                </p>
+                <p>
+                  <strong className="text-green-950">Mais organizado:</strong> a
+                  coordenação acompanha pedidos, pagamentos e totais.
+                </p>
+                <p>
+                  <strong className="text-green-950">
+                    Mais tempo de festa:
+                  </strong>{" "}
+                  você escolhe rápido e volta para aproveitar a família, os
+                  amigos e o bingo.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section className="mt-6 grid gap-4 md:grid-cols-3">
+          <article className="rounded-3xl bg-white p-5 shadow-sm">
+            <Sparkles className="mb-3 h-6 w-6 text-green-800" />
+            <h3 className="font-black">Escolha sem pressa</h3>
+            <p className="mt-2 text-sm text-stone-600">
+              Veja preços e opções antes de falar com o garçom.
+            </p>
+          </article>
+          <article className="rounded-3xl bg-white p-5 shadow-sm">
+            <Utensils className="mb-3 h-6 w-6 text-green-800" />
+            <h3 className="font-black">Retirada com ficha</h3>
+            <p className="mt-2 text-sm text-stone-600">
+              Após o pedido, use a ficha para retirar os itens no ponto
+              indicado.
+            </p>
+          </article>
+          <article className="rounded-3xl bg-white p-5 shadow-sm">
+            <Search className="mb-3 h-6 w-6 text-green-800" />
+            <h3 className="font-black">Tudo em uma lista</h3>
+            <p className="mt-2 text-sm text-stone-600">
+              Comidas, doces e bebidas separados para facilitar a escolha.
+            </p>
+          </article>
+        </section>
+
+        <section id="itens" className="mt-8 grid gap-6">
+          {items.length === 0 ? (
+            <div className="rounded-[2rem] bg-white p-6 text-sm text-stone-600 shadow-sm">
+              O cardápio ainda não foi liberado para este evento. Aguarde
+              orientação da coordenação.
+            </div>
+          ) : (
+            groups.map(({ category, items: categoryItems, message }) => (
+              <article
+                key={category}
+                className="overflow-hidden rounded-[2rem] bg-white shadow-sm"
+              >
+                <div className="border-b border-amber-100 bg-amber-50 p-5 md:p-6">
+                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-black text-green-900">
+                    {category}
+                  </span>
+                  <h2 className="mt-3 text-2xl font-black text-green-950">
+                    {message.title}
+                  </h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-stone-700">
+                    {message.subtitle}
+                  </p>
+                  <p className="mt-2 max-w-3xl text-xs font-bold leading-relaxed text-green-900 md:text-sm">
+                    {message.why}
+                  </p>
+                </div>
+                <div className="grid gap-3 p-4 md:grid-cols-2 md:p-6">
+                  {categoryItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-lg font-black text-green-950">
+                            {item.name}
+                          </h3>
+                          {item.description ? (
+                            <p className="mt-1 text-sm leading-relaxed text-stone-600">
+                              {item.description}
+                            </p>
+                          ) : null}
+                        </div>
+                        <p className="shrink-0 rounded-full bg-green-900 px-3 py-2 text-sm font-black text-white">
+                          {priceOf(item)}
+                        </p>
+                      </div>
+                      <p className="mt-3 text-xs font-bold text-stone-500">
+                        {item.requires_preparation
+                          ? "Preparado no evento"
+                          : "Pronto para retirada"}{" "}
+                        · {item.unit_label || "un"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))
+          )}
+        </section>
+
+        <div className="sticky bottom-3 z-20 mt-8 rounded-[1.5rem] border border-green-100 bg-white/95 p-3 shadow-xl backdrop-blur md:static md:p-0 md:shadow-none md:bg-transparent md:border-0">
+          <Link
+            href="/gestao-evento/garcom"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-900 px-6 py-4 text-center font-black text-white transition hover:bg-green-800"
+            prefetch={false}
+          >
+            Fazer pedido com um garçom <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+export default async function PublicCardapioPage({
+  params,
+  searchParams,
+}: PageProps) {
   const { eventSlug } = await params;
   const query = await searchParams;
   const data = await getData(eventSlug);
@@ -53,37 +323,67 @@ export default async function PublicCardapioPage({ params, searchParams }: PageP
 
   const { event, items } = data;
   const serviceSessionId = firstParam(query?.sessao);
-  const tableLabel = firstParam(query?.mesa) || firstParam(query?.table) || firstParam(query?.grupo);
-  const responsibleName = firstParam(query?.responsavel) || firstParam(query?.customer);
+  const tableLabel =
+    firstParam(query?.mesa) ||
+    firstParam(query?.table) ||
+    firstParam(query?.grupo);
+  const responsibleName =
+    firstParam(query?.responsavel) || firstParam(query?.customer);
   const waiterName = firstParam(query?.garcom);
   const settlementMode = firstParam(query?.fechamento);
-  const isTableService = Boolean(tableLabel || responsibleName || waiterName || settlementMode);
-  const backHref = isTableService ? "/gestao-evento/garcom" : "/";
-  const backLabel = isTableService ? "← Voltar para Garçom/Atendimento" : "← Voltar para a página inicial";
+  const isTableService = Boolean(
+    serviceSessionId ||
+    tableLabel ||
+    responsibleName ||
+    waiterName ||
+    settlementMode,
+  );
+
+  if (!isTableService) {
+    return <PublicPersuasiveMenu event={event} items={items} />;
+  }
 
   return (
     <main className="min-h-screen bg-[#fff9e6] text-green-950">
       <section className="mx-auto max-w-3xl px-4 py-6">
         <div className="mb-4 flex flex-wrap items-center justify-start gap-3">
-          <Link href={backHref} className="rounded-full bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm" prefetch={false}>
-            {backLabel}
+          <Link
+            href="/gestao-evento/garcom"
+            className="rounded-full bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm"
+            prefetch={false}
+          >
+            ← Voltar para Garçom/Atendimento
           </Link>
         </div>
 
         <div className="rounded-[2rem] bg-gradient-to-br from-amber-400 to-yellow-300 p-6 shadow-sm">
-          <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black text-green-900">Cardápio público</span>
+          <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black text-green-900">
+            Pedido pelo garçom
+          </span>
           <h1 className="mt-4 text-3xl font-black">{event.name}</h1>
           <p className="mt-2 text-sm text-green-950/80">
-            Escolha os itens, use a busca ou as categorias e gere o pedido com total para pagamento. Se você estiver usando QR Code da mesa, a mesa já pode vir preenchida.
+            Registre os itens solicitados pelo responsável. O pedido fica
+            vinculado ao atendimento e pode ser acompanhado no caixa.
           </p>
         </div>
 
         {items.length === 0 ? (
           <div className="mt-5 rounded-[2rem] bg-white p-5 text-sm text-stone-600 shadow-sm">
-            O cardápio de vendas ainda não foi liberado para este evento. Aguarde orientação da coordenação.
+            O cardápio de vendas ainda não foi liberado para este evento.
+            Aguarde orientação da coordenação.
           </div>
         ) : (
-          <PublicSalesMenu eventSlug={event.slug} items={items} defaultServiceSessionId={serviceSessionId} defaultTableLabel={tableLabel} defaultCustomerName={responsibleName} defaultWaiterName={waiterName} defaultSettlementMode={settlementMode} error={query?.error} action={createPublicConsumptionOrder.bind(null, event.slug)} />
+          <PublicSalesMenu
+            eventSlug={event.slug}
+            items={items}
+            defaultServiceSessionId={serviceSessionId}
+            defaultTableLabel={tableLabel}
+            defaultCustomerName={responsibleName}
+            defaultWaiterName={waiterName}
+            defaultSettlementMode={settlementMode}
+            error={query?.error}
+            action={createPublicConsumptionOrder.bind(null, event.slug)}
+          />
         )}
       </section>
     </main>

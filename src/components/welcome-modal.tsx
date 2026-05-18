@@ -5,7 +5,6 @@ import { X } from "lucide-react";
 import { useState } from "react";
 import { WhatsAppSupportButton } from "@/components/whatsapp-support-button";
 
-
 const STORAGE_KEY = "tucxa_festa_junina_welcome_hidden_v1";
 
 export function WelcomeModal() {
@@ -55,21 +54,30 @@ export function WelcomeModal() {
             Bem-vindo ao sistema da Festa Junina do Tucxa
           </h2>
           <p className="mt-4 max-w-2xl text-sm leading-relaxed text-stone-700 sm:text-base">
-            Aqui você pode garantir seu convite, escolher combos*, anexar o comprovante, acompanhar sua compra pelo código/QR Code e compartilhar seu link de indicação*.
+            Aqui você pode garantir seu convite, escolher combos*, anexar o
+            comprovante, acompanhar sua compra pelo código/QR Code e
+            compartilhar seu link de indicação*.
           </p>
           <p className="mt-2 max-w-2xl text-xs font-bold text-green-900 sm:text-sm">
             *quando disponíveis
           </p>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-700 sm:text-base">
-            Comprar antecipadamente não é só reservar a entrada: ajuda o Tucxa a planejar melhor alimentos, bebidas, voluntários, mesas e atendimento para receber todos com mais conforto, menos fila e mais organização.
+            Comprar antecipadamente não é só reservar a entrada: ajuda o Tucxa a
+            planejar melhor alimentos, bebidas, voluntários, mesas e atendimento
+            para receber todos com mais conforto, menos fila e mais organização.
           </p>
 
           <div className="mt-6 grid gap-3 md:grid-cols-3">
             <article className="rounded-2xl border border-green-100 bg-amber-50 p-4">
               <h3 className="font-black text-green-950">Antes da festa</h3>
               <p className="mt-2 text-sm leading-relaxed text-stone-700">
-                Caso seja orientado pela coordenação do evento, registre seu{' '}
-                <Link href="/festa-junina#reserva" className="font-black text-green-900 underline" onClick={close} prefetch={false}>
+                Caso seja orientado pela coordenação do evento, registre seu{" "}
+                <Link
+                  href="/festa-junina#reserva"
+                  className="font-black text-green-900 underline"
+                  onClick={close}
+                  prefetch={false}
+                >
                   convite
                 </Link>
                 {", envie o comprovante e guarde o código da compra."}
@@ -78,9 +86,15 @@ export function WelcomeModal() {
             <article className="rounded-2xl border border-green-100 bg-amber-50 p-4">
               <h3 className="font-black text-green-950">No dia do evento</h3>
               <p className="mt-2 text-sm leading-relaxed text-stone-700">
-                Apresente o código/QR Code ou convite na entrada e acompanhe as próximas etapas conforme orientação. Acesse o{' '}
-                <Link href="/cardapio/arraia-tucxa-2026" className="font-black text-green-900 underline" onClick={close} prefetch={false}>
-                  Cardápio
+                Apresente o código/QR Code ou convite na entrada e acompanhe as
+                próximas etapas conforme orientação. Faça seu pedido com um{" "}
+                <Link
+                  href="/gestao-evento/garcom"
+                  className="font-black text-green-900 underline"
+                  onClick={close}
+                  prefetch={false}
+                >
+                  garçom
                 </Link>
                 .
               </p>
@@ -88,7 +102,8 @@ export function WelcomeModal() {
             <article className="rounded-2xl border border-green-100 bg-amber-50 p-4">
               <h3 className="font-black text-green-950">Suporte</h3>
               <p className="mt-2 text-sm leading-relaxed text-stone-700">
-                Em caso de dúvida, toque no botão abaixo para falar com o suporte pelo WhatsApp.
+                Em caso de dúvida, toque no botão abaixo para falar com o
+                suporte pelo WhatsApp.
               </p>
             </article>
           </div>
@@ -100,7 +115,8 @@ export function WelcomeModal() {
               href="/festa-junina#reserva"
               onClick={close}
               className="rounded-2xl bg-green-900 px-5 py-3 text-center text-sm font-black text-white transition hover:bg-green-800"
-             prefetch={false}>
+              prefetch={false}
+            >
               Garantir meu convite
             </Link>
             <button

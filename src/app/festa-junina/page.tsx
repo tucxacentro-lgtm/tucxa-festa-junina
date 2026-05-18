@@ -1,11 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CalendarDays, ExternalLink, Gift, MapPin, PartyPopper, QrCode, Ticket, Utensils, Users } from "lucide-react";
+import {
+  CalendarDays,
+  ExternalLink,
+  Gift,
+  MapPin,
+  PartyPopper,
+  QrCode,
+  Ticket,
+  Utensils,
+  Users,
+} from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { getCurrentEventSlug } from "@/lib/current-event";
 import { formatCurrency, formatDate, formatTime } from "@/lib/format";
-import type { Combo, EventConfig, PaymentOption, TicketType } from "@/types/festa-junina";
+import type {
+  Combo,
+  EventConfig,
+  PaymentOption,
+  TicketType,
+} from "@/types/festa-junina";
 import { TicketOrderForm } from "./components/ticket-order-form";
 import { WelcomeModal } from "@/components/welcome-modal";
 
@@ -28,28 +43,29 @@ async function getEventData() {
     throw new Error(eventError?.message ?? "Evento não encontrado.");
   }
 
-  const [{ data: ticketTypes }, { data: combos }, { data: paymentOptions }] = await Promise.all([
-    supabase
-      .from("ticket_types")
-      .select("*")
-      .eq("event_id", event.id)
-      .eq("active", true)
-      .order("sort_order"),
+  const [{ data: ticketTypes }, { data: combos }, { data: paymentOptions }] =
+    await Promise.all([
+      supabase
+        .from("ticket_types")
+        .select("*")
+        .eq("event_id", event.id)
+        .eq("active", true)
+        .order("sort_order"),
 
-    supabase
-      .from("offer_combos")
-      .select("*")
-      .eq("event_id", event.id)
-      .eq("active", true)
-      .order("sort_order"),
+      supabase
+        .from("offer_combos")
+        .select("*")
+        .eq("event_id", event.id)
+        .eq("active", true)
+        .order("sort_order"),
 
-    supabase
-      .from("payment_options")
-      .select("*")
-      .eq("event_id", event.id)
-      .eq("active", true)
-      .order("sort_order"),
-  ]);
+      supabase
+        .from("payment_options")
+        .select("*")
+        .eq("event_id", event.id)
+        .eq("active", true)
+        .order("sort_order"),
+    ]);
 
   const eventConfig = {
     ...event,
@@ -78,7 +94,9 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
   const { event, ticketTypes, combos, paymentOptions } = await getEventData();
   const params = await searchParams;
   const refParam = params?.ref;
-  const initialReferralCode = Array.isArray(refParam) ? refParam[0] ?? "" : refParam ?? "";
+  const initialReferralCode = Array.isArray(refParam)
+    ? (refParam[0] ?? "")
+    : (refParam ?? "");
 
   return (
     <main className="min-h-screen bg-amber-50 text-stone-900">
@@ -111,7 +129,8 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
               <div className="flex items-center gap-2 rounded-2xl bg-white/80 p-4 shadow-sm">
                 <CalendarDays className="h-5 w-5" />
                 <span>
-                  {formatDate(event.event_date)} {event.start_time ? `• ${formatTime(event.start_time)}` : ""}
+                  {formatDate(event.event_date)}{" "}
+                  {event.start_time ? `• ${formatTime(event.start_time)}` : ""}
                   {event.end_time ? ` às ${formatTime(event.end_time)}` : ""}
                 </span>
               </div>
@@ -124,9 +143,12 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
               >
                 <MapPin className="mt-0.5 h-5 w-5 shrink-0" />
                 <span>
-                  <strong className="block">{event.location_name ?? "Espaço Santa Fé"}</strong>
+                  <strong className="block">
+                    {event.location_name ?? "Espaço Santa Fé"}
+                  </strong>
                   <span className="block text-xs font-semibold leading-relaxed text-stone-700">
-                    Rua Antônio Maurício Ladeira, 474 — Jd. Conceição — Campinas/SP
+                    Rua Antônio Maurício Ladeira, 474 — Jd. Conceição —
+                    Campinas/SP
                   </span>
                 </span>
                 <ExternalLink className="ml-auto mt-1 h-4 w-4 shrink-0 opacity-70" />
@@ -163,10 +185,28 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
             </div>
 
             <div className="rounded-3xl bg-amber-100 p-5">
-              <h2 className="text-2xl font-black text-green-950">Antes e no dia da festa</h2>
+              <h2 className="text-2xl font-black text-green-950">
+                Antes e no dia da festa
+              </h2>
               <div className="mt-3 grid gap-3 text-sm leading-relaxed text-stone-700">
-                <p><strong>Antes da festa:</strong> caso seja orientado pela coordenação do evento, registre seu convite, envie o comprovante e guarde o código da compra.</p>
-                <p><strong>No dia do evento:</strong> apresente o código/QR Code ou convite na entrada e acompanhe as próximas etapas conforme orientação. Acesse o <Link href="/cardapio/arraia-tucxa-2026" className="font-black text-green-900 underline" prefetch={false}>Cardápio</Link>.</p>
+                <p>
+                  <strong>Antes da festa:</strong> caso seja orientado pela
+                  coordenação do evento, registre seu convite, envie o
+                  comprovante e guarde o código da compra.
+                </p>
+                <p>
+                  <strong>No dia do evento:</strong> apresente o código/QR Code
+                  ou convite na entrada e acompanhe as próximas etapas conforme
+                  orientação. Faça seu pedido com um{" "}
+                  <Link
+                    href="/gestao-evento/garcom"
+                    className="font-black text-green-900 underline"
+                    prefetch={false}
+                  >
+                    garçom
+                  </Link>
+                  .
+                </p>
               </div>
             </div>
           </div>
@@ -179,7 +219,8 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
             <Users className="mb-4 h-8 w-8 text-green-800" />
             <h3 className="font-black">Comunidade reunida</h3>
             <p className="mt-2 text-sm text-stone-600">
-              Um momento para família, amigos, crianças e voluntários celebrarem juntos.
+              Um momento para família, amigos, crianças e voluntários celebrarem
+              juntos.
             </p>
           </div>
 
@@ -187,7 +228,8 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
             <Utensils className="mb-4 h-8 w-8 text-green-800" />
             <h3 className="font-black">Planejamento de compras</h3>
             <p className="mt-2 text-sm text-stone-600">
-              Convites antecipados ajudam a prever alimentos, bebidas, mesas, voluntários e atendimento.
+              Convites antecipados ajudam a prever alimentos, bebidas, mesas,
+              voluntários e atendimento.
             </p>
           </div>
 
@@ -195,7 +237,8 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
             <QrCode className="mb-4 h-8 w-8 text-green-800" />
             <h3 className="font-black">Código do comprador</h3>
             <p className="mt-2 text-sm text-stone-600">
-              Cada compra gera um código para consultar ingressos, bingo e, futuramente, consumo da mesa.
+              Cada compra gera um código para consultar ingressos, bingo e,
+              futuramente, consumo da mesa.
             </p>
           </div>
         </div>
@@ -205,8 +248,13 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
         <div className="flex items-center gap-3">
           <Ticket className="h-8 w-8 text-green-800" />
           <div>
-            <h2 className="text-3xl font-black text-green-950">Opções de convite</h2>
-            <p className="mt-1 text-stone-600">Convite antecipado R$ 20,00 até 08/06/2026. Convite no dia da festa R$ 30,00. Crianças até 10 anos não pagam.</p>
+            <h2 className="text-3xl font-black text-green-950">
+              Opções de convite
+            </h2>
+            <p className="mt-1 text-stone-600">
+              Convite antecipado R$ 20,00 até 08/06/2026. Convite no dia da
+              festa R$ 30,00. Crianças até 10 anos não pagam.
+            </p>
           </div>
         </div>
 
@@ -214,7 +262,9 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
           {ticketTypes.map((ticket) => (
             <div key={ticket.id} className="rounded-3xl bg-white p-6 shadow-sm">
               <h3 className="text-xl font-black">{ticket.name}</h3>
-              <p className="mt-2 min-h-12 text-sm text-stone-600">{ticket.description}</p>
+              <p className="mt-2 min-h-12 text-sm text-stone-600">
+                {ticket.description}
+              </p>
               <p className="mt-5 text-3xl font-black text-green-900">
                 {ticket.is_free ? "Grátis" : formatCurrency(ticket.price)}
               </p>
@@ -223,8 +273,13 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
         </div>
 
         <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
-          <h3 className="text-xl font-black text-green-950">Concorra a uma linda Air Fryer</h3>
-          <p className="mt-2 text-sm leading-relaxed text-stone-700">Cada ingresso adquirido para este evento participa do bingo/sorteio da Air Fryer, conforme as regras da organização no dia da festa.</p>
+          <h3 className="text-xl font-black text-green-950">
+            Concorra a uma linda Air Fryer
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-stone-700">
+            Cada ingresso adquirido para este evento participa do bingo/sorteio
+            da Air Fryer, conforme as regras da organização no dia da festa.
+          </p>
         </div>
       </section>
 
@@ -232,68 +287,90 @@ export default async function FestaJuninaPage({ searchParams }: PageProps) {
         <div className="flex items-center gap-3">
           <Gift className="h-8 w-8 text-green-800" />
           <div>
-            <h2 className="text-3xl font-black text-green-950">Combos antecipados</h2>
+            <h2 className="text-3xl font-black text-green-950">
+              Combos antecipados
+            </h2>
             <p className="mt-1 text-stone-600">
-              Combos podem ser ativados em outros eventos, conforme decisão da organização.
+              Combos podem ser ativados em outros eventos, conforme decisão da
+              organização.
             </p>
           </div>
         </div>
 
         {event.allow_combos && combos.length > 0 ? (
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
-          {combos.map((combo) => (
-            <div
-              key={combo.id}
-              className={`rounded-3xl p-6 shadow-sm ${
-                combo.highlighted ? "bg-green-900 text-white" : "bg-white text-stone-900"
-              }`}
-            >
-              <div className="flex flex-wrap gap-2">
-                {combo.badge ? (
-                  <span
-                    className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
-                      combo.highlighted ? "bg-amber-300 text-green-950" : "bg-amber-100 text-green-900"
-                    }`}
-                  >
-                    {combo.badge}
-                  </span>
-                ) : null}
-                {combo.includes_bingo ? (
-                  <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-800">
-                    Inclui bingo
-                  </span>
-                ) : null}
-              </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            {combos.map((combo) => (
+              <div
+                key={combo.id}
+                className={`rounded-3xl p-6 shadow-sm ${
+                  combo.highlighted
+                    ? "bg-green-900 text-white"
+                    : "bg-white text-stone-900"
+                }`}
+              >
+                <div className="flex flex-wrap gap-2">
+                  {combo.badge ? (
+                    <span
+                      className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
+                        combo.highlighted
+                          ? "bg-amber-300 text-green-950"
+                          : "bg-amber-100 text-green-900"
+                      }`}
+                    >
+                      {combo.badge}
+                    </span>
+                  ) : null}
+                  {combo.includes_bingo ? (
+                    <span className="inline-block rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-800">
+                      Inclui bingo
+                    </span>
+                  ) : null}
+                </div>
 
-              <h3 className="mt-4 text-2xl font-black">{combo.name}</h3>
-              <p className={`mt-1 font-semibold ${combo.highlighted ? "text-amber-100" : "text-green-900"}`}>
-                {combo.subtitle}
-              </p>
-              <p className={`mt-3 text-sm leading-relaxed ${combo.highlighted ? "text-white/85" : "text-stone-600"}`}>
-                {combo.description}
-              </p>
+                <h3 className="mt-4 text-2xl font-black">{combo.name}</h3>
+                <p
+                  className={`mt-1 font-semibold ${combo.highlighted ? "text-amber-100" : "text-green-900"}`}
+                >
+                  {combo.subtitle}
+                </p>
+                <p
+                  className={`mt-3 text-sm leading-relaxed ${combo.highlighted ? "text-white/85" : "text-stone-600"}`}
+                >
+                  {combo.description}
+                </p>
 
-              <div className="mt-5 flex items-end gap-3">
-                <p className="text-3xl font-black">{formatCurrency(combo.price)}</p>
-                {combo.compare_at_price ? (
-                  <p className={`pb-1 text-sm line-through ${combo.highlighted ? "text-white/60" : "text-stone-400"}`}>
-                    {formatCurrency(combo.compare_at_price)}
+                <div className="mt-5 flex items-end gap-3">
+                  <p className="text-3xl font-black">
+                    {formatCurrency(combo.price)}
                   </p>
-                ) : null}
+                  {combo.compare_at_price ? (
+                    <p
+                      className={`pb-1 text-sm line-through ${combo.highlighted ? "text-white/60" : "text-stone-400"}`}
+                    >
+                      {formatCurrency(combo.compare_at_price)}
+                    </p>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
         ) : (
-          <div className="mt-6 rounded-3xl bg-white p-6 text-sm text-stone-600 shadow-sm">Neste evento, a organização optou por vender apenas os ingressos individuais.</div>
+          <div className="mt-6 rounded-3xl bg-white p-6 text-sm text-stone-600 shadow-sm">
+            Neste evento, a organização optou por vender apenas os ingressos
+            individuais.
+          </div>
         )}
       </section>
 
       <section id="reserva" className="mx-auto max-w-6xl px-5 py-10">
         <div className="rounded-[2rem] bg-white p-6 shadow-sm md:p-8">
-          <h2 className="text-3xl font-black text-green-950">Garanta seu convite</h2>
+          <h2 className="text-3xl font-black text-green-950">
+            Garanta seu convite
+          </h2>
           <p className="mt-2 text-stone-600">
-            Informe seus dados, escolha o tipo de convite e carregue o comprovante/registro do pagamento. Cada ingresso concorre a uma linda Air Fryer no bingo da festa.
+            Informe seus dados, escolha o tipo de convite e carregue o
+            comprovante/registro do pagamento. Cada ingresso concorre a uma
+            linda Air Fryer no bingo da festa.
           </p>
 
           <TicketOrderForm
