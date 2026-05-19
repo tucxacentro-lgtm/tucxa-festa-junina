@@ -94,7 +94,7 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
           <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-900">Operação · Garçom/Atendimento</span>
           <h1 className="mt-4 text-3xl font-black">Responsáveis por pedidos</h1>
           <p className="mt-3 max-w-4xl text-stone-700">
-            Cadastre o garçom e o responsável pelos pedidos. Se o responsável já existir, o sistema não permite novo cadastro com o mesmo nome. Depois clique no nome para abrir o cardápio já vinculado ao responsável.
+            Cadastre o responsável pelos pedidos. O nome do garçom é opcional neste ano. Se o responsável já existir, o sistema não permite novo cadastro com o mesmo nome. Depois clique no nome para abrir o cardápio já vinculado ao responsável.
           </p>
         </div>
 
@@ -104,7 +104,7 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
           </div>
         ) : null}
         {params?.erro === "campos-obrigatorios" ? (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">Informe o nome do garçom e o nome do responsável.</div>
+          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">Informe o nome do responsável pelos pedidos.</div>
         ) : null}
         {params?.cancelado ? (
           <div className="mt-5 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-bold text-green-900">Registro cancelado. Ele não aparece mais para Garçom/Atendimento nem para Caixa.</div>
@@ -117,11 +117,11 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
             <UserPlus className="h-6 w-6 text-green-800" />
             <div>
               <h2 className="text-2xl font-black">Cadastrar responsável</h2>
-              <p className="mt-1 text-sm text-stone-600">Use um cadastro por responsável. O fechamento padrão será no caixa ao final.</p>
+              <p className="mt-1 text-sm text-stone-600">Use um cadastro por responsável. O nome do garçom é opcional e o fechamento padrão será no caixa ao final.</p>
             </div>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-4">
-            <label className="grid gap-1 text-sm font-bold">Nome do garçom<input name="waiter_name" required className="rounded-2xl border border-green-100 p-3 font-normal" placeholder="Ex.: João" /></label>
+            <label className="grid gap-1 text-sm font-bold">Nome do garçom <span className="text-xs font-bold text-stone-500">opcional</span><input name="waiter_name" className="rounded-2xl border border-green-100 p-3 font-normal" placeholder="Ex.: João (opcional)" /></label>
             <label className="grid gap-1 text-sm font-bold">Responsável pelos pedidos<input name="responsible_name" required className="rounded-2xl border border-green-100 p-3 font-normal" placeholder="Nome do responsável" /></label>
             <label className="grid gap-1 text-sm font-bold">WhatsApp opcional<input name="responsible_phone" className="rounded-2xl border border-green-100 p-3 font-normal" placeholder="Opcional" /></label>
             <label className="grid gap-1 text-sm font-bold">Pagamento<select name="settlement_mode" defaultValue="fechamento_final" className="rounded-2xl border border-green-100 p-3 font-normal"><option value="fechamento_final">Somente no final</option><option value="por_pedido">Pedido a pedido</option></select></label>
@@ -142,6 +142,7 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
               </label>
               <select name="garcom" defaultValue={params?.garcom ?? ""} className="rounded-full border border-green-100 bg-white px-4 py-3 text-sm font-bold text-green-950">
                 <option value="">Todos os garçons</option>
+                <option value="__sem_garcom">Sem garçom informado</option>
                 {waiters.map((waiter) => <option key={waiter} value={waiter}>{waiter}</option>)}
               </select>
               <button className="rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white">Filtrar</button>

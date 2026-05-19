@@ -91,6 +91,7 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
               <input name="q" defaultValue={params?.q ?? ""} className="rounded-full border border-green-100 bg-white px-4 py-3 text-sm" placeholder="Buscar por nome" />
               <select name="garcom" defaultValue={params?.garcom ?? ""} className="rounded-full border border-green-100 bg-white px-4 py-3 text-sm font-bold text-green-950">
                 <option value="">Todos os garçons</option>
+                <option value="__sem_garcom">Sem garçom informado</option>
                 {waiters.map((waiter) => <option key={waiter} value={waiter}>{waiter}</option>)}
               </select>
               <button className="rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white">Filtrar</button>

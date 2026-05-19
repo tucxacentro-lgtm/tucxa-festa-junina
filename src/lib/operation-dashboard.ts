@@ -216,7 +216,10 @@ export function filterServiceRows(rows: ServiceResponsibleRow[], query?: string 
   const normalizedWaiter = normalize(waiter);
   return rows.filter((row) => {
     const matchesQuery = !normalizedQuery || normalize(`${row.responsibleName} ${row.tableLabel ?? ""} ${row.responsiblePhone ?? ""}`).includes(normalizedQuery);
-    const matchesWaiter = !normalizedWaiter || normalize(row.waiterName).includes(normalizedWaiter);
+    const rowWaiter = row.waiterName?.trim() ?? "";
+    const matchesWaiter =
+      !normalizedWaiter ||
+      (normalizedWaiter === "__sem_garcom" ? !rowWaiter : normalize(rowWaiter).includes(normalizedWaiter));
     return matchesQuery && matchesWaiter;
   });
 }

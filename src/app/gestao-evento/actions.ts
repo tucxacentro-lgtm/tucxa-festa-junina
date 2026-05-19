@@ -60,7 +60,7 @@ export async function createServiceResponsible(formData: FormData) {
   const responsiblePhone = text(formData, "responsible_phone");
   const settlementMode = text(formData, "settlement_mode") || "fechamento_final";
 
-  if (!eventId || !waiterName || !responsibleName) {
+  if (!eventId || !responsibleName) {
     redirect(withParams("/gestao-evento/garcom", { erro: "campos-obrigatorios" }));
   }
 
@@ -94,7 +94,7 @@ export async function createServiceResponsible(formData: FormData) {
       table_label: responsibleName,
       responsible_name: responsibleName,
       responsible_phone: responsiblePhone || null,
-      waiter_name: waiterName,
+      waiter_name: waiterName || null,
       settlement_mode: settlementMode === "por_pedido" ? "por_pedido" : "fechamento_final",
       status: "open",
     })
