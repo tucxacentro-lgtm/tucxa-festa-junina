@@ -1,19 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  ArrowRight,
-  HeartHandshake,
-  Search,
-  Sparkles,
-  Utensils,
-} from "lucide-react";
+import { ArrowRight, HeartHandshake, Search, Sparkles, Utensils } from "lucide-react";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
-import { formatCurrency } from "@/lib/format";
 import {
   PublicSalesMenu,
   type PublicSalesMenuItem,
 } from "@/components/public-sales-menu";
 import { createPublicConsumptionOrder } from "./actions";
+import { PublicMenuBrowser } from "@/components/public-menu-browser";
 
 export const dynamic = "force-dynamic";
 
@@ -71,61 +65,6 @@ function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? (value[0] ?? "") : (value ?? "");
 }
 
-function priceOf(item: PublicSalesMenuItem) {
-  return formatCurrency(Number(item.price) || 0);
-}
-
-function categoryMessage(category: string) {
-  const key = category
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-
-  if (key.includes("bebida")) {
-    return {
-      title: "Bebidas para refrescar e acompanhar a festa",
-      subtitle:
-        "Do refrigerante à cerveja, opções para manter o clima leve enquanto você aproveita o arraiá.",
-      why: "Ajuda a evitar filas e facilita a retirada: escolha antes, peça com o garçom e siga para aproveitar a festa.",
-    };
-  }
-
-  if (key.includes("doce")) {
-    return {
-      title: "Doces com gostinho de Festa Junina",
-      subtitle:
-        "Maçã do amor, canjica, bolo e doces diversos para fechar o pedido com carinho de festa de comunidade.",
-      why: "Ideal para agradar crianças, família e amigos sem perder tempo decidindo na hora da retirada.",
-    };
-  }
-
-  if (key.includes("bingo")) {
-    return {
-      title: "Bingo para entrar no clima",
-      subtitle:
-        "Cartelas e itens ligados ao bingo para deixar a festa ainda mais participativa.",
-      why: "Além de se divertir, você ajuda o Tucxa a organizar melhor a arrecadação e a operação do evento.",
-    };
-  }
-
-  return {
-    title: "Comidas de arraiá para matar a fome com alegria",
-    subtitle:
-      "Cachorro-quente, pastel, espetinho, milho, caldo e outras opções para comer bem durante a festa.",
-    why: "Você escolhe com tranquilidade, o garçom registra o pedido e a ficha em papel orienta a retirada.",
-  };
-}
-
-function groupItems(items: PublicSalesMenuItem[]) {
-  return Array.from(
-    new Set(items.map((item) => item.category || "Outros")),
-  ).map((category) => ({
-    category,
-    items: items.filter((item) => (item.category || "Outros") === category),
-    message: categoryMessage(category),
-  }));
-}
-
 function PublicPersuasiveMenu({
   event,
   items,
@@ -133,8 +72,6 @@ function PublicPersuasiveMenu({
   event: EventRow;
   items: PublicSalesMenuItem[];
 }) {
-  const groups = groupItems(items);
-
   return (
     <main className="min-h-screen bg-[#fff9e6] text-green-950">
       <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">
@@ -237,76 +174,14 @@ function PublicPersuasiveMenu({
           </article>
         </section>
 
-        <section id="itens" className="mt-8 grid gap-6">
-          {items.length === 0 ? (
-            <div className="rounded-[2rem] bg-white p-6 text-sm text-stone-600 shadow-sm">
-              O cardápio ainda não foi liberado para este evento. Aguarde
-              orientação da coordenação.
-            </div>
-          ) : (
-            groups.map(({ category, items: categoryItems, message }) => (
-              <article
-                key={category}
-                className="overflow-hidden rounded-[2rem] bg-white shadow-sm"
-              >
-                <div className="border-b border-amber-100 bg-amber-50 p-5 md:p-6">
-                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-black text-green-900">
-                    {category}
-                  </span>
-                  <h2 className="mt-3 text-2xl font-black text-green-950">
-                    {message.title}
-                  </h2>
-                  <p className="mt-2 max-w-3xl text-sm leading-relaxed text-stone-700">
-                    {message.subtitle}
-                  </p>
-                  <p className="mt-2 max-w-3xl text-xs font-bold leading-relaxed text-green-900 md:text-sm">
-                    {message.why}
-                  </p>
-                </div>
-                <div className="grid gap-3 p-4 md:grid-cols-2 md:p-6">
-                  {categoryItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-lg font-black text-green-950">
-                            {item.name}
-                          </h3>
-                          {item.description ? (
-                            <p className="mt-1 text-sm leading-relaxed text-stone-600">
-                              {item.description}
-                            </p>
-                          ) : null}
-                        </div>
-                        <p className="shrink-0 rounded-full bg-green-900 px-3 py-2 text-sm font-black text-white">
-                          {priceOf(item)}
-                        </p>
-                      </div>
-                      <p className="mt-3 text-xs font-bold text-stone-500">
-                        {item.requires_preparation
-                          ? "Preparado no evento"
-                          : "Pronto para retirada"}{" "}
-                        · {item.unit_label || "un"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            ))
-          )}
-        </section>
-
-        <div className="sticky bottom-3 z-20 mt-8 rounded-[1.5rem] border border-green-100 bg-white/95 p-3 shadow-xl backdrop-blur md:static md:p-0 md:shadow-none md:bg-transparent md:border-0">
-          <Link
-            href="/gestao-evento/garcom"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-900 px-6 py-4 text-center font-black text-white transition hover:bg-green-800"
-            prefetch={false}
-          >
-            Fazer pedido com um garçom <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+        {items.length === 0 ? (
+          <section id="itens" className="mt-8 rounded-[2rem] bg-white p-6 text-sm text-stone-600 shadow-sm">
+            O cardápio ainda não foi liberado para este evento. Aguarde
+            orientação da coordenação.
+          </section>
+        ) : (
+          <PublicMenuBrowser items={items} />
+        )}
       </section>
     </main>
   );
