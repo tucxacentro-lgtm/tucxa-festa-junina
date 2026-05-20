@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, HeartHandshake, Search, Sparkles, Utensils } from "lucide-react";
+import { HeartHandshake, Search, Sparkles, Utensils } from "lucide-react";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
 import {
   PublicSalesMenu,
@@ -105,13 +105,9 @@ function PublicPersuasiveMenu({
                 Tucxa.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/gestao-evento/garcom"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-green-900 px-6 py-4 text-center font-black text-white shadow-lg transition hover:bg-green-800"
-                  prefetch={false}
-                >
-                  Fazer pedido com um garçom <ArrowRight className="h-4 w-4" />
-                </Link>
+                <div className="inline-flex items-center justify-center rounded-2xl bg-green-900 px-6 py-4 text-center font-black text-white shadow-lg">
+                  Chame um garçom para fazer seu pedido
+                </div>
                 <a
                   href="#itens"
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 text-center font-black text-green-950 shadow-lg transition hover:bg-amber-50"

@@ -5,6 +5,8 @@ export type MenuItemImage = {
   alt: string;
 };
 
+const IMAGE_BASE_PATH = "/cardapio/arraia-tucxa-2026";
+
 function normalize(text: string) {
   return text
     .normalize("NFD")
@@ -12,110 +14,114 @@ function normalize(text: string) {
     .toLowerCase();
 }
 
+function image(fileName: string, alt: string): MenuItemImage {
+  return {
+    url: `${IMAGE_BASE_PATH}/${fileName}`,
+    alt,
+  };
+}
+
 const DEFAULT_FESTA_JUNINA_IMAGES: MenuItemImage[] = [
-  {
-    url: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&w=900&q=80",
-    alt: "Mesa de festa com comidas variadas",
-  },
+  image("doces-diversos.jpg", "Mesa de festa junina com itens do cardápio"),
 ];
 
 const IMAGE_LIBRARY: Array<{ match: string[]; images: MenuItemImage[] }> = [
   {
     match: ["cachorro", "hot dog"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?auto=format&fit=crop&w=900&q=80", alt: "Cachorro-quente servido com molho" },
-      { url: "https://images.unsplash.com/photo-1551044499-589cdc0683c1?auto=format&fit=crop&w=900&q=80", alt: "Lanche servido em mesa rústica" },
-    ],
+    images: [image("cachorro-quente-pequeno.jpg", "Cachorro-quente pequeno")],
   },
   {
     match: ["batata"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?auto=format&fit=crop&w=900&q=80", alt: "Porção de batata frita crocante" },
-      { url: "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?auto=format&fit=crop&w=900&q=80", alt: "Batatas fritas em porção individual" },
-    ],
+    images: [image("batata-frita.jpg", "Batata frita")],
   },
   {
-    match: ["pastel"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=900&q=80", alt: "Salgado dourado em prato" },
-      { url: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=900&q=80", alt: "Porção salgada preparada para festa" },
-    ],
+    match: ["pastel", "pasteis"],
+    images: [image("pasteis.jpg", "Pastéis variados")],
   },
   {
     match: ["lanche", "pernil"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=900&q=80", alt: "Lanche servido com recheio farto" },
-      { url: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=900&q=80", alt: "Sanduíche em pão artesanal" },
-    ],
+    images: [image("lanche-pernil.jpg", "Lanche de pernil")],
   },
   {
     match: ["milho"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=900&q=80", alt: "Milho verde cozido" },
-      { url: "https://images.unsplash.com/photo-1601593768797-73e4256c606c?auto=format&fit=crop&w=900&q=80", alt: "Espigas de milho para festa" },
-    ],
+    images: [image("milho-verde.jpg", "Milho verde")],
   },
   {
     match: ["caldo", "feijao"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&w=900&q=80", alt: "Caldo quente servido em tigela" },
-      { url: "https://images.unsplash.com/photo-1604908177070-22d7d86c4cde?auto=format&fit=crop&w=900&q=80", alt: "Sopa ou caldo em tigela rústica" },
-    ],
+    images: [image("caldo-feijao.jpg", "Caldo de feijão")],
   },
   {
-    match: ["espetinho", "kafta", "frango"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?auto=format&fit=crop&w=900&q=80", alt: "Espetinhos grelhados" },
-      { url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80", alt: "Carne grelhada para porção" },
-      { url: "https://images.unsplash.com/photo-1598514983318-2f64f8f4796c?auto=format&fit=crop&w=900&q=80", alt: "Frango grelhado em porção" },
-    ],
+    match: ["espetinho", "carne"],
+    images: [image("espetinho-carne.jpg", "Espetinho de carne")],
   },
   {
-    match: ["bolo", "doce", "doces"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=900&q=80", alt: "Bolo recheado para sobremesa" },
-      { url: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=900&q=80", alt: "Doces variados para festa" },
-    ],
+    match: ["kafta"],
+    images: [image("espetinho-kafta.jpg", "Espetinho de kafta")],
+  },
+  {
+    match: ["frango"],
+    images: [image("espetinho-frango.jpg", "Espetinho de frango")],
+  },
+  {
+    match: ["bolo", "recheado"],
+    images: [image("bolo-recheado.jpg", "Bolo recheado")],
   },
   {
     match: ["maca", "amor"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?auto=format&fit=crop&w=900&q=80", alt: "Maçãs vermelhas decorativas" },
-      { url: "https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?auto=format&fit=crop&w=900&q=80", alt: "Maçãs vermelhas frescas" },
-    ],
+    images: [image("maca-do-amor.jpg", "Maçã do amor")],
   },
   {
     match: ["canjica"],
+    images: [image("canjica.jpg", "Canjica")],
+  },
+  {
+    match: ["doce", "doces"],
+    images: [image("doces-diversos.jpg", "Doces diversos")],
+  },
+  {
+    match: ["heineken"],
+    images: [image("cerveja-heineken.jpg", "Cerveja Heineken")],
+  },
+  {
+    match: ["imperio", "original"],
+    images: [image("cerveja-imperio-original.jpg", "Cerveja Império ou Original")],
+  },
+  {
+    match: ["cerveja"],
     images: [
-      { url: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=900&q=80", alt: "Doce cremoso servido em tigela" },
+      image("cerveja-heineken.jpg", "Cerveja Heineken"),
+      image("cerveja-imperio-original.jpg", "Cerveja Império ou Original"),
     ],
   },
   {
-    match: ["cerveja", "heineken", "imperio", "original"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=900&q=80", alt: "Copo de cerveja gelada" },
-      { url: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?auto=format&fit=crop&w=900&q=80", alt: "Cerveja servida em ambiente de festa" },
-    ],
+    match: ["refrigerante"],
+    images: [image("refrigerante.jpg", "Refrigerante")],
   },
   {
-    match: ["refrigerante", "suco", "agua"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=900&q=80", alt: "Bebida refrescante servida com gelo" },
-      { url: "https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=80", alt: "Copos com bebidas geladas" },
-    ],
+    match: ["agua"],
+    images: [image("agua.jpg", "Água")],
   },
   {
-    match: ["vinho quente", "quentao"],
-    images: [
-      { url: "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?auto=format&fit=crop&w=900&q=80", alt: "Bebida quente em caneca" },
-      { url: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?auto=format&fit=crop&w=900&q=80", alt: "Canecas com bebida quente" },
-    ],
+    match: ["suco"],
+    images: [image("suco.jpg", "Suco")],
+  },
+  {
+    match: ["vinho quente"],
+    images: [image("vinho-quente.jpg", "Vinho quente")],
+  },
+  {
+    match: ["quentao"],
+    images: [image("quentao.jpg", "Quentão")],
   },
 ];
 
-export function getMenuItemImages(item: Pick<PublicSalesMenuItem, "name" | "category">): MenuItemImage[] {
+export function getMenuItemImages(
+  item: Pick<PublicSalesMenuItem, "name" | "category">,
+): MenuItemImage[] {
   const searchable = normalize(`${item.name} ${item.category}`);
-  const match = IMAGE_LIBRARY.find((entry) => entry.match.some((term) => searchable.includes(normalize(term))));
+  const match = IMAGE_LIBRARY.find((entry) =>
+    entry.match.some((term) => searchable.includes(normalize(term))),
+  );
 
   return (match?.images ?? DEFAULT_FESTA_JUNINA_IMAGES).slice(0, 3);
 }
