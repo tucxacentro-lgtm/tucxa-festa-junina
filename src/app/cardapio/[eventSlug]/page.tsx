@@ -75,16 +75,6 @@ function PublicPersuasiveMenu({
   return (
     <main className="min-h-screen bg-[#fff9e6] text-green-950">
       <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">
-        <div className="mb-4">
-          <Link
-            href="/festa-junina"
-            className="inline-flex rounded-full bg-white px-5 py-3 text-sm font-black text-green-950 shadow-sm"
-            prefetch={false}
-          >
-            ← Voltar para a Festa Junina
-          </Link>
-        </div>
-
         <div className="overflow-hidden rounded-[2rem] bg-gradient-to-br from-amber-400 via-orange-300 to-yellow-300 shadow-sm">
           <div className="grid gap-6 p-6 md:grid-cols-[1.2fr_0.8fr] md:p-8">
             <div>
