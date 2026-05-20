@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRight, Search } from "lucide-react";
-import Link from "next/link";
+import { Search } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
+import { getMenuItemImages } from "@/lib/menu-images";
 import type { PublicSalesMenuItem } from "@/components/public-sales-menu";
 
 type Props = {
@@ -155,31 +155,76 @@ export function PublicMenuBrowser({ items }: Props) {
                 </p>
               </div>
               <div className="grid gap-3 p-4 md:grid-cols-2 md:p-6">
-                {categoryItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="text-lg font-black text-green-950">
-                          {item.name}
-                        </h3>
-                        {item.description ? (
-                          <p className="mt-1 text-sm leading-relaxed text-stone-600">
-                            {item.description}
+                {categoryItems.map((item) => {
+                  const images = getMenuItemImages(item);
+                  const [mainImage, ...extraImages] = images;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="overflow-hidden rounded-2xl border border-amber-100 bg-white shadow-sm"
+                    >
+                      {mainImage ? (
+                        <div className="relative min-h-44 bg-amber-100 md:min-h-52">
+                          <div
+                            aria-label={mainImage.alt}
+                            role="img"
+                            className="absolute inset-0 bg-cover bg-center"
+                            style={{ backgroundImage: `url(${mainImage.url})` }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/5 to-transparent" />
+                          <span className="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-[0.65rem] font-black text-green-950 shadow-sm">
+                            Foto ilustrativa
+                          </span>
+                          {extraImages.length > 0 ? (
+                            <span className="absolute bottom-3 right-3 rounded-full bg-green-950/90 px-3 py-1 text-[0.65rem] font-black text-white shadow-sm md:hidden">
+                              +{extraImages.length} foto{extraImages.length > 1 ? "s" : ""}
+                            </span>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="text-lg font-black text-green-950">
+                              {item.name}
+                            </h3>
+                            {item.description ? (
+                              <p className="mt-1 text-sm leading-relaxed text-stone-600">
+                                {item.description}
+                              </p>
+                            ) : null}
+                          </div>
+                          <p className="shrink-0 rounded-full bg-green-900 px-3 py-2 text-sm font-black text-white">
+                            {priceOf(item)}
                           </p>
+                        </div>
+
+                        {extraImages.length > 0 ? (
+                          <div className="mt-4 hidden grid-cols-2 gap-2 md:grid">
+                            {extraImages.map((image) => (
+                              <div
+                                key={image.url}
+                                aria-label={image.alt}
+                                role="img"
+                                className="h-20 rounded-2xl bg-amber-100 bg-cover bg-center"
+                                style={{ backgroundImage: `url(${image.url})` }}
+                              />
+                            ))}
+                          </div>
                         ) : null}
+
+                        <p className="mt-3 text-xs font-bold text-stone-500">
+                          {item.requires_preparation ? "Preparado no evento" : "Pronto para retirada"} · {item.unit_label || "un"}
+                        </p>
+                        <p className="mt-1 text-[0.68rem] font-bold text-stone-400">
+                          Fotos meramente ilustrativas.
+                        </p>
                       </div>
-                      <p className="shrink-0 rounded-full bg-green-900 px-3 py-2 text-sm font-black text-white">
-                        {priceOf(item)}
-                      </p>
                     </div>
-                    <p className="mt-3 text-xs font-bold text-stone-500">
-                      {item.requires_preparation ? "Preparado no evento" : "Pronto para retirada"} · {item.unit_label || "un"}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </article>
           ))}
@@ -187,13 +232,9 @@ export function PublicMenuBrowser({ items }: Props) {
       )}
 
       <div className="sticky bottom-3 z-20 mt-8 rounded-[1.5rem] border border-green-100 bg-white/95 p-3 shadow-xl backdrop-blur md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none">
-        <Link
-          href="/gestao-evento/garcom"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-900 px-6 py-4 text-center font-black text-white transition hover:bg-green-800"
-          prefetch={false}
-        >
-          Fazer pedido com um garçom <ArrowRight className="h-4 w-4" />
-        </Link>
+        <div className="flex w-full items-center justify-center rounded-2xl bg-green-900 px-6 py-4 text-center font-black text-white">
+          Chame um garçom para fazer seu pedido
+        </div>
       </div>
     </section>
   );
