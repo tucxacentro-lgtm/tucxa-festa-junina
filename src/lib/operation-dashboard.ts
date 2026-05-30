@@ -88,7 +88,10 @@ function firstNonEmpty(...values: Array<string | null | undefined>) {
   return values.find((value) => value && value.trim())?.trim() ?? "";
 }
 
-export async function getConsumptionOrdersForEvent(eventId: string, options: { includeCancelled?: boolean } = {}): Promise<ConsumptionOrderWithDetails[]> {
+export async function getConsumptionOrdersForEvent(
+  eventId: string,
+  options: { includeCancelled?: boolean } = {},
+): Promise<ConsumptionOrderWithDetails[]> {
   const supabase = createSupabaseAdminClient();
 
   let ordersQuery = supabase
@@ -100,7 +103,10 @@ export async function getConsumptionOrdersForEvent(eventId: string, options: { i
     ordersQuery = ordersQuery.neq("status", "cancelled");
   }
 
-  const { data: orders, error: ordersError } = await ordersQuery.order("created_at", { ascending: false });
+  const { data: orders, error: ordersError } = await ordersQuery.order(
+    "created_at",
+    { ascending: false },
+  );
 
   if (ordersError) return [];
 
@@ -111,25 +117,29 @@ export async function getConsumptionOrdersForEvent(eventId: string, options: { i
   const [{ data: items }, { data: payments }] = await Promise.all([
     supabase
       .from("event_consumption_order_items")
-      .select("id, order_id, item_name, quantity, unit_price, total_price, status, created_at")
+      .select(
+        "id, order_id, item_name, quantity, unit_price, total_price, status, created_at",
+      )
       .in("order_id", orderIds)
       .order("created_at", { ascending: true }),
     supabase
       .from("event_consumption_payments")
-      .select("id, order_id, method, amount, status, proof_file_path, notes, created_at")
+      .select(
+        "id, order_id, method, amount, status, proof_file_path, notes, created_at",
+      )
       .in("order_id", orderIds)
       .order("created_at", { ascending: true }),
   ]);
 
   const itemsByOrder = new Map<string, ConsumptionOrderItemRow[]>();
-  for (const item of ((items ?? []) as ConsumptionOrderItemRow[])) {
+  for (const item of (items ?? []) as ConsumptionOrderItemRow[]) {
     const current = itemsByOrder.get(item.order_id) ?? [];
     current.push(item);
     itemsByOrder.set(item.order_id, current);
   }
 
   const paymentsByOrder = new Map<string, ConsumptionPaymentRow[]>();
-  for (const payment of ((payments ?? []) as ConsumptionPaymentRow[])) {
+  for (const payment of (payments ?? []) as ConsumptionPaymentRow[]) {
     const current = paymentsByOrder.get(payment.order_id) ?? [];
     current.push(payment);
     paymentsByOrder.set(payment.order_id, current);
@@ -142,14 +152,21 @@ export async function getConsumptionOrdersForEvent(eventId: string, options: { i
   }));
 }
 
-export async function getServiceResponsiblesForEvent(eventId: string, options: { includeCancelled?: boolean } = {}) {
+export async function getServiceResponsiblesForEvent(
+  eventId: string,
+  options: { includeCancelled?: boolean } = {},
+) {
   const supabase = createSupabaseAdminClient();
   const orders = await getConsumptionOrdersForEvent(eventId, options);
-  const activeOrders = options.includeCancelled ? orders : orders.filter((order) => order.status !== "cancelled");
+  const activeOrders = options.includeCancelled
+    ? orders
+    : orders.filter((order) => order.status !== "cancelled");
 
   const { data: sessions } = await supabase
     .from("event_table_service_sessions")
-    .select("id, event_id, table_label, responsible_name, responsible_phone, waiter_name, settlement_mode, status, created_at")
+    .select(
+      "id, event_id, table_label, responsible_name, responsible_phone, waiter_name, settlement_mode, status, created_at",
+    )
     .eq("event_id", eventId)
     .neq("status", options.includeCancelled ? "__never__" : "cancelled")
     .order("responsible_name", { ascending: true });
@@ -167,7 +184,11 @@ export async function getServiceResponsiblesForEvent(eventId: string, options: {
     status: string;
     created_at: string;
   }>) {
-    const responsibleName = firstNonEmpty(session.responsible_name, session.table_label, "Responsável sem nome");
+    const responsibleName = firstNonEmpty(
+      session.responsible_name,
+      session.table_label,
+      "Responsável sem nome",
+    );
     rows.set(session.id, {
       id: session.id,
       event_id: session.event_id,
@@ -183,73 +204,123 @@ export async function getServiceResponsiblesForEvent(eventId: string, options: {
   }
 
   for (const order of activeOrders) {
-    const responsibleName = firstNonEmpty(order.customer_name, order.table_label, "Responsável não informado");
+    const responsibleName = firstNonEmpty(
+      order.customer_name,
+      order.table_label,
+      "Responsável não informado",
+    );
     const sessionId = order.service_session_id ?? "";
     const matchingRow = sessionId ? rows.get(sessionId) : undefined;
     const fallbackKey = `order:${normalize(responsibleName) || order.id}`;
-    const current = matchingRow ?? rows.get(fallbackKey) ?? {
-      id: fallbackKey,
-      event_id: order.event_id,
-      responsibleName,
-      responsiblePhone: order.customer_phone,
-      waiterName: order.waiter_name,
-      tableLabel: order.table_label,
-      settlementMode: order.settlement_mode || "fechamento_final",
-      status: "open",
-      createdAt: order.created_at,
-      orders: [],
-    } satisfies ServiceResponsibleRow;
+    const current =
+      matchingRow ??
+      rows.get(fallbackKey) ??
+      ({
+        id: fallbackKey,
+        event_id: order.event_id,
+        responsibleName,
+        responsiblePhone: order.customer_phone,
+        waiterName: order.waiter_name,
+        tableLabel: order.table_label,
+        settlementMode: order.settlement_mode || "fechamento_final",
+        status: "open",
+        createdAt: order.created_at,
+        orders: [],
+      } satisfies ServiceResponsibleRow);
 
     current.orders.push(order);
-    if (!current.waiterName && order.waiter_name) current.waiterName = order.waiter_name;
-    if (!current.responsiblePhone && order.customer_phone) current.responsiblePhone = order.customer_phone;
-    if (!current.tableLabel && order.table_label) current.tableLabel = order.table_label;
-    if (!current.settlementMode && order.settlement_mode) current.settlementMode = order.settlement_mode;
+    if (!current.waiterName && order.waiter_name)
+      current.waiterName = order.waiter_name;
+    if (!current.responsiblePhone && order.customer_phone)
+      current.responsiblePhone = order.customer_phone;
+    if (!current.tableLabel && order.table_label)
+      current.tableLabel = order.table_label;
+    if (!current.settlementMode && order.settlement_mode)
+      current.settlementMode = order.settlement_mode;
     rows.set(matchingRow ? matchingRow.id : fallbackKey, current);
   }
 
-  return Array.from(rows.values()).sort((a, b) => a.responsibleName.localeCompare(b.responsibleName, "pt-BR"));
+  return Array.from(rows.values()).sort((a, b) =>
+    a.responsibleName.localeCompare(b.responsibleName, "pt-BR"),
+  );
 }
 
-export function filterServiceRows(rows: ServiceResponsibleRow[], query?: string | null, waiter?: string | null) {
+export function filterServiceRows(
+  rows: ServiceResponsibleRow[],
+  query?: string | null,
+  waiter?: string | null,
+) {
   const normalizedQuery = normalize(query);
   const normalizedWaiter = normalize(waiter);
   return rows.filter((row) => {
-    const matchesQuery = !normalizedQuery || normalize(`${row.responsibleName} ${row.tableLabel ?? ""} ${row.responsiblePhone ?? ""}`).includes(normalizedQuery);
+    const matchesQuery =
+      !normalizedQuery ||
+      normalize(
+        `${row.responsibleName} ${row.tableLabel ?? ""} ${row.responsiblePhone ?? ""}`,
+      ).includes(normalizedQuery);
     const rowWaiter = row.waiterName?.trim() ?? "";
     const matchesWaiter =
       !normalizedWaiter ||
-      (normalizedWaiter === "__sem_garcom" ? !rowWaiter : normalize(rowWaiter).includes(normalizedWaiter));
+      (normalizedWaiter === "__sem_garcom"
+        ? !rowWaiter
+        : normalize(rowWaiter).includes(normalizedWaiter));
     return matchesQuery && matchesWaiter;
   });
 }
 
 export function getWaiterOptions(rows: ServiceResponsibleRow[]) {
-  return Array.from(new Set(rows.map((row) => row.waiterName?.trim()).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return Array.from(
+    new Set(
+      rows.map((row) => row.waiterName?.trim()).filter(Boolean) as string[],
+    ),
+  ).sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
 export function totalFromOrders(orders: ConsumptionOrderWithDetails[]) {
   return orders.reduce((sum, order) => sum + numeric(order.total_amount), 0);
 }
 
+export function paidAmountFromOrder(order: ConsumptionOrderWithDetails) {
+  const total = numeric(order.total_amount);
+  if (order.status === "cancelled") return 0;
+  if (order.payment_status === "paid") return total;
+
+  const paidByPayments = order.payments
+    .filter((payment) => payment.status === "paid")
+    .reduce((sum, payment) => sum + numeric(payment.amount), 0);
+
+  return Math.min(total, paidByPayments);
+}
+
+export function pendingAmountFromOrder(order: ConsumptionOrderWithDetails) {
+  if (order.status === "cancelled") return 0;
+  return Math.max(0, numeric(order.total_amount) - paidAmountFromOrder(order));
+}
+
+export function isOrderPaid(order: ConsumptionOrderWithDetails) {
+  return pendingAmountFromOrder(order) <= 0 && numeric(order.total_amount) > 0;
+}
+
 export function pendingFromOrders(orders: ConsumptionOrderWithDetails[]) {
-  return orders
-    .filter((order) => order.payment_status !== "paid" && order.status !== "cancelled")
-    .reduce((sum, order) => sum + numeric(order.total_amount), 0);
+  return orders.reduce((sum, order) => sum + pendingAmountFromOrder(order), 0);
 }
 
 export function paidFromOrders(orders: ConsumptionOrderWithDetails[]) {
-  return orders
-    .filter((order) => order.payment_status === "paid")
-    .reduce((sum, order) => sum + numeric(order.total_amount), 0);
+  return orders.reduce((sum, order) => sum + paidAmountFromOrder(order), 0);
 }
 
-export function buildSalesSummary(orders: ConsumptionOrderWithDetails[]): SalesSummary {
+export function buildSalesSummary(
+  orders: ConsumptionOrderWithDetails[],
+): SalesSummary {
   const activeOrders = orders.filter((order) => order.status !== "cancelled");
   const itemMap = new Map<string, SalesSummaryItem>();
   for (const order of activeOrders) {
     for (const item of order.items) {
-      const current = itemMap.get(item.item_name) ?? { itemName: item.item_name, quantity: 0, total: 0 };
+      const current = itemMap.get(item.item_name) ?? {
+        itemName: item.item_name,
+        quantity: 0,
+        total: 0,
+      };
       current.quantity += numeric(item.quantity);
       current.total += numeric(item.total_price);
       itemMap.set(item.item_name, current);
