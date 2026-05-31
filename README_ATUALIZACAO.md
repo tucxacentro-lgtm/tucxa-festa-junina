@@ -1,77 +1,68 @@
-# Ajustes - pedidos, caixa e convites
+# Ajustes — Garçom / Responsável / QR Code
 
-## Arquivos alterados
+## Arquivo alterado
 
-1. `src/components/ticket-order-form.tsx`
-   - Quantidade de convites/combos/crianças agora usa controle mobile friendly com botões `-` e `+`.
-   - O campo numérico seleciona o valor ao tocar/clicar, evitando o problema de manter o `0` à direita ao digitar outro número.
-   - O valor enviado ao formulário fica em campo oculto, sempre normalizado.
+Substituir o arquivo abaixo no projeto:
 
-2. `src/components/public-sales-menu.tsx`
-   - O formulário agora envia as quantidades de todos os itens do cardápio, inclusive os selecionados em abas/categorias que não estão abertas no momento.
-   - Corrige o problema em que o pedido final considerava apenas itens da última aba/categoria visível.
+```txt
+src/app/gestao-evento/garcom/page.tsx
+```
 
-3. `src/lib/operation-dashboard.ts`
-   - O cálculo de pago/pendente passa a considerar tanto `payment_status = paid` quanto pagamentos registrados na tabela `event_consumption_payments` com status `paid`.
-   - Evita divergência visual entre tabela de pedidos, total pago e total pendente.
+## O que foi ajustado
 
-4. `src/app/gestao-evento/caixa/page.tsx`
-   - Quando não houver pendência, a tela mostra `Pago / sem pendências` em vez de continuar destacando `Pendente: R$ 0,00` em vermelho.
-   - A coluna de pagamento usa a mesma regra consolidada do dashboard.
-   - Mantido layout mobile friendly.
+1. O texto exibido abaixo do QR Code agora é um link clicável.
+   - O QR Code e o link apontam para o mesmo endereço de acompanhamento dos pedidos do responsável.
+   - O link agora é gerado como URL completa, facilitando copiar ou encaminhar por WhatsApp quando o QR Code não puder ser lido.
 
-5. `src/app/gestao-evento/actions.ts`
-   - Enviado completo para manter compatibilidade com o fluxo de fechamento do caixa.
+2. O botão “Abrir pedidos” foi alterado para “Fazer Pedido”.
+   - O destino continua sendo o cardápio já vinculado ao responsável.
+
+3. A tela de Garçom/Atendimento recebeu uma área de atalho rápido antes dos cards/tabela.
+   - Mostra os nomes dos responsáveis em botões compactos.
+   - Ao tocar/clicar no nome, abre o cardápio para fazer novo pedido para aquele responsável.
+   - Permite ordenar por:
+     - Ordem alfabética;
+     - Mais recente;
+     - Mais antiga.
 
 ## Passo a passo para atualizar
 
-1. Faça backup ou commit da versão atual antes de substituir os arquivos.
+1. Feche o servidor local, caso esteja rodando.
 
-2. Copie as pastas deste zip para a raiz do projeto, mantendo a estrutura `src/...`.
+2. Extraia este ZIP na raiz do projeto, mantendo a estrutura de pastas.
 
-3. No terminal, dentro da pasta do projeto, rode:
+3. Confirme se o arquivo abaixo foi substituído:
+
+```txt
+src/app/gestao-evento/garcom/page.tsx
+```
+
+4. Rode as validações:
 
 ```bash
-npm install
 npm run lint
 npm run build
 ```
 
-4. Teste no navegador, principalmente no celular ou modo responsivo:
+5. Teste no celular e no notebook:
 
-- Comprar/reservar convite:
-  - tocar no campo de quantidade;
-  - digitar outro número;
-  - validar se o zero não permanece à direita;
-  - testar botões `-` e `+`.
+```txt
+/gestao-evento/garcom
+```
 
-- Cardápio/pedido:
-  - adicionar item em Bebidas;
-  - mudar para Comidas;
-  - adicionar item em Comidas;
-  - criar o pedido;
-  - confirmar que todos os itens aparecem no pedido criado.
+Valide:
 
-- Caixa:
-  - registrar pagamento por Pix;
-  - voltar para `/gestao-evento/caixa`;
-  - confirmar que o responsável aparece como `Pago / sem pendências`;
-  - confirmar que a tabela do pedido mostra `Pago`.
+- O texto abaixo do QR Code aparece como link clicável.
+- O link abre a mesma tela de detalhes/acompanhamento dos pedidos do responsável.
+- O botão aparece como “Fazer Pedido”.
+- A lista rápida de responsáveis aparece antes dos cards.
+- A ordenação funciona por ordem alfabética, mais recente e mais antiga.
 
-5. Se tudo estiver correto, faça o commit:
+6. Se tudo estiver correto, faça o commit:
 
 ```bash
 git status
-git add src/components/ticket-order-form.tsx \
-  src/components/public-sales-menu.tsx \
-  src/lib/operation-dashboard.ts \
-  src/app/gestao-evento/caixa/page.tsx \
-  src/app/gestao-evento/actions.ts
-
-git commit -m "Corrige quantidades mobile, itens por categoria e status do caixa"
+git add src/app/gestao-evento/garcom/page.tsx
+git commit -m "Ajusta link do QR Code e atalhos de responsaveis no garcom"
 git push
 ```
-
-## Observação importante
-
-O zip enviado pelo ambiente anterior estava achatado, com vários arquivos `page.tsx` e `actions.ts` sem suas pastas originais. Por isso, este pacote entrega os arquivos corrigidos já na estrutura esperada `src/...`.

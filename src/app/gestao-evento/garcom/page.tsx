@@ -6,12 +6,13 @@ import { QrCodeInline } from "@/components/qr-code-inline";
 import { cancelConsumptionGroup, cancelConsumptionOrder, createServiceResponsible } from "@/app/gestao-evento/actions";
 import { getCurrentEventForPublic } from "@/lib/current-event";
 import { formatCurrency } from "@/lib/format";
+import { buildPublicUrl } from "@/lib/site-url";
 import { filterServiceRows, getServiceResponsiblesForEvent, getWaiterOptions, pendingFromOrders, totalFromOrders, type ServiceResponsibleRow } from "@/lib/operation-dashboard";
 
 export const dynamic = "force-dynamic";
 
 type PageProps = {
-  searchParams?: Promise<{ q?: string; garcom?: string; erro?: string; nome?: string; cancelado?: string }>;
+  searchParams?: Promise<{ q?: string; garcom?: string; ordem?: string; erro?: string; nome?: string; cancelado?: string }>;
 };
 
 
@@ -34,6 +35,39 @@ function statusText(row: ServiceResponsibleRow) {
   const pending = pendingFromOrders(row.orders);
   if (pending > 0) return "Com pendência";
   return "Pago";
+}
+
+function normalizeSortOrder(value?: string | null) {
+  if (value === "mais_recente" || value === "mais_antiga") return value;
+  return "alfabetica";
+}
+
+function getResponsibleSortDate(row: ServiceResponsibleRow) {
+  const candidates = [
+    row.createdAt,
+    ...row.orders.map((order) => order.created_at),
+  ]
+    .map((value) => new Date(value).getTime())
+    .filter((value) => Number.isFinite(value));
+
+  return candidates.length > 0 ? Math.max(...candidates) : 0;
+}
+
+function sortServiceResponsibleRows(rows: ServiceResponsibleRow[], sortOrder?: string | null) {
+  const normalizedSortOrder = normalizeSortOrder(sortOrder);
+  return [...rows].sort((a, b) => {
+    if (normalizedSortOrder === "mais_recente") {
+      const byDate = getResponsibleSortDate(b) - getResponsibleSortDate(a);
+      if (byDate !== 0) return byDate;
+    }
+
+    if (normalizedSortOrder === "mais_antiga") {
+      const byDate = getResponsibleSortDate(a) - getResponsibleSortDate(b);
+      if (byDate !== 0) return byDate;
+    }
+
+    return a.responsibleName.localeCompare(b.responsibleName, "pt-BR");
+  });
 }
 
 function normalizeResponsibleKey(value: string) {
@@ -71,7 +105,7 @@ function mergeRowsByResponsible(rows: ServiceResponsibleRow[]) {
     current.settlementMode = current.settlementMode || row.settlementMode;
   }
 
-  return Array.from(map.values()).sort((a, b) => a.responsibleName.localeCompare(b.responsibleName, "pt-BR"));
+  return Array.from(map.values());
 }
 
 export default async function GarcomPublicPage({ searchParams }: PageProps) {
@@ -79,7 +113,11 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
   const event = await getCurrentEventForPublic();
   const rows = await getServiceResponsiblesForEvent(event.id);
   const waiters = getWaiterOptions(rows);
-  const filteredRows = mergeRowsByResponsible(filterServiceRows(rows, params?.q, params?.garcom));
+  const sortOrder = normalizeSortOrder(params?.ordem);
+  const filteredRows = sortServiceResponsibleRows(
+    mergeRowsByResponsible(filterServiceRows(rows, params?.q, params?.garcom)),
+    sortOrder,
+  );
 
   return (
     <main className="min-h-screen bg-amber-50 text-green-950">
@@ -135,15 +173,20 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
               <h2 className="text-2xl font-black">Lista de responsáveis</h2>
               <p className="mt-1 text-sm text-stone-600">Lista em ordem alfabética, com busca por nome e filtro por garçom.</p>
             </div>
-            <form action="/gestao-evento/garcom#resultado-busca" className="grid w-full gap-2 md:w-auto md:grid-cols-[1fr_1fr_auto]">
+            <form action="/gestao-evento/garcom#resultado-busca" className="grid w-full gap-2 md:w-auto md:grid-cols-[minmax(180px,1fr)_minmax(160px,1fr)_minmax(150px,1fr)_auto]">
               <label className="relative block">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-500" />
                 <input name="q" defaultValue={params?.q ?? ""} className="w-full rounded-full border border-green-100 bg-white py-3 pl-9 pr-4 text-sm" placeholder="Buscar responsável" />
               </label>
-              <select name="garcom" defaultValue={params?.garcom ?? ""} className="rounded-full border border-green-100 bg-white px-4 py-3 text-sm font-bold text-green-950">
+              <select name="garcom" defaultValue={params?.garcom ?? ""} className="rounded-full border border-green-100 bg-white px-4 py-3 text-sm font-bold text-green-950" aria-label="Filtrar por garçom">
                 <option value="">Todos os garçons</option>
                 <option value="__sem_garcom">Sem garçom informado</option>
                 {waiters.map((waiter) => <option key={waiter} value={waiter}>{waiter}</option>)}
+              </select>
+              <select name="ordem" defaultValue={sortOrder} className="rounded-full border border-green-100 bg-white px-4 py-3 text-sm font-bold text-green-950" aria-label="Ordenar responsáveis">
+                <option value="alfabetica">Ordem alfabética</option>
+                <option value="mais_recente">Mais recente</option>
+                <option value="mais_antiga">Mais antiga</option>
               </select>
               <button className="rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white">Filtrar</button>
             </form>
@@ -151,11 +194,38 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
 
           <div id="resultado-busca" className="scroll-mt-24" />
 
+          {filteredRows.length > 0 ? (
+            <div className="mt-5 rounded-3xl border border-green-100 bg-green-50 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-base font-black text-green-950">Atalho rápido por responsável</h3>
+                  <p className="mt-1 text-xs font-semibold text-stone-600">Toque no nome para fazer novo pedido no cardápio sem precisar procurar no card abaixo.</p>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-green-900">
+                  {sortOrder === "mais_recente" ? "Mais recente" : sortOrder === "mais_antiga" ? "Mais antiga" : "A-Z"}
+                </span>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredRows.map((row) => (
+                  <Link
+                    key={`quick-${row.id}`}
+                    href={cardapioUrl(event.slug, row)}
+                    className="flex min-h-12 items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 text-sm font-black text-green-950 shadow-sm ring-1 ring-green-100 transition hover:bg-amber-50"
+                    prefetch={false}
+                  >
+                    <span className="truncate">{row.responsibleName}</span>
+                    <span className="shrink-0 rounded-full bg-green-900 px-3 py-1 text-[11px] font-black text-white">Fazer Pedido</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="mt-6 grid gap-3 md:hidden">
             {filteredRows.map((row) => {
               const total = totalFromOrders(row.orders);
               const pending = pendingFromOrders(row.orders);
-              const publicTrackingUrl = trackingUrl(row);
+              const publicTrackingUrl = buildPublicUrl(trackingUrl(row));
               return (
                 <article key={row.id} className="rounded-3xl border border-green-100 bg-white p-4 shadow-sm">
                   <Link href={cardapioUrl(event.slug, row)} className="block text-lg font-black text-green-900 underline" prefetch={false}>{row.responsibleName}</Link>
@@ -168,10 +238,10 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
                   </div>
                   <details className="mt-3 rounded-2xl bg-green-50 p-3">
                     <summary className="cursor-pointer font-black text-green-900"><QrCode className="mr-1 inline h-4 w-4" /> QR Code único</summary>
-                    <div className="mt-3"><QrCodeInline value={publicTrackingUrl} /><p className="mt-2 break-all text-xs text-stone-600">{publicTrackingUrl}</p></div>
+                    <div className="mt-3"><QrCodeInline value={publicTrackingUrl} /><a href={publicTrackingUrl} className="mt-2 block break-all text-xs font-bold text-green-900 underline" target="_blank" rel="noreferrer">{publicTrackingUrl}</a></div>
                   </details>
                   <div className="mt-3 grid gap-2">
-                    <Link href={cardapioUrl(event.slug, row)} className="rounded-full bg-green-900 px-4 py-3 text-center text-sm font-black text-white" prefetch={false}>Abrir pedidos</Link>
+                    <Link href={cardapioUrl(event.slug, row)} className="rounded-full bg-green-900 px-4 py-3 text-center text-sm font-black text-white" prefetch={false}>Fazer Pedido</Link>
                     <form action={cancelConsumptionGroup}>
                       <input type="hidden" name="event_id" value={event.id} />
                       <input type="hidden" name="responsible" value={row.responsibleName} />
@@ -203,7 +273,7 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
                 {filteredRows.map((row) => {
                   const total = totalFromOrders(row.orders);
                   const pending = pendingFromOrders(row.orders);
-                  const publicTrackingUrl = trackingUrl(row);
+                  const publicTrackingUrl = buildPublicUrl(trackingUrl(row));
                   return (
                     <tr key={row.id} className="align-top">
                       <td className="p-3"><Link href={cardapioUrl(event.slug, row)} className="font-black text-green-900 underline" prefetch={false}>{row.responsibleName}</Link><p className="mt-1 text-xs text-stone-500">{statusText(row)}</p></td>
@@ -211,10 +281,10 @@ export default async function GarcomPublicPage({ searchParams }: PageProps) {
                       <td className="p-3">{row.orders.length}</td>
                       <td className="p-3 font-black">{formatCurrency(total)}</td>
                       <td className="p-3 font-black text-red-800">{formatCurrency(pending)}</td>
-                      <td className="p-3"><details><summary className="cursor-pointer font-black text-green-900"><QrCode className="mr-1 inline h-4 w-4" /> QR Code</summary><div className="mt-3 rounded-2xl bg-stone-50 p-3"><QrCodeInline value={publicTrackingUrl} /><p className="mt-2 break-all text-xs text-stone-600">{publicTrackingUrl}</p></div></details></td>
+                      <td className="p-3"><details><summary className="cursor-pointer font-black text-green-900"><QrCode className="mr-1 inline h-4 w-4" /> QR Code</summary><div className="mt-3 rounded-2xl bg-stone-50 p-3"><QrCodeInline value={publicTrackingUrl} /><a href={publicTrackingUrl} className="mt-2 block break-all text-xs font-bold text-green-900 underline" target="_blank" rel="noreferrer">{publicTrackingUrl}</a></div></details></td>
                       <td className="p-3">
                         <div className="flex flex-wrap gap-2">
-                          <Link href={cardapioUrl(event.slug, row)} className="rounded-full bg-green-900 px-4 py-2 text-xs font-black text-white" prefetch={false}>Abrir pedidos</Link>
+                          <Link href={cardapioUrl(event.slug, row)} className="rounded-full bg-green-900 px-4 py-2 text-xs font-black text-white" prefetch={false}>Fazer Pedido</Link>
                           <form action={cancelConsumptionGroup}>
                             <input type="hidden" name="event_id" value={event.id} />
                             <input type="hidden" name="responsible" value={row.responsibleName} />

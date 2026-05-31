@@ -1,20 +1,17 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "Aplicando ajustes na raiz do projeto..." -ForegroundColor Cyan
+$source = Join-Path $PSScriptRoot "src\app\gestao-evento\garcom\page.tsx"
+$target = Join-Path (Get-Location) "src\app\gestao-evento\garcom\page.tsx"
 
-$files = @(
-  "src\components\ticket-order-form.tsx",
-  "src\components\public-sales-menu.tsx",
-  "src\lib\operation-dashboard.ts",
-  "src\app\gestao-evento\caixa\page.tsx",
-  "src\app\gestao-evento\actions.ts"
-)
-
-foreach ($file in $files) {
-  if (-not (Test-Path $file)) {
-    Write-Host "Atenção: $file não existe ainda no destino. Ele será criado." -ForegroundColor Yellow
-  }
+if (!(Test-Path $source)) {
+  throw "Arquivo de origem não encontrado: $source"
 }
 
-Write-Host "Copie o conteúdo deste zip por cima da raiz do projeto mantendo as pastas src/..." -ForegroundColor Green
-Write-Host "Depois rode: npm run lint e npm run build" -ForegroundColor Green
+$targetDir = Split-Path $target -Parent
+if (!(Test-Path $targetDir)) {
+  New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+}
+
+Copy-Item $source $target -Force
+Write-Host "Arquivo atualizado: $target"
+Write-Host "Agora rode: npm run lint && npm run build"
