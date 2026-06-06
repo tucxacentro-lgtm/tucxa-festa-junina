@@ -1,68 +1,110 @@
-# Ajustes — Garçom / Responsável / QR Code
+# Ajustes - Caixa, login, cancelados, CSV e prestação de contas
 
-## Arquivo alterado
-
-Substituir o arquivo abaixo no projeto:
+## Arquivos incluídos
 
 ```txt
-src/app/gestao-evento/garcom/page.tsx
+src/app/gestao-evento/caixa/page.tsx
+src/app/gestao-evento/actions.ts
+src/app/admin/login/page.tsx
+src/app/admin/login/admin-login-form.tsx
+src/app/admin/festa-junina/atendimento/cancelados/page.tsx
+src/app/admin/festa-junina/atendimento/cancelados/actions.ts
+src/app/admin/festa-junina/prestacao-contas/page.tsx
+src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts
+supabase/031_limpeza_pedidos_cancelados_teste.sql
 ```
 
 ## O que foi ajustado
 
-1. O texto exibido abaixo do QR Code agora é um link clicável.
-   - O QR Code e o link apontam para o mesmo endereço de acompanhamento dos pedidos do responsável.
-   - O link agora é gerado como URL completa, facilitando copiar ou encaminhar por WhatsApp quando o QR Code não puder ser lido.
+1. **Caixa por responsável**
+   - O fechamento agora reforça o total agrupado por responsável.
+   - O caixa pode registrar pagamento agrupado de todos os pedidos pendentes do responsável.
+   - Os pedidos individuais aparecem em blocos de abrir/recolher.
+   - Cada pedido individual também pode ser pago separadamente por Pix, crédito, débito ou dinheiro.
 
-2. O botão “Abrir pedidos” foi alterado para “Fazer Pedido”.
-   - O destino continua sendo o cardápio já vinculado ao responsável.
+2. **Login da gestão**
+   - A tela de login passou a usar o mesmo cabeçalho das demais telas.
+   - Foi adicionada opção de mostrar/ocultar senha.
 
-3. A tela de Garçom/Atendimento recebeu uma área de atalho rápido antes dos cards/tabela.
-   - Mostra os nomes dos responsáveis em botões compactos.
-   - Ao tocar/clicar no nome, abre o cardápio para fazer novo pedido para aquele responsável.
-   - Permite ordenar por:
-     - Ordem alfabética;
-     - Mais recente;
-     - Mais antiga.
+3. **Pedidos cancelados**
+   - A tela mostra somente pedidos cancelados no dia da festa, com base em `events.event_date` e `cancelled_at`.
+   - Foi adicionada opção de **Excluir definitivamente** o pedido cancelado.
+   - Antes da exclusão, o sistema exibe alerta informando que a ação é irreversível.
+   - A exclusão remove pagamentos, itens e o pedido.
 
-## Passo a passo para atualizar
-
-1. Feche o servidor local, caso esteja rodando.
-
-2. Extraia este ZIP na raiz do projeto, mantendo a estrutura de pastas.
-
-3. Confirme se o arquivo abaixo foi substituído:
+4. **Plano B - CSV**
+   - Criada rota para exportar todos os pedidos registrados em CSV:
 
 ```txt
-src/app/gestao-evento/garcom/page.tsx
+/admin/festa-junina/prestacao-contas/exportar-pedidos
 ```
 
-4. Rode as validações:
+5. **Relatório final / prestação de contas**
+   - Criada tela com drill-down:
+     - resumo geral;
+     - formas de pagamento;
+     - categorias/resumo;
+     - itens do cardápio;
+     - responsáveis e pedidos;
+     - cancelamentos e divergências;
+     - botão para exportar CSV.
+
+6. **SQL opcional**
+   - Incluído SQL opcional para limpar pedidos cancelados de teste fora do dia da festa:
+
+```txt
+supabase/031_limpeza_pedidos_cancelados_teste.sql
+```
+
+## Passo a passo para aplicar
+
+### Opção 1 - Aplicar manualmente
+
+1. Extraia o ZIP na raiz do projeto.
+2. Confirme que os arquivos foram substituídos/criados nos caminhos acima.
+3. Rode:
 
 ```bash
 npm run lint
 npm run build
 ```
 
-5. Teste no celular e no notebook:
+4. Teste as telas:
 
 ```txt
-/gestao-evento/garcom
+/gestao-evento/caixa
+/admin/login
+/admin/festa-junina/atendimento/cancelados
+/admin/festa-junina/prestacao-contas
+/admin/festa-junina/prestacao-contas/exportar-pedidos
 ```
 
-Valide:
+### Opção 2 - Aplicar pelo PowerShell
 
-- O texto abaixo do QR Code aparece como link clicável.
-- O link abre a mesma tela de detalhes/acompanhamento dos pedidos do responsável.
-- O botão aparece como “Fazer Pedido”.
-- A lista rápida de responsáveis aparece antes dos cards.
-- A ordenação funciona por ordem alfabética, mais recente e mais antiga.
+Na raiz do projeto, depois de extrair o ZIP, rode:
 
-6. Se tudo estiver correto, faça o commit:
+```powershell
+./aplicar-ajustes.ps1
+```
+
+## Commit no GitHub
+
+Depois dos testes:
 
 ```bash
 git status
-git add src/app/gestao-evento/garcom/page.tsx
-git commit -m "Ajusta link do QR Code e atalhos de responsaveis no garcom"
+
+git add src/app/gestao-evento/caixa/page.tsx \
+  src/app/gestao-evento/actions.ts \
+  src/app/admin/login/page.tsx \
+  src/app/admin/login/admin-login-form.tsx \
+  src/app/admin/festa-junina/atendimento/cancelados/page.tsx \
+  src/app/admin/festa-junina/atendimento/cancelados/actions.ts \
+  src/app/admin/festa-junina/prestacao-contas/page.tsx \
+  src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts \
+  supabase/031_limpeza_pedidos_cancelados_teste.sql
+
+git commit -m "Ajusta caixa, login, cancelados, CSV e prestação de contas"
+
 git push
 ```

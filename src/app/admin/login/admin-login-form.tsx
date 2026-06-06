@@ -1,6 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
 export function AdminLoginForm({ next }: { next: string }) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <form action="/admin/login/submit" method="post" className="grid gap-4">
       <input type="hidden" name="next" value={next} />
@@ -19,20 +24,27 @@ export function AdminLoginForm({ next }: { next: string }) {
 
       <label className="grid gap-2 text-sm font-bold text-green-950">
         Senha
-        <input
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          className="rounded-2xl border border-amber-200 px-4 py-3 font-normal outline-none transition focus:border-green-700 focus:ring-2 focus:ring-green-100"
-          placeholder="Digite a senha"
-        />
+        <div className="flex overflow-hidden rounded-2xl border border-amber-200 bg-white focus-within:border-green-700 focus-within:ring-2 focus-within:ring-green-100">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            className="min-w-0 flex-1 px-4 py-3 font-normal outline-none"
+            placeholder="Digite a senha"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            className="border-l border-amber-100 px-4 text-xs font-black text-green-900"
+            aria-pressed={showPassword}
+          >
+            {showPassword ? "Ocultar" : "Mostrar"}
+          </button>
+        </div>
       </label>
 
-      <button
-        type="submit"
-        className="rounded-2xl bg-green-900 px-6 py-4 font-black text-white shadow-lg transition hover:bg-green-800"
-      >
+      <button type="submit" className="rounded-2xl bg-green-900 px-6 py-4 font-black text-white shadow-lg transition hover:bg-green-800">
         Entrar no admin
       </button>
 

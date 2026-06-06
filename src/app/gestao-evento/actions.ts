@@ -167,6 +167,77 @@ export async function registerCashierGroupPayment(formData: FormData) {
   redirect(withParams("/gestao-evento/caixa", { responsavel: serviceSessionId || responsibleName, pago: "1" }));
 }
 
+
+export async function registerCashierOrderPayment(formData: FormData) {
+  const eventId = text(formData, "event_id");
+  const orderId = text(formData, "order_id");
+  const responsibleKey = text(formData, "responsible_key");
+  const method = text(formData, "method") || "pix";
+  const amount = numeric(formData, "amount", 0);
+
+  if (!eventId || !orderId || amount <= 0) {
+    redirect("/gestao-evento/caixa?erro=pagamento-invalido");
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { data: order, error: orderError } = await supabase
+    .from("event_consumption_orders")
+    .select("id, total_amount, status, payment_status")
+    .eq("event_id", eventId)
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (orderError) throw new Error(orderError.message);
+  if (!order || order.status === "cancelled") {
+    redirect(withParams("/gestao-evento/caixa", { responsavel: responsibleKey, erro: "pedido-invalido" }));
+  }
+
+  if (order.payment_status === "paid") {
+    redirect(withParams("/gestao-evento/caixa", { responsavel: responsibleKey, erro: "sem-pendencias" }));
+  }
+
+  const { data: previousPayments, error: paymentsReadError } = await supabase
+    .from("event_consumption_payments")
+    .select("amount, status")
+    .eq("order_id", orderId);
+
+  if (paymentsReadError) throw new Error(paymentsReadError.message);
+
+  const total = Number(order.total_amount ?? 0);
+  const alreadyPaid = (previousPayments ?? [])
+    .filter((payment) => payment.status === "paid")
+    .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0);
+  const pending = Math.max(0, total - alreadyPaid);
+  const paymentAmount = Math.min(amount, pending || total);
+
+  if (paymentAmount <= 0) {
+    redirect(withParams("/gestao-evento/caixa", { responsavel: responsibleKey, erro: "sem-pendencias" }));
+  }
+
+  const { error: paymentError } = await supabase.from("event_consumption_payments").insert({
+    event_id: eventId,
+    order_id: orderId,
+    method,
+    amount: paymentAmount,
+    status: "paid",
+    notes: `Pagamento individual registrado no caixa: ${method}.`,
+  });
+
+  if (paymentError) throw new Error(paymentError.message);
+
+  const newPending = Math.max(0, pending - paymentAmount);
+  const { error: updateError } = await supabase
+    .from("event_consumption_orders")
+    .update({ payment_status: newPending <= 0 ? "paid" : "registered", updated_at: new Date().toISOString() })
+    .eq("id", orderId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  revalidatePath("/gestao-evento/caixa");
+  revalidatePath("/gestao-evento/garcom");
+  redirect(withParams("/gestao-evento/caixa", { responsavel: responsibleKey, pago: "1" }));
+}
+
 export async function cancelConsumptionOrder(formData: FormData) {
   const orderId = text(formData, "order_id");
   const eventSlug = text(formData, "event_slug") || "arraia-tucxa-2026";

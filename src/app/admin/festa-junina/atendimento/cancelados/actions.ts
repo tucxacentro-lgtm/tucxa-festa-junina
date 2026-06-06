@@ -37,3 +37,37 @@ export async function reactivateConsumptionOrder(formData: FormData) {
   revalidatePath("/gestao-evento/caixa");
   redirect("/admin/festa-junina/atendimento/cancelados?restaurado=1");
 }
+
+
+export async function permanentlyDeleteConsumptionOrder(formData: FormData) {
+  await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/atendimento/cancelados");
+  const orderId = text(formData, "order_id");
+  if (!orderId) redirect("/admin/festa-junina/atendimento/cancelados");
+
+  const supabase = createSupabaseAdminClient();
+
+  const { data: order, error: readError } = await supabase
+    .from("event_consumption_orders")
+    .select("id, status")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (readError) throw new Error(readError.message);
+  if (!order || order.status !== "cancelled") {
+    redirect("/admin/festa-junina/atendimento/cancelados?erro=nao-cancelado");
+  }
+
+  const { error: paymentsError } = await supabase.from("event_consumption_payments").delete().eq("order_id", orderId);
+  if (paymentsError) throw new Error(paymentsError.message);
+
+  const { error: itemsError } = await supabase.from("event_consumption_order_items").delete().eq("order_id", orderId);
+  if (itemsError) throw new Error(itemsError.message);
+
+  const { error: orderError } = await supabase.from("event_consumption_orders").delete().eq("id", orderId);
+  if (orderError) throw new Error(orderError.message);
+
+  revalidatePath("/admin/festa-junina/atendimento/cancelados");
+  revalidatePath("/gestao-evento/garcom");
+  revalidatePath("/gestao-evento/caixa");
+  redirect("/admin/festa-junina/atendimento/cancelados?excluido=1");
+}
