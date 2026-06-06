@@ -32,17 +32,62 @@ type PageProps = {
   }>;
 };
 
-function selectedRow(rows: ServiceResponsibleRow[], key?: string) {
-  if (!key) return rows[0];
-  return rows.find((row) => row.id === key || row.responsibleName === key) ?? rows[0];
+type GroupedServiceResponsibleRow = ServiceResponsibleRow & {
+  groupedSessionIds?: string[];
+  responsibleKey?: string;
+};
+
+function normalizeResponsibleKey(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase() || "responsavel";
 }
 
-function paymentMethodButton(method: string, label: string, row: ServiceResponsibleRow, eventId: string, amount: number) {
+function uniqueText(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.map((value) => value?.trim()).filter(Boolean) as string[]));
+}
+
+function groupRowsByResponsible(rows: ServiceResponsibleRow[]): GroupedServiceResponsibleRow[] {
+  const groups = new Map<string, GroupedServiceResponsibleRow>();
+
+  for (const row of rows) {
+    const key = normalizeResponsibleKey(row.responsibleName || "Responsável não informado");
+    const existing = groups.get(key);
+
+    if (!existing) {
+      groups.set(key, {
+        ...row,
+        id: `responsible:${key}`,
+        responsibleKey: key,
+        groupedSessionIds: [row.id],
+        orders: [...row.orders],
+      });
+      continue;
+    }
+
+    existing.orders = [...existing.orders, ...row.orders];
+    existing.groupedSessionIds = Array.from(new Set([...(existing.groupedSessionIds ?? []), row.id]));
+    existing.waiterName = uniqueText([existing.waiterName, row.waiterName]).join(", ") || null;
+  }
+
+  return Array.from(groups.values()).sort((a, b) => a.responsibleName.localeCompare(b.responsibleName, "pt-BR"));
+}
+
+function selectedRow(rows: GroupedServiceResponsibleRow[], key?: string) {
+  if (!key) return rows[0];
+  return rows.find((row) => row.id === key || row.responsibleKey === key || row.responsibleName === key) ?? rows[0];
+}
+
+function paymentMethodButton(method: string, label: string, row: GroupedServiceResponsibleRow, eventId: string, amount: number) {
   return (
     <form action={registerCashierGroupPayment} key={method}>
       <input type="hidden" name="event_id" value={eventId} />
       <input type="hidden" name="service_session_id" value={row.id} />
       <input type="hidden" name="responsible_name" value={row.responsibleName} />
+      <input type="hidden" name="order_ids" value={row.orders.map((order) => order.id).join(",")} />
       <input type="hidden" name="amount" value={String(amount)} />
       <input type="hidden" name="method" value={method} />
       <button className="w-full rounded-2xl border border-green-100 bg-white px-4 py-3 text-sm font-black text-green-950 shadow-sm hover:bg-green-50 sm:w-auto">
@@ -77,8 +122,9 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
   const event = await getCurrentEventForPublic();
   const [rows, orders] = await Promise.all([getServiceResponsiblesForEvent(event.id), getConsumptionOrdersForEvent(event.id)]);
   const filteredRows = filterServiceRows(rows, params?.q, params?.garcom);
+  const groupedRows = groupRowsByResponsible(filteredRows);
   const waiters = getWaiterOptions(rows);
-  const current = selectedRow(filteredRows, params?.responsavel);
+  const current = selectedRow(groupedRows, params?.responsavel);
   const summary = buildSalesSummary(orders);
   const pending = current ? pendingFromOrders(current.orders) : 0;
   const currentTotal = current ? totalFromOrders(current.orders) : 0;
@@ -159,7 +205,7 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
               <button className="rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white">Filtrar</button>
             </form>
             <div className="mt-5 divide-y divide-green-100 rounded-2xl border border-green-100 bg-white">
-              {filteredRows.map((row) => {
+              {groupedRows.map((row) => {
                 const rowPending = pendingFromOrders(row.orders);
                 const rowIsPaid = row.orders.length > 0 && rowPending <= 0;
                 return (
@@ -171,7 +217,7 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
                   </Link>
                 );
               })}
-              {filteredRows.length === 0 ? <p className="p-4 text-sm text-stone-600">Nenhum responsável encontrado.</p> : null}
+              {groupedRows.length === 0 ? <p className="p-4 text-sm text-stone-600">Nenhum responsável encontrado.</p> : null}
             </div>
           </div>
 

@@ -10,10 +10,20 @@ function text(formData: FormData, name: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function safeReturnTo(formData: FormData) {
+  const returnTo = text(formData, "return_to");
+  return returnTo.startsWith("/admin/festa-junina/atendimento/cancelados") ? returnTo : "/admin/festa-junina/atendimento/cancelados";
+}
+
+function appendStatus(path: string, key: string, value: string) {
+  return `${path}${path.includes("?") ? "&" : "?"}${key}=${value}`;
+}
+
 export async function reactivateConsumptionOrder(formData: FormData) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/atendimento/cancelados");
   const orderId = text(formData, "order_id");
-  if (!orderId) redirect("/admin/festa-junina/atendimento/cancelados");
+  const returnTo = safeReturnTo(formData);
+  if (!orderId) redirect(returnTo);
 
   const supabase = createSupabaseAdminClient();
   const now = new Date().toISOString();
@@ -35,14 +45,15 @@ export async function reactivateConsumptionOrder(formData: FormData) {
   revalidatePath("/admin/festa-junina/atendimento/cancelados");
   revalidatePath("/gestao-evento/garcom");
   revalidatePath("/gestao-evento/caixa");
-  redirect("/admin/festa-junina/atendimento/cancelados?restaurado=1");
+  redirect(appendStatus(returnTo, "restaurado", "1"));
 }
 
 
 export async function permanentlyDeleteConsumptionOrder(formData: FormData) {
   await requireAdmin(["admin", "coordenador"], "/admin/festa-junina/atendimento/cancelados");
   const orderId = text(formData, "order_id");
-  if (!orderId) redirect("/admin/festa-junina/atendimento/cancelados");
+  const returnTo = safeReturnTo(formData);
+  if (!orderId) redirect(returnTo);
 
   const supabase = createSupabaseAdminClient();
 
@@ -54,7 +65,7 @@ export async function permanentlyDeleteConsumptionOrder(formData: FormData) {
 
   if (readError) throw new Error(readError.message);
   if (!order || order.status !== "cancelled") {
-    redirect("/admin/festa-junina/atendimento/cancelados?erro=nao-cancelado");
+    redirect(appendStatus(returnTo, "erro", "nao-cancelado"));
   }
 
   const { error: paymentsError } = await supabase.from("event_consumption_payments").delete().eq("order_id", orderId);
@@ -69,5 +80,5 @@ export async function permanentlyDeleteConsumptionOrder(formData: FormData) {
   revalidatePath("/admin/festa-junina/atendimento/cancelados");
   revalidatePath("/gestao-evento/garcom");
   revalidatePath("/gestao-evento/caixa");
-  redirect("/admin/festa-junina/atendimento/cancelados?excluido=1");
+  redirect(appendStatus(returnTo, "excluido", "1"));
 }

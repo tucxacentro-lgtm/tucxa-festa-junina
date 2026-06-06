@@ -116,6 +116,10 @@ export async function registerCashierGroupPayment(formData: FormData) {
   const eventId = text(formData, "event_id");
   const serviceSessionId = text(formData, "service_session_id");
   const responsibleName = text(formData, "responsible_name");
+  const orderIds = text(formData, "order_ids")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
   const method = text(formData, "method") || "pix";
   const amount = numeric(formData, "amount", 0);
 
@@ -131,7 +135,9 @@ export async function registerCashierGroupPayment(formData: FormData) {
     .neq("status", "cancelled")
     .neq("payment_status", "paid");
 
-  if (serviceSessionId && !serviceSessionId.startsWith("order:")) {
+  if (orderIds.length > 0) {
+    query = query.in("id", orderIds);
+  } else if (serviceSessionId && !serviceSessionId.startsWith("order:") && !serviceSessionId.startsWith("responsible:")) {
     query = query.eq("service_session_id", serviceSessionId);
   } else {
     query = query.ilike("customer_name", responsibleName);

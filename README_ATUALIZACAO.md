@@ -1,110 +1,138 @@
-# Ajustes - Caixa, login, cancelados, CSV e prestação de contas
+# Ajustes — Caixa agrupado, Relatórios e Cancelados
 
-## Arquivos incluídos
+## Arquivos incluídos no pacote
 
 ```txt
 src/app/gestao-evento/caixa/page.tsx
 src/app/gestao-evento/actions.ts
-src/app/admin/login/page.tsx
-src/app/admin/login/admin-login-form.tsx
+src/app/admin/festa-junina/relatorios/page.tsx
 src/app/admin/festa-junina/atendimento/cancelados/page.tsx
 src/app/admin/festa-junina/atendimento/cancelados/actions.ts
 src/app/admin/festa-junina/prestacao-contas/page.tsx
 src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts
+src/app/admin/login/page.tsx
+src/app/admin/login/admin-login-form.tsx
 supabase/031_limpeza_pedidos_cancelados_teste.sql
 ```
 
 ## O que foi ajustado
 
-1. **Caixa por responsável**
-   - O fechamento agora reforça o total agrupado por responsável.
-   - O caixa pode registrar pagamento agrupado de todos os pedidos pendentes do responsável.
-   - Os pedidos individuais aparecem em blocos de abrir/recolher.
-   - Cada pedido individual também pode ser pago separadamente por Pix, crédito, débito ou dinheiro.
+### 1. Caixa agrupado por responsável
 
-2. **Login da gestão**
-   - A tela de login passou a usar o mesmo cabeçalho das demais telas.
-   - Foi adicionada opção de mostrar/ocultar senha.
+A tela `/gestao-evento/caixa` agora agrupa os cards pelo nome do responsável.
 
-3. **Pedidos cancelados**
-   - A tela mostra somente pedidos cancelados no dia da festa, com base em `events.event_date` e `cancelled_at`.
-   - Foi adicionada opção de **Excluir definitivamente** o pedido cancelado.
-   - Antes da exclusão, o sistema exibe alerta informando que a ação é irreversível.
-   - A exclusão remove pagamentos, itens e o pedido.
+Exemplo esperado:
 
-4. **Plano B - CSV**
-   - Criada rota para exportar todos os pedidos registrados em CSV:
+- Emerson com 2 pedidos de R$ 34,00 aparece uma única vez.
+- O total agrupado aparece como R$ 68,00.
+- Ao abrir o fechamento, aparecem os pedidos individuais.
+- O caixa pode registrar pagamento agrupado ou abrir cada pedido para pagar separadamente.
+
+Também foi ajustada a action `registerCashierGroupPayment` para receber os `order_ids` do grupo e registrar o pagamento nos pedidos corretos.
+
+### 2. Menu Relatórios da Prestação de Contas
+
+Foi criada a rota:
 
 ```txt
-/admin/festa-junina/prestacao-contas/exportar-pedidos
+/admin/festa-junina/relatorios
 ```
 
-5. **Relatório final / prestação de contas**
-   - Criada tela com drill-down:
-     - resumo geral;
-     - formas de pagamento;
-     - categorias/resumo;
-     - itens do cardápio;
-     - responsáveis e pedidos;
-     - cancelamentos e divergências;
-     - botão para exportar CSV.
-
-6. **SQL opcional**
-   - Incluído SQL opcional para limpar pedidos cancelados de teste fora do dia da festa:
+Ela redireciona para:
 
 ```txt
-supabase/031_limpeza_pedidos_cancelados_teste.sql
+/admin/festa-junina/prestacao-contas
 ```
 
-## Passo a passo para aplicar
+Assim, se o menu lateral continuar apontando para `Relatórios`, o usuário será levado para a nova tela de prestação de contas com drill-down.
 
-### Opção 1 - Aplicar manualmente
+### 3. Cancelados com filtro operacional
 
-1. Extraia o ZIP na raiz do projeto.
-2. Confirme que os arquivos foram substituídos/criados nos caminhos acima.
-3. Rode:
+A tela `/admin/festa-junina/atendimento/cancelados` foi alterada para mostrar filtros por:
+
+- data inicial;
+- data final;
+- período do dia: madrugada, manhã, tarde, noite ou dia inteiro.
+
+Agora, sem filtro aplicado, a tela mostra todos os pedidos cancelados do evento, inclusive testes. Com filtro, mostra somente o período selecionado.
+
+Os textos antigos que diziam que apenas o dia da festa seria exibido foram removidos.
+
+A tela mantém:
+
+- abrir pedido;
+- restaurar pedido;
+- excluir definitivamente com confirmação de ação irreversível.
+
+## Passo a passo para atualizar
+
+1. Feche o servidor local, se estiver rodando.
+
+2. Extraia o conteúdo do ZIP na raiz do projeto, mantendo a estrutura das pastas `src/...`.
+
+3. Confirme os arquivos alterados:
+
+```bash
+git status
+```
+
+4. Rode as validações:
 
 ```bash
 npm run lint
 npm run build
 ```
 
-4. Teste as telas:
+5. Teste as telas:
 
 ```txt
 /gestao-evento/caixa
-/admin/login
-/admin/festa-junina/atendimento/cancelados
+/admin/festa-junina/relatorios
 /admin/festa-junina/prestacao-contas
-/admin/festa-junina/prestacao-contas/exportar-pedidos
+/admin/festa-junina/atendimento/cancelados
 ```
 
-### Opção 2 - Aplicar pelo PowerShell
+## Testes recomendados
 
-Na raiz do projeto, depois de extrair o ZIP, rode:
+### Caixa
 
-```powershell
-./aplicar-ajustes.ps1
-```
+1. Crie dois pedidos para o mesmo responsável, por exemplo Emerson.
+2. Acesse `/gestao-evento/caixa`.
+3. Confira se Emerson aparece uma única vez na lista lateral.
+4. Confira se o total agrupado soma todos os pedidos dele.
+5. Abra os pedidos individuais e confira se cada pedido pode ser pago separadamente.
+6. Registre pagamento agrupado e confira se todos os pedidos ficam como pagos.
 
-## Commit no GitHub
+### Relatórios
 
-Depois dos testes:
+1. Entre na gestão.
+2. Clique em `Prestação de Contas > Relatórios`.
+3. Confirme se abre a tela de prestação de contas com o drill-down.
+4. Teste o botão de exportar CSV.
+
+### Cancelados
+
+1. Acesse `/admin/festa-junina/atendimento/cancelados`.
+2. Confira se os cancelados de teste aparecem quando não há filtro.
+3. Filtre por uma data específica.
+4. Teste restaurar um pedido cancelado.
+5. Teste excluir definitivamente apenas em um pedido de teste.
+
+## Commit sugerido
 
 ```bash
-git status
-
 git add src/app/gestao-evento/caixa/page.tsx \
   src/app/gestao-evento/actions.ts \
-  src/app/admin/login/page.tsx \
-  src/app/admin/login/admin-login-form.tsx \
+  src/app/admin/festa-junina/relatorios/page.tsx \
   src/app/admin/festa-junina/atendimento/cancelados/page.tsx \
   src/app/admin/festa-junina/atendimento/cancelados/actions.ts \
   src/app/admin/festa-junina/prestacao-contas/page.tsx \
   src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts \
+  src/app/admin/login/page.tsx \
+  src/app/admin/login/admin-login-form.tsx \
   supabase/031_limpeza_pedidos_cancelados_teste.sql
 
-git commit -m "Ajusta caixa, login, cancelados, CSV e prestação de contas"
+git commit -m "Ajusta caixa agrupado, relatorios e cancelados"
 
 git push
 ```
