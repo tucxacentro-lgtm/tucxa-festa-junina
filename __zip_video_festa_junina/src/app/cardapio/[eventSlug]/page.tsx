@@ -35,26 +35,6 @@ type EventRow = {
   pix_receiver_name: string | null;
 };
 
-const EVENT_PROMO_VIDEOS: Record<
-  string,
-  {
-    title: string;
-    description: string;
-    videoSrc: string;
-    posterSrc: string;
-    downloadLabel: string;
-  }
-> = {
-  "arraia-tucxa-2026": {
-    title: "Vídeo simples para TVs e divulgação",
-    description:
-      "Um MP4 leve para rodar em loop nas TVs do evento, sem internet, alternando cardápio e programação do bingo. Também fica disponível nesta página para assistir e baixar.",
-    videoSrc: "/videos/arraia-tucxa-2026-cardapio-bingo.mp4",
-    posterSrc: "/videos/arraia-tucxa-2026-cardapio-bingo-poster.jpg",
-    downloadLabel: "Baixar vídeo MP4",
-  },
-};
-
 async function getData(eventSlug: string) {
   const supabase = createSupabaseAdminClient();
   const { data: event } = await supabase
@@ -92,8 +72,6 @@ function PublicPersuasiveMenu({
   event: EventRow;
   items: PublicSalesMenuItem[];
 }) {
-  const promoVideo = EVENT_PROMO_VIDEOS[event.slug] ?? null;
-
   return (
     <main className="min-h-screen bg-[#fff9e6] text-green-950">
       <section className="mx-auto max-w-6xl px-4 py-6 sm:px-5 sm:py-8">
@@ -127,32 +105,6 @@ function PublicPersuasiveMenu({
                   Ver itens e valores
                 </a>
               </div>
-
-              {promoVideo ? (
-                <div className="mt-6 rounded-[1.75rem] border border-white/70 bg-white/85 p-4 shadow-lg backdrop-blur">
-                  <p className="text-sm font-black uppercase tracking-wide text-orange-700">
-                    {promoVideo.title}
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-stone-700">
-                    {promoVideo.description}
-                  </p>
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                    <a
-                      href="#video-evento"
-                      className="inline-flex items-center justify-center rounded-2xl bg-orange-600 px-5 py-3 text-center font-black text-white shadow-lg transition hover:bg-orange-700"
-                    >
-                      Assistir vídeo
-                    </a>
-                    <a
-                      href={promoVideo.videoSrc}
-                      download
-                      className="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-center font-black text-green-950 shadow-lg transition hover:bg-amber-50"
-                    >
-                      {promoVideo.downloadLabel}
-                    </a>
-                  </div>
-                </div>
-              ) : null}
             </div>
 
             <div className="rounded-[1.5rem] bg-white/80 p-5 shadow-sm backdrop-blur">
@@ -207,59 +159,6 @@ function PublicPersuasiveMenu({
             </p>
           </article>
         </section>
-
-        {promoVideo ? (
-          <section
-            id="video-evento"
-            className="mt-6 rounded-[2rem] bg-white p-5 shadow-sm sm:p-6"
-          >
-            <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-              <div>
-                <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-orange-700">
-                  TV sem internet
-                </span>
-                <h2 className="mt-3 text-2xl font-black text-green-950 sm:text-3xl">
-                  Cardápio + programação do bingo em vídeo
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-stone-700 sm:text-base">
-                  Este vídeo foi preparado para rodar em loop no dia do evento,
-                  alternando as opções do cardápio público e a programação das
-                  15 rodadas do bingo. Você pode assistir aqui, baixar o MP4 e
-                  usar em notebook, pendrive ou TV.
-                </p>
-                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                  <a
-                    href={promoVideo.videoSrc}
-                    download
-                    className="inline-flex items-center justify-center rounded-2xl bg-green-900 px-5 py-3 text-center font-black text-white shadow-lg transition hover:bg-green-800"
-                  >
-                    {promoVideo.downloadLabel}
-                  </a>
-                  <a
-                    href="https://bingo-sementinha.vercel.app/evento/bingo-festa-junina-do-tucxa-2026-06-14/programacao"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-center rounded-2xl bg-amber-50 px-5 py-3 text-center font-black text-green-950 shadow-sm transition hover:bg-amber-100"
-                  >
-                    Ver programação do bingo
-                  </a>
-                </div>
-              </div>
-
-              <div className="overflow-hidden rounded-[1.5rem] border border-amber-100 bg-stone-950 shadow-lg">
-                <video
-                  controls
-                  preload="metadata"
-                  poster={promoVideo.posterSrc}
-                  className="aspect-video h-full w-full"
-                >
-                  <source src={promoVideo.videoSrc} type="video/mp4" />
-                  Seu navegador não suporta a reprodução de vídeo.
-                </video>
-              </div>
-            </div>
-          </section>
-        ) : null}
 
         {items.length === 0 ? (
           <section id="itens" className="mt-8 rounded-[2rem] bg-white p-6 text-sm text-stone-600 shadow-sm">
