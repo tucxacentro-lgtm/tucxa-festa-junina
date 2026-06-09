@@ -115,9 +115,68 @@ const IMAGE_LIBRARY: Array<{ match: string[]; images: MenuItemImage[] }> = [
   },
 ];
 
+function numberValue(value: PublicSalesMenuItem["price"] | undefined) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  if (!value) return 0;
+
+  const normalized = String(value)
+    .replace(/\s/g, "")
+    .replace("R$", "")
+    .replace(".", "")
+    .replace(",", ".");
+
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getBingoCardImages(
+  item: Pick<PublicSalesMenuItem, "name" | "category" | "description" | "price">,
+): MenuItemImage[] | null {
+  const searchable = normalize(
+    `${item.name} ${item.category} ${item.description ?? ""}`,
+  );
+  const price = numberValue(item.price);
+
+  const isBingoCard =
+    searchable.includes("cartela") ||
+    searchable.includes("bingo") ||
+    searchable.includes("rodada");
+
+  if (!isBingoCard) return null;
+
+  if (price === 5 || searchable.includes("r$ 5") || searchable.includes("5,00")) {
+    return [
+      image(
+        "cartela-bingo-rs5-premios.jpg",
+        "Cartela de bingo de R$ 5,00 com exemplos dos prêmios previstos",
+      ),
+    ];
+  }
+
+  if (price === 7 || searchable.includes("r$ 7") || searchable.includes("7,00")) {
+    return [
+      image(
+        "cartela-bingo-rs7-premios.jpg",
+        "Cartela de bingo de R$ 7,00 com exemplos dos prêmios previstos",
+      ),
+    ];
+  }
+
+  return null;
+}
+
 export function getMenuItemImages(
-  item: Pick<PublicSalesMenuItem, "name" | "category">,
+  item: Pick<PublicSalesMenuItem, "name" | "category" | "description" | "price">,
 ): MenuItemImage[] {
+  const bingoCardImages = getBingoCardImages(item);
+
+  if (bingoCardImages) {
+    return bingoCardImages;
+  }
+
   const searchable = normalize(`${item.name} ${item.category}`);
   const match = IMAGE_LIBRARY.find((entry) =>
     entry.match.some((term) => searchable.includes(normalize(term))),
