@@ -58,10 +58,13 @@ export async function createServiceResponsible(formData: FormData) {
   const waiterName = text(formData, "waiter_name");
   const responsibleName = text(formData, "responsible_name");
   const responsiblePhone = text(formData, "responsible_phone");
-  const settlementMode = text(formData, "settlement_mode") || "fechamento_final";
+  const settlementMode =
+    text(formData, "settlement_mode") || "fechamento_final";
 
   if (!eventId || !responsibleName) {
-    redirect(withParams("/gestao-evento/garcom", { erro: "campos-obrigatorios" }));
+    redirect(
+      withParams("/gestao-evento/garcom", { erro: "campos-obrigatorios" }),
+    );
   }
 
   const supabase = createSupabaseAdminClient();
@@ -83,8 +86,16 @@ export async function createServiceResponsible(formData: FormData) {
 
   if (orderError) throw new Error(orderError.message);
 
-  if ((existingSessions?.length ?? 0) > 0 || (existingOrders?.length ?? 0) > 0) {
-    redirect(withParams("/gestao-evento/garcom", { erro: "responsavel-existe", nome: responsibleName }));
+  if (
+    (existingSessions?.length ?? 0) > 0 ||
+    (existingOrders?.length ?? 0) > 0
+  ) {
+    redirect(
+      withParams("/gestao-evento/garcom", {
+        erro: "responsavel-existe",
+        nome: responsibleName,
+      }),
+    );
   }
 
   const { data: session, error } = await supabase
@@ -95,21 +106,28 @@ export async function createServiceResponsible(formData: FormData) {
       responsible_name: responsibleName,
       responsible_phone: responsiblePhone || null,
       waiter_name: waiterName || null,
-      settlement_mode: settlementMode === "por_pedido" ? "por_pedido" : "fechamento_final",
+      settlement_mode:
+        settlementMode === "por_pedido" ? "por_pedido" : "fechamento_final",
       status: "open",
     })
     .select("id")
     .single();
 
-  if (error || !session) throw new Error(error?.message ?? "Não foi possível cadastrar o responsável.");
+  if (error || !session)
+    throw new Error(
+      error?.message ?? "Não foi possível cadastrar o responsável.",
+    );
 
   revalidatePath("/gestao-evento/garcom");
-  redirect(withParams(`/cardapio/${eventSlug}`, {
-    sessao: String(session.id),
-    responsavel: responsibleName,
-    garcom: waiterName,
-    fechamento: settlementMode === "por_pedido" ? "por_pedido" : "fechamento_final",
-  }));
+  redirect(
+    withParams(`/cardapio/${eventSlug}`, {
+      sessao: String(session.id),
+      responsavel: responsibleName,
+      garcom: waiterName,
+      fechamento:
+        settlementMode === "por_pedido" ? "por_pedido" : "fechamento_final",
+    }),
+  );
 }
 
 export async function registerCashierGroupPayment(formData: FormData) {
@@ -137,7 +155,11 @@ export async function registerCashierGroupPayment(formData: FormData) {
 
   if (orderIds.length > 0) {
     query = query.in("id", orderIds);
-  } else if (serviceSessionId && !serviceSessionId.startsWith("order:") && !serviceSessionId.startsWith("responsible:")) {
+  } else if (
+    serviceSessionId &&
+    !serviceSessionId.startsWith("order:") &&
+    !serviceSessionId.startsWith("responsible:")
+  ) {
     query = query.eq("service_session_id", serviceSessionId);
   } else {
     query = query.ilike("customer_name", responsibleName);
@@ -146,8 +168,17 @@ export async function registerCashierGroupPayment(formData: FormData) {
   const { data: orders, error: ordersError } = await query;
   if (ordersError) throw new Error(ordersError.message);
 
-  const orderRows = (orders ?? []) as Array<{ id: string; total_amount: number | string }>;
-  if (orderRows.length === 0) redirect(withParams("/gestao-evento/caixa", { responsavel: serviceSessionId || responsibleName, erro: "sem-pendencias" }));
+  const orderRows = (orders ?? []) as Array<{
+    id: string;
+    total_amount: number | string;
+  }>;
+  if (orderRows.length === 0)
+    redirect(
+      withParams("/gestao-evento/caixa", {
+        responsavel: serviceSessionId || responsibleName,
+        erro: "sem-pendencias",
+      }),
+    );
 
   const payments = orderRows.map((order) => ({
     event_id: eventId,
@@ -158,21 +189,30 @@ export async function registerCashierGroupPayment(formData: FormData) {
     notes: `Pagamento registrado no caixa: ${method}.`,
   }));
 
-  const { error: paymentsError } = await supabase.from("event_consumption_payments").insert(payments);
+  const { error: paymentsError } = await supabase
+    .from("event_consumption_payments")
+    .insert(payments);
   if (paymentsError) throw new Error(paymentsError.message);
 
   const { error: updateError } = await supabase
     .from("event_consumption_orders")
     .update({ payment_status: "paid", updated_at: new Date().toISOString() })
-    .in("id", orderRows.map((order) => order.id));
+    .in(
+      "id",
+      orderRows.map((order) => order.id),
+    );
 
   if (updateError) throw new Error(updateError.message);
 
   revalidatePath("/gestao-evento/caixa");
   revalidatePath("/gestao-evento/garcom");
-  redirect(withParams("/gestao-evento/caixa", { responsavel: serviceSessionId || responsibleName, pago: "1" }));
+  redirect(
+    withParams("/gestao-evento/caixa", {
+      responsavel: serviceSessionId || responsibleName,
+      pago: "1",
+    }),
+  );
 }
-
 
 export async function registerCashierOrderPayment(formData: FormData) {
   const eventId = text(formData, "event_id");
@@ -195,11 +235,21 @@ export async function registerCashierOrderPayment(formData: FormData) {
 
   if (orderError) throw new Error(orderError.message);
   if (!order || order.status === "cancelled") {
-    redirect(withParams("/gestao-evento/caixa", { responsavel: responsibleKey, erro: "pedido-invalido" }));
+    redirect(
+      withParams("/gestao-evento/caixa", {
+        responsavel: responsibleKey,
+        erro: "pedido-invalido",
+      }),
+    );
   }
 
   if (order.payment_status === "paid") {
-    redirect(withParams("/gestao-evento/caixa", { responsavel: responsibleKey, erro: "sem-pendencias" }));
+    redirect(
+      withParams("/gestao-evento/caixa", {
+        responsavel: responsibleKey,
+        erro: "sem-pendencias",
+      }),
+    );
   }
 
   const { data: previousPayments, error: paymentsReadError } = await supabase
@@ -217,31 +267,193 @@ export async function registerCashierOrderPayment(formData: FormData) {
   const paymentAmount = Math.min(amount, pending || total);
 
   if (paymentAmount <= 0) {
-    redirect(withParams("/gestao-evento/caixa", { responsavel: responsibleKey, erro: "sem-pendencias" }));
+    redirect(
+      withParams("/gestao-evento/caixa", {
+        responsavel: responsibleKey,
+        erro: "sem-pendencias",
+      }),
+    );
   }
 
-  const { error: paymentError } = await supabase.from("event_consumption_payments").insert({
-    event_id: eventId,
-    order_id: orderId,
-    method,
-    amount: paymentAmount,
-    status: "paid",
-    notes: `Pagamento individual registrado no caixa: ${method}.`,
-  });
+  const { error: paymentError } = await supabase
+    .from("event_consumption_payments")
+    .insert({
+      event_id: eventId,
+      order_id: orderId,
+      method,
+      amount: paymentAmount,
+      status: "paid",
+      notes: `Pagamento individual registrado no caixa: ${method}.`,
+    });
 
   if (paymentError) throw new Error(paymentError.message);
 
   const newPending = Math.max(0, pending - paymentAmount);
   const { error: updateError } = await supabase
     .from("event_consumption_orders")
-    .update({ payment_status: newPending <= 0 ? "paid" : "registered", updated_at: new Date().toISOString() })
+    .update({
+      payment_status: newPending <= 0 ? "paid" : "registered",
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", orderId);
 
   if (updateError) throw new Error(updateError.message);
 
   revalidatePath("/gestao-evento/caixa");
   revalidatePath("/gestao-evento/garcom");
-  redirect(withParams("/gestao-evento/caixa", { responsavel: responsibleKey, pago: "1" }));
+  redirect(
+    withParams("/gestao-evento/caixa", {
+      responsavel: responsibleKey,
+      pago: "1",
+    }),
+  );
+}
+
+export async function updateCashierOrderItems(formData: FormData) {
+  const eventId = text(formData, "event_id");
+  const orderId = text(formData, "order_id");
+  const responsibleKey = text(formData, "responsible_key");
+
+  if (!eventId || !orderId) {
+    redirect(
+      withParams("/gestao-evento/caixa", {
+        responsavel: responsibleKey,
+        erro: "pedido-invalido",
+      }),
+    );
+  }
+
+  const supabase = createSupabaseAdminClient();
+
+  const { data: order, error: orderError } = await supabase
+    .from("event_consumption_orders")
+    .select("id, event_id, status, payment_status, total_amount")
+    .eq("event_id", eventId)
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (orderError) throw new Error(orderError.message);
+  if (!order || order.status === "cancelled") {
+    redirect(
+      withParams("/gestao-evento/caixa", {
+        responsavel: responsibleKey,
+        erro: "pedido-invalido",
+      }),
+    );
+  }
+
+  const { data: menuItems, error: menuError } = await supabase
+    .from("event_sales_menu_items")
+    .select("id, name, price")
+    .eq("event_id", eventId)
+    .eq("active", true);
+
+  if (menuError) throw new Error(menuError.message);
+
+  const selected = (
+    (menuItems ?? []) as Array<{
+      id: string;
+      name: string;
+      price: number | string;
+    }>
+  )
+    .map((item) => {
+      const quantity = numeric(formData, `qty_${item.id}`, 0);
+      const unitPrice = Number(item.price ?? 0);
+      return {
+        item,
+        quantity,
+        unitPrice,
+        total: quantity * unitPrice,
+      };
+    })
+    .filter((entry) => entry.quantity > 0);
+
+  if (selected.length === 0) {
+    redirect(
+      withParams("/gestao-evento/caixa", {
+        responsavel: responsibleKey,
+        erro: "pedido-sem-itens",
+      }),
+    );
+  }
+
+  const now = new Date().toISOString();
+  const newTotal = selected.reduce((sum, entry) => sum + entry.total, 0);
+
+  const { error: deleteError } = await supabase
+    .from("event_consumption_order_items")
+    .delete()
+    .eq("order_id", orderId);
+
+  if (deleteError) throw new Error(deleteError.message);
+
+  const rows = selected.map((entry) => ({
+    event_id: eventId,
+    order_id: orderId,
+    sales_menu_item_id: entry.item.id,
+    item_name: entry.item.name,
+    quantity: entry.quantity,
+    unit_price: entry.unitPrice,
+    total_price: entry.total,
+    status: "received",
+    updated_at: now,
+  }));
+
+  const { error: insertError } = await supabase
+    .from("event_consumption_order_items")
+    .insert(rows);
+  if (insertError) throw new Error(insertError.message);
+
+  const { data: payments, error: paymentsError } = await supabase
+    .from("event_consumption_payments")
+    .select("amount, status")
+    .eq("order_id", orderId);
+
+  if (paymentsError) throw new Error(paymentsError.message);
+
+  const paidByPayments = (payments ?? [])
+    .filter((payment) => payment.status === "paid")
+    .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0);
+  const oldPaidFallback =
+    order.payment_status === "paid" && paidByPayments <= 0
+      ? Number(order.total_amount ?? 0)
+      : 0;
+  const paidAmount = Math.max(paidByPayments, oldPaidFallback);
+  const nextPaymentStatus =
+    paidAmount >= newTotal ? "paid" : paidAmount > 0 ? "registered" : "pending";
+  const editNote = text(formData, "edit_note");
+  const existingNote = text(formData, "existing_note");
+  const notes = [
+    existingNote,
+    editNote
+      ? `Ajuste no caixa: ${editNote}`
+      : "Ajuste no caixa: itens editados.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const { error: updateError } = await supabase
+    .from("event_consumption_orders")
+    .update({
+      total_amount: newTotal,
+      payment_status: nextPaymentStatus,
+      notes: notes || null,
+      updated_at: now,
+    })
+    .eq("id", orderId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  revalidatePath("/gestao-evento/caixa");
+  revalidatePath("/gestao-evento/garcom");
+  revalidatePath("/admin/festa-junina/prestacao-contas");
+  redirect(
+    withParams("/gestao-evento/caixa", {
+      responsavel: responsibleKey,
+      editado: "1",
+    }),
+  );
 }
 
 export async function cancelConsumptionOrder(formData: FormData) {
@@ -264,7 +476,8 @@ export async function cancelConsumptionGroup(formData: FormData) {
   const eventId = text(formData, "event_id");
   const serviceSessionId = text(formData, "service_session_id");
   const responsible = text(formData, "responsible");
-  const reason = text(formData, "reason") || "Responsável/pedidos cancelados pela operação.";
+  const reason =
+    text(formData, "reason") || "Responsável/pedidos cancelados pela operação.";
   const fallback = buildReturnPath(formData, "/gestao-evento/garcom");
 
   if (!eventId || (!serviceSessionId && !responsible)) redirect(fallback);
@@ -276,13 +489,16 @@ export async function cancelConsumptionGroup(formData: FormData) {
     .eq("event_id", eventId)
     .neq("status", "cancelled");
 
-  if (serviceSessionId && !serviceSessionId.startsWith("order:")) query = query.eq("service_session_id", serviceSessionId);
+  if (serviceSessionId && !serviceSessionId.startsWith("order:"))
+    query = query.eq("service_session_id", serviceSessionId);
   else if (responsible) query = query.ilike("customer_name", responsible);
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
-  const orderIds = ((data ?? []) as Array<{ id: string }>).map((row) => String(row.id));
+  const orderIds = ((data ?? []) as Array<{ id: string }>).map((row) =>
+    String(row.id),
+  );
   await cancelOrders(orderIds, reason);
 
   if (serviceSessionId && !serviceSessionId.startsWith("order:")) {

@@ -91,10 +91,10 @@ ROUNDS = [
     (7, 'R$ 7,00', '1 quina · com cartela cheia', ['Quina 1: Sabonete Natura + Colar Rosê', 'Cheia: Tatuagem']),
     (8, 'R$ 5,00', '1 quina · com cartela cheia', ['Quina 1: Petiscos Especiais', 'Cheia: Fardo Heineken']),
     (9, 'R$ 7,00', '1 quina · com cartela cheia', ['Quina 1: Kit Natura Folhas', 'Cheia: Limpeza Dentária']),
-    (10, 'R$ 7,00', '2 quinas · sem cartela cheia', ['Quina 1: Tapete de Crochê', 'Quina 2: Liquidificador']),
+    (10, 'R$ 7,00', '1 quina · com cartela cheia', ['Quina 1: Tapete de Crochê', 'Cheia: Liquidificador']),
     (11, 'R$ 7,00', '1 quina · com cartela cheia', ['Quina 1: Porta-Temperos para Cozinha', 'Cheia: Limpeza Dentária']),
     (12, 'R$ 5,00', '2 quinas · sem cartela cheia', ['Quina 1: Jogo Americano de Crochê', 'Quina 2: Prato de Vidro']),
-    (13, 'R$ 10,00', '2 quinas · sem cartela cheia', ['Quina 1: Sabonete Orgânico', 'Quina 2: Cesta Festa Junina']),
+    (13, 'R$ 5,00', '2 quinas · sem cartela cheia', ['Quina 1: Sabonete Orgânico', 'Quina 2: Cesta Festa Junina']),
     (14, 'R$ 5,00', '2 quinas · sem cartela cheia', ['Quina 1: Kit Pudim + Avental + Colher', 'Quina 2: Colar Azul']),
     (15, 'R$ 5,00', '2 quinas · sem cartela cheia', ['Quina 1: Sabonete Lilás + Colar de Pérolas', 'Quina 2: Bolsa Madeira + Vidro Macramê']),
 ]

@@ -24,13 +24,28 @@ export type ConsumptionOrderRow = {
 
 export type ConsumptionOrderItemRow = {
   id: string;
+  event_id?: string | null;
   order_id: string;
+  sales_menu_item_id?: string | null;
   item_name: string;
+  category?: string | null;
   quantity: number | string;
   unit_price: number | string;
   total_price: number | string;
   status: string;
   created_at: string;
+};
+
+export type SalesMenuItemOption = {
+  id: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  price: number | string;
+  unit_label: string | null;
+  requires_preparation: boolean | null;
+  active: boolean;
+  sort_order: number | null;
 };
 
 export type ConsumptionPaymentRow = {
@@ -114,27 +129,49 @@ export async function getConsumptionOrdersForEvent(
   const orderIds = typedOrders.map((order) => order.id);
   if (orderIds.length === 0) return [];
 
-  const [{ data: items }, { data: payments }] = await Promise.all([
-    supabase
-      .from("event_consumption_order_items")
-      .select(
-        "id, order_id, item_name, quantity, unit_price, total_price, status, created_at",
-      )
-      .in("order_id", orderIds)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("event_consumption_payments")
-      .select(
-        "id, order_id, method, amount, status, proof_file_path, notes, created_at",
-      )
-      .in("order_id", orderIds)
-      .order("created_at", { ascending: true }),
-  ]);
+  const [{ data: items }, { data: payments }, { data: menuItems }] =
+    await Promise.all([
+      supabase
+        .from("event_consumption_order_items")
+        .select(
+          "id, event_id, order_id, sales_menu_item_id, item_name, quantity, unit_price, total_price, status, created_at",
+        )
+        .in("order_id", orderIds)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("event_consumption_payments")
+        .select(
+          "id, order_id, method, amount, status, proof_file_path, notes, created_at",
+        )
+        .in("order_id", orderIds)
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("event_sales_menu_items")
+        .select("id, name, category")
+        .eq("event_id", eventId),
+    ]);
+
+  const categoryByMenuId = new Map<string, string | null>();
+  const categoryByName = new Map<string, string | null>();
+  for (const item of (menuItems ?? []) as Array<{
+    id: string;
+    name: string;
+    category: string | null;
+  }>) {
+    categoryByMenuId.set(item.id, item.category);
+    categoryByName.set(normalize(item.name), item.category);
+  }
 
   const itemsByOrder = new Map<string, ConsumptionOrderItemRow[]>();
   for (const item of (items ?? []) as ConsumptionOrderItemRow[]) {
+    const category =
+      (item.sales_menu_item_id
+        ? categoryByMenuId.get(item.sales_menu_item_id)
+        : null) ??
+      categoryByName.get(normalize(item.item_name)) ??
+      null;
     const current = itemsByOrder.get(item.order_id) ?? [];
-    current.push(item);
+    current.push({ ...item, category });
     itemsByOrder.set(item.order_id, current);
   }
 
@@ -315,7 +352,9 @@ export function buildSalesSummary(
   const activeOrders = orders.filter((order) => order.status !== "cancelled");
   const itemMap = new Map<string, SalesSummaryItem>();
   for (const order of activeOrders) {
-    for (const item of order.items) {
+    for (const item of order.items.filter(
+      (entry) => entry.status !== "cancelled",
+    )) {
       const current = itemMap.get(item.item_name) ?? {
         itemName: item.item_name,
         quantity: 0,
@@ -334,6 +373,161 @@ export function buildSalesSummary(
     pendingTotal: Math.max(0, soldTotal - paidTotal),
     itemDetails: Array.from(itemMap.values()).sort((a, b) => b.total - a.total),
   };
+}
+
+export async function getActiveSalesMenuItemsForEvent(
+  eventId: string,
+): Promise<SalesMenuItemOption[]> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("event_sales_menu_items")
+    .select(
+      "id, name, category, description, price, unit_label, requires_preparation, active, sort_order",
+    )
+    .eq("event_id", eventId)
+    .eq("active", true)
+    .order("category", { ascending: true })
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (error) return [];
+  return (data ?? []) as SalesMenuItemOption[];
+}
+
+export type PaymentMethodSummaryItem = {
+  method: string;
+  label: string;
+  total: number;
+};
+
+export function buildPaymentMethodSummary(
+  orders: ConsumptionOrderWithDetails[],
+): PaymentMethodSummaryItem[] {
+  const totals = new Map<string, number>();
+
+  for (const order of orders.filter((entry) => entry.status !== "cancelled")) {
+    const paidPayments = order.payments.filter(
+      (payment) => payment.status === "paid",
+    );
+
+    if (paidPayments.length > 0) {
+      for (const payment of paidPayments) {
+        totals.set(
+          payment.method,
+          (totals.get(payment.method) ?? 0) + numeric(payment.amount),
+        );
+      }
+      continue;
+    }
+
+    if (order.payment_status === "paid") {
+      totals.set(
+        "sem_forma",
+        (totals.get("sem_forma") ?? 0) + numeric(order.total_amount),
+      );
+    }
+  }
+
+  return Array.from(totals.entries())
+    .map(([method, total]) => ({
+      method,
+      label:
+        method === "sem_forma"
+          ? "Pago sem forma registrada"
+          : paymentMethodLabel(method),
+      total,
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
+export type CategorySummaryItem = {
+  category: string;
+  quantity: number;
+  total: number;
+};
+
+export function buildCategorySummary(
+  orders: ConsumptionOrderWithDetails[],
+): CategorySummaryItem[] {
+  const totals = new Map<string, { quantity: number; total: number }>();
+
+  for (const order of orders.filter((entry) => entry.status !== "cancelled")) {
+    for (const item of order.items.filter(
+      (entry) => entry.status !== "cancelled",
+    )) {
+      const category = item.category || "Cardápio";
+      const current = totals.get(category) ?? { quantity: 0, total: 0 };
+      current.quantity += numeric(item.quantity);
+      current.total += numeric(item.total_price);
+      totals.set(category, current);
+    }
+  }
+
+  return Array.from(totals.entries())
+    .map(([category, item]) => ({
+      category,
+      quantity: item.quantity,
+      total: item.total,
+    }))
+    .sort((a, b) => b.total - a.total);
+}
+
+export type HourlyItemSummary = {
+  bucketStart: Date;
+  bucketEnd: Date;
+  itemName: string;
+  category: string;
+  quantity: number;
+  total: number;
+};
+
+export function buildHourlyItemSummary(
+  orders: ConsumptionOrderWithDetails[],
+): HourlyItemSummary[] {
+  const activeOrders = orders
+    .filter((order) => order.status !== "cancelled")
+    .sort(
+      (a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
+
+  if (activeOrders.length === 0) return [];
+
+  const firstTime = new Date(activeOrders[0].created_at).getTime();
+  const buckets = new Map<string, HourlyItemSummary>();
+
+  for (const order of activeOrders) {
+    const orderTime = new Date(order.created_at).getTime();
+    const bucketIndex = Math.max(
+      0,
+      Math.floor((orderTime - firstTime) / (60 * 60 * 1000)),
+    );
+    const bucketStart = new Date(firstTime + bucketIndex * 60 * 60 * 1000);
+    const bucketEnd = new Date(bucketStart.getTime() + 60 * 60 * 1000);
+
+    for (const item of order.items.filter(
+      (entry) => entry.status !== "cancelled",
+    )) {
+      const key = `${bucketIndex}:${item.item_name}`;
+      const current = buckets.get(key) ?? {
+        bucketStart,
+        bucketEnd,
+        itemName: item.item_name,
+        category: item.category || "Cardápio",
+        quantity: 0,
+        total: 0,
+      };
+      current.quantity += numeric(item.quantity);
+      current.total += numeric(item.total_price);
+      buckets.set(key, current);
+    }
+  }
+
+  return Array.from(buckets.values()).sort((a, b) => {
+    const timeDiff = a.bucketStart.getTime() - b.bucketStart.getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return b.total - a.total;
+  });
 }
 
 export function orderStatusLabel(value: string) {
