@@ -16,6 +16,19 @@ function number(formData: FormData, name: string, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function normalize(value: string | null | undefined) {
+  return (value ?? "").trim().toLocaleLowerCase("pt-BR");
+}
+
+function selectedSignature(
+  selected: Array<{ item: { id: string }; quantity: number; total: number }>,
+) {
+  return selected
+    .map((entry) => `${entry.item.id}:${entry.quantity}:${entry.total.toFixed(2)}`)
+    .sort()
+    .join("|");
+}
+
 export async function createConsumptionOrder(formData: FormData) {
   await requireAdmin(["admin", "coordenador", "caixa", "garcom"], "/admin/festa-junina/cliente-resumo");
   const event = await getCurrentEventForAdmin();
@@ -46,6 +59,47 @@ export async function createConsumptionOrder(formData: FormData) {
   if (selected.length === 0) redirect("/admin/festa-junina/cliente-resumo?error=no-items");
 
   const totalAmount = selected.reduce((sum, entry) => sum + entry.total, 0);
+  const currentSignature = selectedSignature(selected);
+  const duplicateWindowStart = new Date(Date.now() - 15_000).toISOString();
+
+  // Proteção contra toque duplo/reenvio: se o mesmo responsável criou um
+  // pedido idêntico nos últimos 15 segundos, reaproveita o pedido existente
+  // em vez de criar outro pedido que depois precisaria ser cancelado.
+  const { data: recentOrders, error: recentOrdersError } = await supabase
+    .from("event_consumption_orders")
+    .select("id, customer_name, table_label, total_amount, status, created_at")
+    .eq("event_id", event.id)
+    .neq("status", "cancelled")
+    .gte("created_at", duplicateWindowStart)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (recentOrdersError) throw new Error(recentOrdersError.message);
+
+  for (const recentOrder of recentOrders ?? []) {
+    const sameResponsible =
+      normalize(recentOrder.customer_name) === normalize(customerName) &&
+      normalize(recentOrder.table_label) === normalize(tableLabel);
+    const sameTotal = Math.abs(Number(recentOrder.total_amount ?? 0) - totalAmount) < 0.01;
+    if (!sameResponsible || !sameTotal) continue;
+
+    const { data: recentItems, error: recentItemsError } = await supabase
+      .from("event_consumption_order_items")
+      .select("sales_menu_item_id, quantity, total_price, status")
+      .eq("order_id", recentOrder.id)
+      .neq("status", "cancelled");
+
+    if (recentItemsError) throw new Error(recentItemsError.message);
+
+    const recentSignature = (recentItems ?? [])
+      .map((entry) => `${entry.sales_menu_item_id}:${Number(entry.quantity ?? 0)}:${Number(entry.total_price ?? 0).toFixed(2)}`)
+      .sort()
+      .join("|");
+
+    if (recentSignature === currentSignature) {
+      redirect(`/admin/festa-junina/consumo/${recentOrder.id}?duplicado=ignorado`);
+    }
+  }
 
   const { data: order, error: orderError } = await supabase
     .from("event_consumption_orders")

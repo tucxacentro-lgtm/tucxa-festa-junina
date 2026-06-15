@@ -572,6 +572,95 @@ export type PeriodCategorySummary = {
   sortKey: number;
 };
 
+export type CancelledDuplicateGroup = {
+  responsible: string;
+  amount: number;
+  quantity: number;
+  total: number;
+  orderCodes: string[];
+  firstCreatedAt: string;
+  lastCreatedAt: string;
+  sampleReason: string;
+  itemSignature: string;
+};
+
+function orderShortCode(order: Pick<ConsumptionOrderRow, "id">) {
+  return String(order.id).slice(0, 8).toUpperCase();
+}
+
+function itemSignatureFromOrder(order: ConsumptionOrderWithDetails) {
+  const parts = order.items
+    .filter((item) => item.status !== "cancelled")
+    .map((item) => `${normalize(item.item_name)}:${numeric(item.quantity)}:${numeric(item.total_price).toFixed(2)}`)
+    .sort();
+  return parts.join("|") || "sem-itens";
+}
+
+function sameDayKey(value: string | Date) {
+  const date = value instanceof Date ? value : new Date(value);
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: REPORT_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+export function buildCancelledDuplicateGroups(
+  orders: ConsumptionOrderWithDetails[],
+): CancelledDuplicateGroup[] {
+  const buckets = new Map<string, ConsumptionOrderWithDetails[]>();
+
+  for (const order of orders.filter((entry) => entry.status === "cancelled")) {
+    const responsible = firstNonEmpty(
+      order.customer_name,
+      order.table_label,
+      "Responsável não informado",
+    );
+    const amount = numeric(order.total_amount);
+    const signature = itemSignatureFromOrder(order);
+    const key = [
+      normalize(responsible),
+      amount.toFixed(2),
+      sameDayKey(order.created_at),
+      signature,
+    ].join("::");
+    const current = buckets.get(key) ?? [];
+    current.push(order);
+    buckets.set(key, current);
+  }
+
+  return Array.from(buckets.values())
+    .filter((group) => group.length >= 2)
+    .map((group) => {
+      const sorted = [...group].sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
+      const first = sorted[0]!;
+      const last = sorted[sorted.length - 1]!;
+      const responsible = firstNonEmpty(
+        first.customer_name,
+        first.table_label,
+        "Responsável não informado",
+      );
+      const amount = numeric(first.total_amount);
+      return {
+        responsible,
+        amount,
+        quantity: sorted.length,
+        total: sorted.reduce((sum, order) => sum + numeric(order.total_amount), 0),
+        orderCodes: sorted.map(orderShortCode),
+        firstCreatedAt: first.created_at,
+        lastCreatedAt: last.created_at,
+        sampleReason: first.cancellation_reason || "sem motivo",
+        itemSignature: itemSignatureFromOrder(first),
+      };
+    })
+    .sort((a, b) => b.total - a.total || b.quantity - a.quantity);
+}
+
+
 function getZonedHour(value: string | Date, timeZone = REPORT_TIME_ZONE) {
   const date = value instanceof Date ? value : new Date(value);
   const parts = new Intl.DateTimeFormat("pt-BR", {

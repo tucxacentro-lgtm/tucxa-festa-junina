@@ -11,6 +11,7 @@ import { requireAdmin } from "@/lib/auth";
 import { getCurrentEventForAdmin } from "@/lib/current-event";
 import { formatCurrency } from "@/lib/format";
 import {
+  buildCancelledDuplicateGroups,
   buildCategorySummary,
   buildPeriodCategorySummary,
   buildPaymentMethodSummary,
@@ -30,6 +31,20 @@ type PageProps = {
 
 function sortLink(orderBy: "quantidade" | "valor") {
   return `/admin/festa-junina/prestacao-contas?ordenar=${orderBy}`;
+}
+
+function periodRowClass(period: string) {
+  if (period.startsWith("Antes")) return "bg-stone-50";
+  if (period.startsWith("Após")) return "bg-red-50";
+  const hour = Number(period.slice(0, 2));
+  const classes = [
+    "bg-green-50",
+    "bg-amber-50",
+    "bg-sky-50",
+    "bg-orange-50",
+    "bg-lime-50",
+  ];
+  return classes[Math.max(0, hour - 12) % classes.length] ?? "bg-white";
 }
 
 export default async function PrestacaoContasPage({ searchParams }: PageProps) {
@@ -55,6 +70,7 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
     orderBy === "quantidade" ? b.quantity - a.quantity : b.total - a.total,
   );
   const periodCategoryTotals = buildPeriodCategorySummary(activeOrders);
+  const duplicateCancelledGroups = buildCancelledDuplicateGroups(cancelledOrders);
 
   return (
     <AdminPageShell>
@@ -267,8 +283,11 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {periodCategoryTotals.map((item) => (
-                  <tr key={`${item.period}-${item.category}`}>
-                    <td className="p-3 font-bold">{item.period}</td>
+                  <tr
+                    key={`${item.period}-${item.category}`}
+                    className={periodRowClass(item.period)}
+                  >
+                    <td className="p-3 font-black text-green-950">{item.period}</td>
                     <td className="p-3 font-bold">{item.category}</td>
                     <td className="p-3">{item.quantity}</td>
                     <td className="p-3 font-black">
@@ -297,14 +316,48 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
               <strong>Pedidos cancelados:</strong> {cancelledOrders.length} ·{" "}
               <strong>Valor:</strong> {formatCurrency(cancelledTotal)}
             </div>
-            {cancelledOrders.map((order) => (
-              <p key={order.id} className="text-sm text-stone-700">
-                Pedido {order.id.slice(0, 8).toUpperCase()} ·{" "}
-                {order.customer_name || "sem responsável"} ·{" "}
-                {formatCurrency(order.total_amount)} ·{" "}
-                {order.cancellation_reason || "sem motivo"}
-              </p>
-            ))}
+            {duplicateCancelledGroups.length > 0 ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <h3 className="font-black text-amber-950">
+                  Possíveis duplicidades canceladas
+                </h3>
+                <p className="mt-1 text-sm text-amber-900">
+                  Grupos com mesmo responsável, valor, dia e composição de itens.
+                  Use esta visão para auditoria e para entender cancelamentos em
+                  sequência causados por toque duplo ou reenvio do formulário.
+                </p>
+                <div className="mt-3 grid gap-3">
+                  {duplicateCancelledGroups.map((group) => (
+                    <div
+                      key={`${group.responsible}-${group.amount}-${group.orderCodes.join("-")}`}
+                      className="rounded-2xl bg-white p-4 text-sm text-stone-800"
+                    >
+                      <p className="font-black text-green-950">
+                        {group.responsible} · {group.quantity} pedidos semelhantes ·
+                        {" "}{formatCurrency(group.amount)} cada · total cancelado {formatCurrency(group.total)}
+                      </p>
+                      <p className="mt-1 text-xs text-stone-600">
+                        Códigos: {group.orderCodes.join(", ")}
+                      </p>
+                      <p className="mt-1 text-xs text-stone-500">
+                        Motivo base: {group.sampleReason}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="grid gap-1">
+              {cancelledOrders.map((order) => (
+                <p key={order.id} className="text-sm text-stone-700">
+                  Pedido {order.id.slice(0, 8).toUpperCase()} ·{" "}
+                  {order.customer_name || "sem responsável"} ·{" "}
+                  {formatCurrency(order.total_amount)} ·{" "}
+                  {order.cancellation_reason || "sem motivo"}
+                </p>
+              ))}
+            </div>
           </div>
         </details>
 

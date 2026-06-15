@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { getCurrentEventForAdmin } from "@/lib/current-event";
 import { formatCurrency } from "@/lib/format";
 import {
+  buildCancelledDuplicateGroups,
   buildCategorySummary,
   buildPeriodCategorySummary,
   buildPaymentMethodSummary,
@@ -30,6 +31,15 @@ function shortDateTime(value: string | Date) {
   }).format(new Date(value));
 }
 
+
+function periodClass(period: string) {
+  if (period.startsWith("Antes")) return "period-before";
+  if (period.startsWith("Após")) return "period-after";
+  const hour = Number(period.slice(0, 2));
+  const classes = ["period-0", "period-1", "period-2", "period-3", "period-4"];
+  return classes[Math.max(0, hour - 12) % classes.length] ?? "";
+}
+
 function rows<T>(items: T[], render: (item: T) => string, empty: string) {
   if (items.length === 0) {
     return `<tr><td colspan="99" class="empty">${escapeHtml(empty)}</td></tr>`;
@@ -54,6 +64,7 @@ export async function GET() {
   const categoryTotals = buildCategorySummary(activeOrders);
   const itemTotals = [...summary.itemDetails].sort((a, b) => b.total - a.total);
   const periodCategoryTotals = buildPeriodCategorySummary(activeOrders);
+  const duplicateCancelledGroups = buildCancelledDuplicateGroups(cancelledOrders);
   const cancelledTotal = totalFromOrders(cancelledOrders);
   const generatedAt = new Date();
 
@@ -81,6 +92,16 @@ export async function GET() {
     th { background: #063f25; color: #fff; text-align: left; }
     th, td { padding: 8px; border: 1px solid #d1d5db; vertical-align: top; }
     tr:nth-child(even) td { background: #f9fafb; }
+    tr.period-before td { background: #f3f4f6 !important; }
+    tr.period-after td { background: #fee2e2 !important; }
+    tr.period-0 td { background: #ecfdf5 !important; }
+    tr.period-1 td { background: #fffbeb !important; }
+    tr.period-2 td { background: #eff6ff !important; }
+    tr.period-3 td { background: #fff7ed !important; }
+    tr.period-4 td { background: #f7fee7 !important; }
+    .duplicate-box { border: 1px solid #fbbf24; background: #fffbeb; border-radius: 14px; padding: 12px; margin: 8px 0 16px; }
+    .duplicate-box h3 { margin: 0 0 6px; color: #78350f; }
+    .duplicate-item { background: #fff; border-radius: 10px; padding: 10px; margin-top: 8px; }
     .empty { color: #6b7280; font-style: italic; }
     .small { font-size: 12px; color: #4b5563; }
     @media print {
@@ -145,13 +166,26 @@ export async function GET() {
     <table><thead><tr><th>Período</th><th>Categoria</th><th>Quantidade</th><th>Total</th></tr></thead><tbody>
       ${rows(
         periodCategoryTotals,
-        (item) => `<tr><td>${escapeHtml(item.period)}</td><td>${escapeHtml(item.category)}</td><td>${item.quantity}</td><td>${formatCurrency(item.total)}</td></tr>`,
+        (item) => `<tr class="${periodClass(item.period)}"><td><strong>${escapeHtml(item.period)}</strong></td><td>${escapeHtml(item.category)}</td><td>${item.quantity}</td><td>${formatCurrency(item.total)}</td></tr>`,
         "Nenhum total encontrado por período.",
       )}
     </tbody></table>
 
     <h2>5. Cancelamentos e divergências</h2>
     <p><strong>Pedidos cancelados:</strong> ${cancelledOrders.length} · <strong>Valor cancelado:</strong> ${formatCurrency(cancelledTotal)}</p>
+    ${duplicateCancelledGroups.length > 0 ? `
+      <div class="duplicate-box">
+        <h3>Possíveis duplicidades canceladas</h3>
+        <p class="small">Grupos com mesmo responsável, valor, dia e composição de itens. Esta visão ajuda a identificar cancelamentos gerados por toque duplo, reenvio do formulário ou instabilidade de conexão.</p>
+        ${duplicateCancelledGroups.map((group) => `
+          <div class="duplicate-item">
+            <strong>${escapeHtml(group.responsible)} · ${group.quantity} pedidos semelhantes · ${formatCurrency(group.amount)} cada · total cancelado ${formatCurrency(group.total)}</strong>
+            <div class="small">Códigos: ${escapeHtml(group.orderCodes.join(", "))}</div>
+            <div class="small">Motivo base: ${escapeHtml(group.sampleReason)}</div>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
     <table><thead><tr><th>Pedido</th><th>Responsável</th><th>Valor</th><th>Motivo</th></tr></thead><tbody>
       ${rows(
         cancelledOrders,

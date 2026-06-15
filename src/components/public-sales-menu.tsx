@@ -115,6 +115,14 @@ export function PublicSalesMenu({
   const [lastOrder, setLastOrder] = useState<LastOrderDraft | null>(null);
   const [notes, setNotes] = useState("");
   const [sessionLoaded, setSessionLoaded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [clientRequestKey] = useState(() => {
+    const randomPart =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2);
+    return `pedido-${Date.now()}-${randomPart}`;
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -215,7 +223,14 @@ export function PublicSalesMenu({
   return (
     <form
       action={action}
-      onSubmit={storeBeforeSubmit}
+      onSubmit={(event) => {
+        if (isSubmitting) {
+          event.preventDefault();
+          return;
+        }
+        storeBeforeSubmit();
+        setIsSubmitting(true);
+      }}
       className="mt-5 rounded-[2rem] bg-white p-4 shadow-sm"
     >
       <input
@@ -223,6 +238,7 @@ export function PublicSalesMenu({
         name="service_session_id"
         value={defaultServiceSessionId}
       />
+      <input type="hidden" name="client_request_key" value={clientRequestKey} />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-black">Novo pedido</h2>
@@ -537,8 +553,11 @@ export function PublicSalesMenu({
               {itemCount} item(ns) · {formatCurrency(total)}
             </p>
           </div>
-          <button className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white">
-            Criar pedido
+          <button
+            disabled={isSubmitting || itemCount <= 0}
+            className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? "Registrando..." : "Criar pedido"}
           </button>
         </div>
         <p className="mt-2 flex items-center gap-1 text-xs text-stone-500">
