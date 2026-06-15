@@ -3,8 +3,8 @@ import { requireAdmin } from "@/lib/auth";
 import { getCurrentEventForAdmin } from "@/lib/current-event";
 import {
   paidAmountFromOrder,
+  paymentMethodsFromOrder,
   pendingAmountFromOrder,
-  paymentMethodLabel,
   getConsumptionOrdersForEvent,
 } from "@/lib/operation-dashboard";
 
@@ -60,19 +60,7 @@ export async function GET() {
   for (const order of orders) {
     const paid = paidAmountFromOrder(order);
     const pending = pendingAmountFromOrder(order);
-    const paidPayments = order.payments.filter(
-      (payment) => payment.status === "paid",
-    );
-    const methods =
-      paidPayments.length > 0
-        ? Array.from(
-            new Set(
-              paidPayments.map((payment) => paymentMethodLabel(payment.method)),
-            ),
-          ).join(" + ")
-        : order.payment_status === "paid"
-          ? "Pago sem forma registrada"
-          : "";
+    const methods = paymentMethodsFromOrder(order);
     const items = order.items.length > 0 ? order.items : [null];
 
     for (const item of items) {

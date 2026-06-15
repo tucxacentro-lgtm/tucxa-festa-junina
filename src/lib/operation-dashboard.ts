@@ -103,6 +103,82 @@ function firstNonEmpty(...values: Array<string | null | undefined>) {
   return values.find((value) => value && value.trim())?.trim() ?? "";
 }
 
+const IN_QUERY_CHUNK_SIZE = 40;
+const PAYMENT_STATUSES_WITH_METHOD = new Set(["paid", "registered", "proof_sent"]);
+
+function chunkValues<T>(values: T[], size = IN_QUERY_CHUNK_SIZE) {
+  const chunks: T[][] = [];
+  for (let index = 0; index < values.length; index += size) {
+    chunks.push(values.slice(index, index + size));
+  }
+  return chunks;
+}
+
+function isPaymentUsableForMethod(payment: Pick<ConsumptionPaymentRow, "status">) {
+  return PAYMENT_STATUSES_WITH_METHOD.has(payment.status);
+}
+
+async function fetchOrderItemsInChunks(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  orderIds: string[],
+): Promise<ConsumptionOrderItemRow[]> {
+  const rows: ConsumptionOrderItemRow[] = [];
+
+  for (const chunk of chunkValues(orderIds)) {
+    const result = await supabase
+      .from("event_consumption_order_items")
+      .select(
+        "id, event_id, order_id, sales_menu_item_id, item_name, quantity, unit_price, total_price, status, created_at",
+      )
+      .in("order_id", chunk)
+      .order("created_at", { ascending: true });
+
+    if (!result.error) {
+      rows.push(...((result.data ?? []) as ConsumptionOrderItemRow[]));
+      continue;
+    }
+
+    // Compatibilidade: algumas bases antigas podem não aceitar algum campo extra
+    // no select acima. Neste caso, buscamos novamente com os campos mínimos.
+    const fallback = await supabase
+      .from("event_consumption_order_items")
+      .select(
+        "id, order_id, item_name, quantity, unit_price, total_price, status, created_at",
+      )
+      .in("order_id", chunk)
+      .order("created_at", { ascending: true });
+
+    if (!fallback.error) {
+      rows.push(...((fallback.data ?? []) as ConsumptionOrderItemRow[]));
+    }
+  }
+
+  return rows;
+}
+
+async function fetchPaymentsInChunks(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  orderIds: string[],
+): Promise<ConsumptionPaymentRow[]> {
+  const rows: ConsumptionPaymentRow[] = [];
+
+  for (const chunk of chunkValues(orderIds)) {
+    const result = await supabase
+      .from("event_consumption_payments")
+      .select(
+        "id, order_id, method, amount, status, proof_file_path, notes, created_at",
+      )
+      .in("order_id", chunk)
+      .order("created_at", { ascending: true });
+
+    if (!result.error) {
+      rows.push(...((result.data ?? []) as ConsumptionPaymentRow[]));
+    }
+  }
+
+  return rows;
+}
+
 export async function getConsumptionOrdersForEvent(
   eventId: string,
   options: { includeCancelled?: boolean } = {},
@@ -129,43 +205,15 @@ export async function getConsumptionOrdersForEvent(
   const orderIds = typedOrders.map((order) => order.id);
   if (orderIds.length === 0) return [];
 
-  const [itemsResult, paymentsResult, menuItemsResult] = await Promise.all([
-    supabase
-      .from("event_consumption_order_items")
-      .select(
-        "id, event_id, order_id, sales_menu_item_id, item_name, quantity, unit_price, total_price, status, created_at",
-      )
-      .in("order_id", orderIds)
-      .order("created_at", { ascending: true }),
-    supabase
-      .from("event_consumption_payments")
-      .select(
-        "id, order_id, method, amount, status, proof_file_path, notes, created_at",
-      )
-      .in("order_id", orderIds)
-      .order("created_at", { ascending: true }),
+  const [items, payments, menuItemsResult] = await Promise.all([
+    fetchOrderItemsInChunks(supabase, orderIds),
+    fetchPaymentsInChunks(supabase, orderIds),
     supabase
       .from("event_sales_menu_items")
       .select("id, name, category")
       .eq("event_id", eventId),
   ]);
 
-  let items = (itemsResult.data ?? null) as ConsumptionOrderItemRow[] | null;
-
-  // Compatibilidade: algumas bases antigas podem não aceitar algum campo extra
-  // no select acima. Neste caso, buscamos novamente com os campos mínimos para
-  // garantir que os relatórios continuem mostrando os itens vendidos.
-  if (itemsResult.error) {
-    const fallbackItemsResult = await supabase
-      .from("event_consumption_order_items")
-      .select("id, order_id, item_name, quantity, unit_price, total_price, status, created_at")
-      .in("order_id", orderIds)
-      .order("created_at", { ascending: true });
-
-    items = (fallbackItemsResult.data ?? null) as ConsumptionOrderItemRow[] | null;
-  }
-
-  const payments = paymentsResult.data;
   const menuItems = menuItemsResult.data;
 
   const categoryByMenuId = new Map<string, string | null>();
@@ -180,7 +228,7 @@ export async function getConsumptionOrdersForEvent(
   }
 
   const itemsByOrder = new Map<string, ConsumptionOrderItemRow[]>();
-  for (const item of (items ?? []) as ConsumptionOrderItemRow[]) {
+  for (const item of items) {
     const category =
       (item.sales_menu_item_id
         ? categoryByMenuId.get(item.sales_menu_item_id)
@@ -193,7 +241,7 @@ export async function getConsumptionOrdersForEvent(
   }
 
   const paymentsByOrder = new Map<string, ConsumptionPaymentRow[]>();
-  for (const payment of (payments ?? []) as ConsumptionPaymentRow[]) {
+  for (const payment of payments) {
     const current = paymentsByOrder.get(payment.order_id) ?? [];
     current.push(payment);
     paymentsByOrder.set(payment.order_id, current);
@@ -423,16 +471,26 @@ export function buildPaymentMethodSummary(
   const totals = new Map<string, number>();
 
   for (const order of orders.filter((entry) => entry.status !== "cancelled")) {
-    const paidPayments = order.payments.filter(
-      (payment) => payment.status === "paid",
+    const paidAmount = paidAmountFromOrder(order);
+    if (paidAmount <= 0) continue;
+
+    const paymentsWithMethod = order.payments.filter(isPaymentUsableForMethod);
+    const totalWithMethod = paymentsWithMethod.reduce(
+      (sum, payment) => sum + numeric(payment.amount),
+      0,
     );
 
-    if (paidPayments.length > 0) {
-      for (const payment of paidPayments) {
+    if (paymentsWithMethod.length > 0 && totalWithMethod > 0) {
+      for (const payment of paymentsWithMethod) {
         totals.set(
           payment.method,
           (totals.get(payment.method) ?? 0) + numeric(payment.amount),
         );
+      }
+
+      const residual = paidAmount - totalWithMethod;
+      if (residual > 0.009) {
+        totals.set("sem_forma", (totals.get("sem_forma") ?? 0) + residual);
       }
       continue;
     }
@@ -440,7 +498,7 @@ export function buildPaymentMethodSummary(
     if (order.payment_status === "paid") {
       totals.set(
         "sem_forma",
-        (totals.get("sem_forma") ?? 0) + numeric(order.total_amount),
+        (totals.get("sem_forma") ?? 0) + paidAmount,
       );
     }
   }
@@ -455,6 +513,19 @@ export function buildPaymentMethodSummary(
       total,
     }))
     .sort((a, b) => b.total - a.total);
+}
+
+export function paymentMethodsFromOrder(order: ConsumptionOrderWithDetails) {
+  const methods = Array.from(
+    new Set(
+      order.payments
+        .filter(isPaymentUsableForMethod)
+        .map((payment) => paymentMethodLabel(payment.method)),
+    ),
+  );
+
+  if (methods.length > 0) return methods.join(" + ");
+  return order.payment_status === "paid" ? "Pago sem forma registrada" : "";
 }
 
 export type CategorySummaryItem = {

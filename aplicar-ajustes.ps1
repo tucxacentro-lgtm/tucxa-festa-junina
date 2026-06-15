@@ -1,24 +1,22 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "Aplicando ajustes do relatório final, PDF e bloqueio de edição..." -ForegroundColor Green
-
 $files = @(
-  "src/app/gestao-evento/caixa/page.tsx",
-  "src/app/gestao-evento/actions.ts",
+  "src/lib/operation-dashboard.ts",
   "src/app/admin/festa-junina/prestacao-contas/page.tsx",
   "src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts",
-  "src/app/admin/festa-junina/prestacao-contas/gerar-pdf/route.ts",
-  "src/lib/operation-dashboard.ts"
+  "src/app/admin/festa-junina/prestacao-contas/gerar-pdf/route.ts"
 )
 
+Write-Host "Arquivos esperados no pacote:" -ForegroundColor Green
 foreach ($file in $files) {
-  if (-not (Test-Path $file)) {
-    Write-Host "Atenção: arquivo ainda não encontrado após extração: $file" -ForegroundColor Yellow
+  if (Test-Path $file) {
+    Write-Host "OK  $file" -ForegroundColor Green
   } else {
-    Write-Host "OK: $file" -ForegroundColor Green
+    Write-Host "ERRO: arquivo não encontrado: $file" -ForegroundColor Red
   }
 }
 
-Write-Host "\nAgora rode:" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Depois rode:" -ForegroundColor Yellow
 Write-Host "npm run lint"
 Write-Host "npm run build"
