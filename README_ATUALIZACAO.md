@@ -1,75 +1,88 @@
-# Atualização — períodos coloridos e controle de duplicidades
+# Atualização — Despesas, receitas manuais e ticket médio na prestação de contas
+
+## Objetivo
+
+Esta entrega adiciona à Prestação de Contas:
+
+- cadastro, edição e exclusão de despesas;
+- cadastro, edição e exclusão de receitas manuais;
+- lançamento inicial das despesas informadas pela coordenação;
+- lançamento inicial de R$ 2.600,00 em convites antecipados;
+- cálculo de ticket médio de consumo considerando R$ 20,00 por convite;
+- inclusão dos dados no relatório final e na versão para PDF;
+- inclusão dos lançamentos financeiros no CSV completo.
 
 ## Arquivos incluídos
 
-- `src/lib/operation-dashboard.ts`
-- `src/app/admin/festa-junina/prestacao-contas/page.tsx`
-- `src/app/admin/festa-junina/prestacao-contas/gerar-pdf/route.ts`
-- `src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts`
-- `src/components/public-sales-menu.tsx`
-- `src/app/admin/festa-junina/cliente-resumo/actions.ts`
+```txt
+src/lib/operation-dashboard.ts
+src/app/admin/festa-junina/prestacao-contas/page.tsx
+src/app/admin/festa-junina/prestacao-contas/actions.ts
+src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts
+src/app/admin/festa-junina/prestacao-contas/gerar-pdf/route.ts
+supabase/sql/032_event_accounting_entries.sql
+README_ATUALIZACAO.md
+aplicar-ajustes.ps1
+```
 
-## O que foi ajustado
+## Passo a passo
 
-1. **Item 4 do relatório com melhor leitura**
-   - As linhas de `Totais por período de 60 minutos` agora recebem fundo alternado por período.
-   - A mesma melhoria foi aplicada na tela e na versão para PDF.
+### 1. Extrair o ZIP
 
-2. **Possíveis duplicidades em cancelamentos**
-   - Foi criada a seção `Possíveis duplicidades canceladas` dentro de `Cancelamentos e divergências`.
-   - O agrupamento considera responsável, valor, dia e composição dos itens quando disponível.
-   - Isso destaca casos como vários cancelamentos iguais para a mesma pessoa, facilitando a auditoria.
+Extraia o ZIP na raiz do projeto, mantendo a estrutura das pastas `src/...` e `supabase/sql/...`.
 
-3. **Prevenção de duplicidade no envio de pedidos**
-   - No cardápio público/garçom, o botão `Criar pedido` fica desabilitado após o primeiro clique e muda para `Registrando...`.
-   - Foi incluído um identificador de tentativa (`client_request_key`) no formulário.
-   - No fluxo administrativo de criação de pedido, foi adicionada uma proteção no servidor: se houver pedido idêntico do mesmo responsável nos últimos 15 segundos, o sistema reaproveita o pedido existente em vez de criar outro.
+### 2. Rodar o SQL no Supabase
 
-## Passo a passo para atualização
+No Supabase, abra o **SQL Editor** e rode:
 
-1. Extraia o ZIP na raiz do projeto, mantendo a estrutura `src/...`.
-2. Rode as validações:
+```txt
+supabase/sql/032_event_accounting_entries.sql
+```
+
+Esse SQL cria a tabela `event_accounting_entries` e cadastra os lançamentos iniciais:
+
+- despesas informadas pela coordenação;
+- bebidas como `Aguardando valor`;
+- receita manual de convites antecipados de R$ 2.600,00, com 130 convites a R$ 20,00.
+
+### 3. Validar localmente
 
 ```bash
 npm run lint
 npm run build
 ```
 
-3. Teste as rotas:
+### 4. Testar no navegador
 
 ```txt
 /admin/festa-junina/prestacao-contas
 /admin/festa-junina/prestacao-contas/gerar-pdf
-/cardapio/arraia-tucxa-2026
+/admin/festa-junina/prestacao-contas/exportar-pedidos
 ```
 
-4. Confira no relatório:
-   - item 4 com fundos por período;
-   - seção `Possíveis duplicidades canceladas`;
-   - lista normal de cancelamentos mantida abaixo.
+### 5. O que testar
 
-5. Faça o commit:
+- conferir os cards de receitas manuais, despesas, resultado e ticket médio;
+- editar uma despesa existente;
+- incluir o valor de bebidas quando estiver disponível;
+- excluir um lançamento de teste;
+- incluir nova receita manual;
+- gerar o PDF e conferir se a seção financeira aparece;
+- baixar o CSV e conferir se os lançamentos financeiros aparecem no final.
+
+### 6. Commit sugerido
 
 ```bash
 git status
 
 git add src/lib/operation-dashboard.ts \
   src/app/admin/festa-junina/prestacao-contas/page.tsx \
-  src/app/admin/festa-junina/prestacao-contas/gerar-pdf/route.ts \
+  src/app/admin/festa-junina/prestacao-contas/actions.ts \
   src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts \
-  src/components/public-sales-menu.tsx \
-  src/app/admin/festa-junina/cliente-resumo/actions.ts
+  src/app/admin/festa-junina/prestacao-contas/gerar-pdf/route.ts \
+  supabase/sql/032_event_accounting_entries.sql
 
-git commit -m "Melhora relatorio por periodo e evita pedidos duplicados"
+git commit -m "Inclui despesas receitas manuais e ticket medio na prestacao de contas"
 
 git push
 ```
-
-## Observação importante
-
-A proteção contra duplicidade foi feita em duas camadas:
-
-- **front-end**, bloqueando múltiplos cliques no botão de criação do pedido;
-- **back-end**, verificando pedido idêntico recente antes de inserir novo registro.
-
-Isso reduz bastante o risco de pedidos duplicados por toque duplo, instabilidade de rede ou reenvio acidental do formulário.

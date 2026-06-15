@@ -6,8 +6,11 @@ import {
   buildCancelledDuplicateGroups,
   buildCategorySummary,
   buildPeriodCategorySummary,
+  buildAccountingTotals,
   buildPaymentMethodSummary,
   buildSalesSummary,
+  buildTicketConsumptionMetrics,
+  getAccountingEntriesForEvent,
   getConsumptionOrdersForEvent,
   totalFromOrders,
 } from "@/lib/operation-dashboard";
@@ -66,6 +69,9 @@ export async function GET() {
   const periodCategoryTotals = buildPeriodCategorySummary(activeOrders);
   const duplicateCancelledGroups = buildCancelledDuplicateGroups(cancelledOrders);
   const cancelledTotal = totalFromOrders(cancelledOrders);
+  const accountingEntries = await getAccountingEntriesForEvent(event.id);
+  const accountingTotals = buildAccountingTotals(accountingEntries, summary.soldTotal);
+  const ticketMetrics = await buildTicketConsumptionMetrics(event.id, accountingEntries, summary.soldTotal);
   const generatedAt = new Date();
 
   const html = `<!doctype html>
@@ -85,6 +91,7 @@ export async function GET() {
     h2 { margin: 26px 0 10px; font-size: 20px; border-bottom: 2px solid #063f25; padding-bottom: 8px; }
     p { color: #374151; }
     .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0; }
+    .cards.secondary { margin-top: -6px; }
     .card { border: 1px solid #e5e7eb; border-radius: 18px; background: #fff; padding: 14px; }
     .label { font-size: 12px; color: #4b5563; font-weight: 700; }
     .value { margin-top: 6px; font-size: 23px; font-weight: 900; }
@@ -100,6 +107,7 @@ export async function GET() {
     tr.period-3 td { background: #fff7ed !important; }
     tr.period-4 td { background: #f7fee7 !important; }
     .duplicate-box { border: 1px solid #fbbf24; background: #fffbeb; border-radius: 14px; padding: 12px; margin: 8px 0 16px; }
+    .financial-note { border: 1px solid #fde68a; background: #fffbeb; border-radius: 14px; padding: 12px; margin: 10px 0 16px; }
     .duplicate-box h3 { margin: 0 0 6px; color: #78350f; }
     .duplicate-item { background: #fff; border-radius: 10px; padding: 10px; margin-top: 8px; }
     .empty { color: #6b7280; font-style: italic; }
@@ -133,6 +141,19 @@ export async function GET() {
       <div class="card"><div class="label">Total pendente</div><div class="value">${formatCurrency(summary.pendingTotal)}</div></div>
       <div class="card"><div class="label">Cancelado</div><div class="value">${formatCurrency(cancelledTotal)}</div></div>
     </section>
+
+    <section class="cards secondary">
+      <div class="card"><div class="label">Receitas manuais</div><div class="value">${formatCurrency(accountingTotals.manualRevenueTotal)}</div></div>
+      <div class="card"><div class="label">Despesas confirmadas</div><div class="value">${formatCurrency(accountingTotals.expenseTotal)}</div></div>
+      <div class="card"><div class="label">Resultado estimado</div><div class="value">${formatCurrency(accountingTotals.resultTotal)}</div></div>
+      <div class="card"><div class="label">Ticket médio consumo</div><div class="value">${formatCurrency(ticketMetrics.consumptionAveragePerTicket)}</div></div>
+    </section>
+
+    <div class="financial-note">
+      <strong>Ticket médio:</strong> ${Math.round(ticketMetrics.totalTicketQuantity)} convite(s) considerados a ${formatCurrency(ticketMetrics.ticketPrice)} cada.
+      Receita de convites considerada: ${formatCurrency(ticketMetrics.totalTicketRevenue)}.
+      Receita total por pessoa: ${formatCurrency(ticketMetrics.totalRevenueAveragePerTicket)}.
+    </div>
 
     <h2>1. Totais por forma de pagamento</h2>
     <table><thead><tr><th>Forma</th><th>Total</th></tr></thead><tbody>
@@ -171,7 +192,43 @@ export async function GET() {
       )}
     </tbody></table>
 
-    <h2>5. Cancelamentos e divergências</h2>
+    <h2>5. Receitas manuais, despesas e resultado</h2>
+    <table><thead><tr><th>Indicador</th><th>Total</th></tr></thead><tbody>
+      <tr><td>Receita do sistema</td><td>${formatCurrency(summary.soldTotal)}</td></tr>
+      <tr><td>Receitas manuais</td><td>${formatCurrency(accountingTotals.manualRevenueTotal)}</td></tr>
+      <tr><td>Receita total considerada</td><td>${formatCurrency(summary.soldTotal + accountingTotals.manualRevenueTotal)}</td></tr>
+      <tr><td>Despesas confirmadas</td><td>${formatCurrency(accountingTotals.expenseTotal)}</td></tr>
+      <tr><td>Resultado estimado</td><td>${formatCurrency(accountingTotals.resultTotal)}</td></tr>
+    </tbody></table>
+
+    <h3>Despesas por categoria</h3>
+    <table><thead><tr><th>Categoria</th><th>Qtde</th><th>Total</th></tr></thead><tbody>
+      ${rows(
+        accountingTotals.expensesByCategory,
+        (item) => `<tr><td>${escapeHtml(item.category)}</td><td>${item.quantity}</td><td>${formatCurrency(item.total)}</td></tr>`,
+        "Nenhuma despesa confirmada.",
+      )}
+    </tbody></table>
+
+    <h3>Detalhamento de despesas</h3>
+    <table><thead><tr><th>Categoria</th><th>Descrição</th><th>Status</th><th>Valor</th><th>Observações</th></tr></thead><tbody>
+      ${rows(
+        accountingTotals.expenses,
+        (entry) => `<tr><td>${escapeHtml(entry.category)}</td><td>${escapeHtml(entry.description)}</td><td>${entry.status === "pending_value" ? "Aguardando valor" : entry.status === "confirmed" ? "Confirmada" : "Cancelada"}</td><td>${entry.status === "pending_value" ? "-" : formatCurrency(entry.amount ?? 0)}</td><td>${escapeHtml(entry.notes ?? "")}</td></tr>`,
+        "Nenhuma despesa cadastrada.",
+      )}
+    </tbody></table>
+
+    <h3>Receitas manuais</h3>
+    <table><thead><tr><th>Categoria</th><th>Descrição</th><th>Qtde</th><th>Valor unit.</th><th>Total</th></tr></thead><tbody>
+      ${rows(
+        accountingTotals.revenues,
+        (entry) => `<tr><td>${escapeHtml(entry.category)}</td><td>${escapeHtml(entry.description)}</td><td>${entry.quantity ?? ""}</td><td>${entry.unit_amount ? formatCurrency(entry.unit_amount) : ""}</td><td>${formatCurrency(entry.amount ?? 0)}</td></tr>`,
+        "Nenhuma receita manual cadastrada.",
+      )}
+    </tbody></table>
+
+    <h2>6. Cancelamentos e divergências</h2>
     <p><strong>Pedidos cancelados:</strong> ${cancelledOrders.length} · <strong>Valor cancelado:</strong> ${formatCurrency(cancelledTotal)}</p>
     ${duplicateCancelledGroups.length > 0 ? `
       <div class="duplicate-box">

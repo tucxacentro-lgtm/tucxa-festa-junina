@@ -5,6 +5,8 @@ import {
   FileText,
   FileSpreadsheet,
   ReceiptText,
+  DollarSign,
+  Trash2,
 } from "lucide-react";
 import { AdminPageShell } from "@/components/admin-page-shell";
 import { requireAdmin } from "@/lib/auth";
@@ -14,11 +16,15 @@ import {
   buildCancelledDuplicateGroups,
   buildCategorySummary,
   buildPeriodCategorySummary,
+  buildAccountingTotals,
   buildPaymentMethodSummary,
   buildSalesSummary,
+  buildTicketConsumptionMetrics,
+  getAccountingEntriesForEvent,
   getConsumptionOrdersForEvent,
   totalFromOrders,
 } from "@/lib/operation-dashboard";
+import { createAccountingEntry, deleteAccountingEntry, updateAccountingEntry } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -71,6 +77,13 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
   );
   const periodCategoryTotals = buildPeriodCategorySummary(activeOrders);
   const duplicateCancelledGroups = buildCancelledDuplicateGroups(cancelledOrders);
+  const accountingEntries = await getAccountingEntriesForEvent(event.id);
+  const accountingTotals = buildAccountingTotals(accountingEntries, summary.soldTotal);
+  const ticketMetrics = await buildTicketConsumptionMetrics(
+    event.id,
+    accountingEntries,
+    summary.soldTotal,
+  );
 
   return (
     <AdminPageShell>
@@ -139,6 +152,36 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
             <p className="text-sm font-bold text-stone-600">Cancelado</p>
             <p className="mt-2 text-3xl font-black text-stone-700">
               {formatCurrency(cancelledTotal)}
+            </p>
+          </div>
+        </section>
+
+        <section className="mt-4 grid gap-4 md:grid-cols-4">
+          <div className="rounded-3xl bg-green-50 p-5 shadow-sm">
+            <p className="text-sm font-bold text-stone-600">Receitas manuais</p>
+            <p className="mt-2 text-2xl font-black text-green-950">
+              {formatCurrency(accountingTotals.manualRevenueTotal)}
+            </p>
+          </div>
+          <div className="rounded-3xl bg-red-50 p-5 shadow-sm">
+            <p className="text-sm font-bold text-stone-600">Despesas confirmadas</p>
+            <p className="mt-2 text-2xl font-black text-red-900">
+              {formatCurrency(accountingTotals.expenseTotal)}
+            </p>
+          </div>
+          <div className="rounded-3xl bg-white p-5 shadow-sm">
+            <p className="text-sm font-bold text-stone-600">Resultado estimado</p>
+            <p className="mt-2 text-2xl font-black text-green-950">
+              {formatCurrency(accountingTotals.resultTotal)}
+            </p>
+          </div>
+          <div className="rounded-3xl bg-amber-50 p-5 shadow-sm">
+            <p className="text-sm font-bold text-stone-600">Ticket médio consumo</p>
+            <p className="mt-2 text-2xl font-black text-amber-900">
+              {formatCurrency(ticketMetrics.consumptionAveragePerTicket)}
+            </p>
+            <p className="mt-1 text-xs font-bold text-stone-600">
+              {Math.round(ticketMetrics.totalTicketQuantity)} convites considerados · {formatCurrency(ticketMetrics.ticketPrice)} por convite
             </p>
           </div>
         </section>
@@ -357,6 +400,134 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
                   {order.cancellation_reason || "sem motivo"}
                 </p>
               ))}
+            </div>
+          </div>
+        </details>
+
+        <details open className="mt-8 rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
+          <summary className="cursor-pointer text-xl font-black text-green-950">
+            6. Receitas manuais, despesas e resultado
+          </summary>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <div className="rounded-2xl bg-green-50 p-4">
+              <p className="text-sm font-bold text-stone-600">Receita do sistema</p>
+              <p className="mt-1 text-2xl font-black text-green-950">{formatCurrency(summary.soldTotal)}</p>
+            </div>
+            <div className="rounded-2xl bg-green-50 p-4">
+              <p className="text-sm font-bold text-stone-600">Receitas manuais</p>
+              <p className="mt-1 text-2xl font-black text-green-950">{formatCurrency(accountingTotals.manualRevenueTotal)}</p>
+            </div>
+            <div className="rounded-2xl bg-red-50 p-4">
+              <p className="text-sm font-bold text-stone-600">Despesas confirmadas</p>
+              <p className="mt-1 text-2xl font-black text-red-900">{formatCurrency(accountingTotals.expenseTotal)}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <p className="font-black text-amber-950">Ticket médio de consumo</p>
+            <p className="mt-1 text-sm text-stone-700">
+              Considera {Math.round(ticketMetrics.totalTicketQuantity)} convite(s) a {formatCurrency(ticketMetrics.ticketPrice)} cada, somando convites registrados no sistema e receitas manuais de convites.
+            </p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <div><span className="text-xs font-bold text-stone-600">Consumo por pessoa</span><p className="text-xl font-black text-green-950">{formatCurrency(ticketMetrics.consumptionAveragePerTicket)}</p></div>
+              <div><span className="text-xs font-bold text-stone-600">Receita de convites</span><p className="text-xl font-black text-green-950">{formatCurrency(ticketMetrics.totalTicketRevenue)}</p></div>
+              <div><span className="text-xs font-bold text-stone-600">Receita total por pessoa</span><p className="text-xl font-black text-green-950">{formatCurrency(ticketMetrics.totalRevenueAveragePerTicket)}</p></div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-stone-100 p-4">
+            <h3 className="flex items-center gap-2 font-black text-green-950"><DollarSign className="h-4 w-4" /> Novo lançamento</h3>
+            <form action={createAccountingEntry} className="mt-3 grid gap-3 md:grid-cols-6">
+              <select name="entry_type" className="rounded-2xl border border-stone-200 p-3 text-sm font-bold md:col-span-1" defaultValue="expense">
+                <option value="expense">Despesa</option>
+                <option value="manual_revenue">Receita manual</option>
+              </select>
+              <input name="category" className="rounded-2xl border border-stone-200 p-3 text-sm md:col-span-1" placeholder="Categoria" />
+              <input name="description" className="rounded-2xl border border-stone-200 p-3 text-sm md:col-span-2" placeholder="Descrição" />
+              <input name="amount" className="rounded-2xl border border-stone-200 p-3 text-sm" placeholder="Valor" inputMode="decimal" />
+              <select name="status" className="rounded-2xl border border-stone-200 p-3 text-sm font-bold" defaultValue="confirmed">
+                <option value="confirmed">Confirmado</option>
+                <option value="pending_value">Aguardando valor</option>
+                <option value="cancelled">Cancelado</option>
+              </select>
+              <input name="quantity" className="rounded-2xl border border-stone-200 p-3 text-sm" placeholder="Qtde" inputMode="decimal" />
+              <input name="unit_amount" className="rounded-2xl border border-stone-200 p-3 text-sm" placeholder="Valor unit." inputMode="decimal" />
+              <input name="occurred_on" type="date" className="rounded-2xl border border-stone-200 p-3 text-sm" />
+              <input name="notes" className="rounded-2xl border border-stone-200 p-3 text-sm md:col-span-2" placeholder="Observações" />
+              <button className="rounded-2xl bg-green-900 px-5 py-3 text-sm font-black text-white md:col-span-1">Salvar</button>
+            </form>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-red-100 p-4">
+              <h3 className="font-black text-red-900">Despesas</h3>
+              <div className="mt-3 grid gap-3">
+                {accountingTotals.expenses.map((entry) => (
+                  <details key={entry.id} className="rounded-2xl bg-red-50 p-3">
+                    <summary className="cursor-pointer font-bold text-red-950">
+                      {entry.description} · {entry.status === "pending_value" ? "Aguardando valor" : formatCurrency(entry.amount ?? 0)}
+                    </summary>
+                    <form action={updateAccountingEntry} className="mt-3 grid gap-2 md:grid-cols-2">
+                      <input type="hidden" name="id" value={entry.id} />
+                      <input type="hidden" name="entry_type" value="expense" />
+                      <input name="category" defaultValue={entry.category} className="rounded-xl border border-stone-200 p-2 text-sm" />
+                      <input name="description" defaultValue={entry.description} className="rounded-xl border border-stone-200 p-2 text-sm" />
+                      <input name="amount" defaultValue={entry.amount ?? ""} className="rounded-xl border border-stone-200 p-2 text-sm" inputMode="decimal" />
+                      <select name="status" defaultValue={entry.status} className="rounded-xl border border-stone-200 p-2 text-sm">
+                        <option value="confirmed">Confirmado</option>
+                        <option value="pending_value">Aguardando valor</option>
+                        <option value="cancelled">Cancelado</option>
+                      </select>
+                      <input name="occurred_on" type="date" defaultValue={entry.occurred_on ?? ""} className="rounded-xl border border-stone-200 p-2 text-sm" />
+                      <input name="notes" defaultValue={entry.notes ?? ""} className="rounded-xl border border-stone-200 p-2 text-sm" />
+                      <button className="rounded-xl bg-green-900 px-4 py-2 text-sm font-black text-white">Atualizar</button>
+                    </form>
+                    <form action={deleteAccountingEntry} className="mt-2">
+                      <input type="hidden" name="id" value={entry.id} />
+                      <button className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-black text-red-900" type="submit">
+                        <Trash2 className="h-4 w-4" /> Excluir definitivamente
+                      </button>
+                    </form>
+                  </details>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-green-100 p-4">
+              <h3 className="font-black text-green-950">Receitas manuais</h3>
+              <div className="mt-3 grid gap-3">
+                {accountingTotals.revenues.map((entry) => (
+                  <details key={entry.id} className="rounded-2xl bg-green-50 p-3">
+                    <summary className="cursor-pointer font-bold text-green-950">
+                      {entry.description} · {formatCurrency(entry.amount ?? 0)}
+                    </summary>
+                    <form action={updateAccountingEntry} className="mt-3 grid gap-2 md:grid-cols-2">
+                      <input type="hidden" name="id" value={entry.id} />
+                      <input type="hidden" name="entry_type" value="manual_revenue" />
+                      <input name="category" defaultValue={entry.category} className="rounded-xl border border-stone-200 p-2 text-sm" />
+                      <input name="description" defaultValue={entry.description} className="rounded-xl border border-stone-200 p-2 text-sm" />
+                      <input name="amount" defaultValue={entry.amount ?? ""} className="rounded-xl border border-stone-200 p-2 text-sm" inputMode="decimal" />
+                      <select name="status" defaultValue={entry.status} className="rounded-xl border border-stone-200 p-2 text-sm">
+                        <option value="confirmed">Confirmado</option>
+                        <option value="pending_value">Aguardando valor</option>
+                        <option value="cancelled">Cancelado</option>
+                      </select>
+                      <input name="quantity" defaultValue={entry.quantity ?? ""} className="rounded-xl border border-stone-200 p-2 text-sm" placeholder="Qtde" />
+                      <input name="unit_amount" defaultValue={entry.unit_amount ?? ""} className="rounded-xl border border-stone-200 p-2 text-sm" placeholder="Valor unit." />
+                      <input name="occurred_on" type="date" defaultValue={entry.occurred_on ?? ""} className="rounded-xl border border-stone-200 p-2 text-sm" />
+                      <input name="notes" defaultValue={entry.notes ?? ""} className="rounded-xl border border-stone-200 p-2 text-sm" />
+                      <button className="rounded-xl bg-green-900 px-4 py-2 text-sm font-black text-white">Atualizar</button>
+                    </form>
+                    <form action={deleteAccountingEntry} className="mt-2">
+                      <input type="hidden" name="id" value={entry.id} />
+                      <button className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-black text-red-900" type="submit">
+                        <Trash2 className="h-4 w-4" /> Excluir definitivamente
+                      </button>
+                    </form>
+                  </details>
+                ))}
+              </div>
             </div>
           </div>
         </details>

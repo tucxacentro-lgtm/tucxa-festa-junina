@@ -5,6 +5,7 @@ import {
   paidAmountFromOrder,
   paymentMethodsFromOrder,
   pendingAmountFromOrder,
+  getAccountingEntriesForEvent,
   getConsumptionOrdersForEvent,
 } from "@/lib/operation-dashboard";
 
@@ -29,6 +30,7 @@ export async function GET() {
   const orders = await getConsumptionOrdersForEvent(event.id, {
     includeCancelled: true,
   });
+  const accountingEntries = await getAccountingEntriesForEvent(event.id);
 
   const headers = [
     "evento",

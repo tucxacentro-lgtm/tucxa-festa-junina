@@ -730,6 +730,195 @@ export function buildPeriodCategorySummary(
 export const buildHourlyItemSummary = buildPeriodCategorySummary;
 export type HourlyItemSummary = PeriodCategorySummary;
 
+
+
+export type AccountingEntryType = "expense" | "manual_revenue";
+export type AccountingEntryStatus = "confirmed" | "pending_value" | "cancelled";
+
+export type AccountingEntryRow = {
+  id: string;
+  event_id: string;
+  entry_type: AccountingEntryType;
+  category: string;
+  description: string;
+  amount: number | string | null;
+  quantity: number | string | null;
+  unit_amount: number | string | null;
+  status: AccountingEntryStatus;
+  occurred_on: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AccountingTotals = {
+  manualRevenueTotal: number;
+  expenseTotal: number;
+  pendingExpenseCount: number;
+  resultTotal: number;
+  revenues: AccountingEntryRow[];
+  expenses: AccountingEntryRow[];
+  expensesByCategory: CategorySummaryItem[];
+};
+
+export type TicketConsumptionMetrics = {
+  ticketPrice: number;
+  systemTicketQuantity: number;
+  manualTicketQuantity: number;
+  totalTicketQuantity: number;
+  systemTicketRevenue: number;
+  manualTicketRevenue: number;
+  totalTicketRevenue: number;
+  consumptionRevenue: number;
+  consumptionAveragePerTicket: number;
+  totalRevenueAveragePerTicket: number;
+};
+
+const DEFAULT_TICKET_PRICE = 20;
+
+export async function getAccountingEntriesForEvent(
+  eventId: string,
+): Promise<AccountingEntryRow[]> {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("event_accounting_entries")
+    .select(
+      "id, event_id, entry_type, category, description, amount, quantity, unit_amount, status, occurred_on, notes, created_at, updated_at",
+    )
+    .eq("event_id", eventId)
+    .order("entry_type", { ascending: false })
+    .order("category", { ascending: true })
+    .order("description", { ascending: true });
+
+  if (error) return [];
+  return (data ?? []) as AccountingEntryRow[];
+}
+
+export function buildAccountingTotals(
+  entries: AccountingEntryRow[],
+  systemRevenueTotal: number,
+): AccountingTotals {
+  const activeEntries = entries.filter((entry) => entry.status !== "cancelled");
+  const revenues = activeEntries.filter((entry) => entry.entry_type === "manual_revenue");
+  const expenses = activeEntries.filter((entry) => entry.entry_type === "expense");
+  const manualRevenueTotal = revenues
+    .filter((entry) => entry.status === "confirmed")
+    .reduce((sum, entry) => sum + numeric(entry.amount), 0);
+  const expenseTotal = expenses
+    .filter((entry) => entry.status === "confirmed")
+    .reduce((sum, entry) => sum + numeric(entry.amount), 0);
+  const pendingExpenseCount = expenses.filter((entry) => entry.status === "pending_value").length;
+  const categoryBuckets = new Map<string, { quantity: number; total: number }>();
+
+  for (const expense of expenses.filter((entry) => entry.status === "confirmed")) {
+    const category = expense.category || "Despesas";
+    const current = categoryBuckets.get(category) ?? { quantity: 0, total: 0 };
+    current.quantity += 1;
+    current.total += numeric(expense.amount);
+    categoryBuckets.set(category, current);
+  }
+
+  return {
+    manualRevenueTotal,
+    expenseTotal,
+    pendingExpenseCount,
+    resultTotal: systemRevenueTotal + manualRevenueTotal - expenseTotal,
+    revenues,
+    expenses,
+    expensesByCategory: Array.from(categoryBuckets.entries())
+      .map(([category, item]) => ({ category, quantity: item.quantity, total: item.total }))
+      .sort((a, b) => b.total - a.total),
+  };
+}
+
+async function getConfiguredTicketPrice(eventId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("ticket_types")
+    .select("name, price")
+    .eq("event_id", eventId)
+    .eq("active", true)
+    .gt("price", 0)
+    .order("price", { ascending: true });
+
+  if (error) return DEFAULT_TICKET_PRICE;
+  const rows = (data ?? []) as Array<{ name: string | null; price: number | string }>;
+  const antecipado = rows.find((row) => normalize(row.name).includes("antecip"));
+  const selected = antecipado ?? rows[0];
+  const price = numeric(selected?.price);
+  return price > 0 ? price : DEFAULT_TICKET_PRICE;
+}
+
+async function getSystemTicketTotals(eventId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("ticket_orders")
+    .select("adults_quantity, children_quantity, total_amount, payment_status, order_status")
+    .eq("event_id", eventId)
+    .neq("order_status", "cancelled");
+
+  if (error) return { quantity: 0, revenue: 0 };
+
+  return ((data ?? []) as Array<{
+    adults_quantity: number | string | null;
+    children_quantity: number | string | null;
+    total_amount: number | string | null;
+    payment_status: string | null;
+    order_status: string | null;
+  }>).reduce(
+    (totals, order) => {
+      if (order.payment_status && !["paid", "proof_sent"].includes(order.payment_status)) return totals;
+      totals.quantity += numeric(order.adults_quantity) + numeric(order.children_quantity);
+      totals.revenue += numeric(order.total_amount);
+      return totals;
+    },
+    { quantity: 0, revenue: 0 },
+  );
+}
+
+export async function buildTicketConsumptionMetrics(
+  eventId: string,
+  entries: AccountingEntryRow[],
+  consumptionRevenue: number,
+): Promise<TicketConsumptionMetrics> {
+  const ticketPrice = await getConfiguredTicketPrice(eventId);
+  const systemTickets = await getSystemTicketTotals(eventId);
+  const manualTicketEntries = entries.filter(
+    (entry) =>
+      entry.entry_type === "manual_revenue" &&
+      entry.status === "confirmed" &&
+      normalize(`${entry.category} ${entry.description}`).includes("convite"),
+  );
+
+  const manualTicketRevenue = manualTicketEntries.reduce(
+    (sum, entry) => sum + numeric(entry.amount),
+    0,
+  );
+  const manualTicketQuantity = manualTicketEntries.reduce((sum, entry) => {
+    const quantity = numeric(entry.quantity);
+    if (quantity > 0) return sum + quantity;
+    const unitAmount = numeric(entry.unit_amount) || ticketPrice;
+    return unitAmount > 0 ? sum + numeric(entry.amount) / unitAmount : sum;
+  }, 0);
+  const totalTicketQuantity = systemTickets.quantity + manualTicketQuantity;
+  const totalTicketRevenue = systemTickets.revenue + manualTicketRevenue;
+
+  return {
+    ticketPrice,
+    systemTicketQuantity: systemTickets.quantity,
+    manualTicketQuantity,
+    totalTicketQuantity,
+    systemTicketRevenue: systemTickets.revenue,
+    manualTicketRevenue,
+    totalTicketRevenue,
+    consumptionRevenue,
+    consumptionAveragePerTicket:
+      totalTicketQuantity > 0 ? consumptionRevenue / totalTicketQuantity : 0,
+    totalRevenueAveragePerTicket:
+      totalTicketQuantity > 0 ? (consumptionRevenue + totalTicketRevenue) / totalTicketQuantity : 0,
+  };
+}
+
 export function orderStatusLabel(value: string) {
   const labels: Record<string, string> = {
     received: "Recebido",
