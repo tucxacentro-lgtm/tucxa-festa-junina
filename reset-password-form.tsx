@@ -121,7 +121,7 @@ export function ResetPasswordForm() {
         {loading ? "Atualizando..." : "Atualizar senha"}
       </button>
 
-      <Link href="/admin/login" className="text-center text-sm font-bold text-green-900 underline decoration-green-300 underline-offset-4">
+      <Link href="/admin/login" className="text-center text-sm font-bold text-green-900 underline decoration-green-300 underline-offset-4" prefetch={false}>
         Ir para o login
       </Link>
     </form>

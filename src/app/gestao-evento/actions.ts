@@ -342,6 +342,31 @@ export async function updateCashierOrderItems(formData: FormData) {
     );
   }
 
+  const { data: paymentsBeforeEdit, error: paymentsBeforeEditError } =
+    await supabase
+      .from("event_consumption_payments")
+      .select("amount, status")
+      .eq("order_id", orderId);
+
+  if (paymentsBeforeEditError) throw new Error(paymentsBeforeEditError.message);
+
+  const paidBeforeEdit = (paymentsBeforeEdit ?? [])
+    .filter((payment) => payment.status === "paid")
+    .reduce((sum, payment) => sum + Number(payment.amount ?? 0), 0);
+  const orderTotalBeforeEdit = Number(order.total_amount ?? 0);
+  const orderAlreadyPaid =
+    order.payment_status === "paid" ||
+    (orderTotalBeforeEdit > 0 && paidBeforeEdit >= orderTotalBeforeEdit);
+
+  if (orderAlreadyPaid) {
+    redirect(
+      withParams("/gestao-evento/caixa", {
+        responsavel: responsibleKey,
+        erro: "pedido-pago-edicao-bloqueada",
+      }),
+    );
+  }
+
   const { data: menuItems, error: menuError } = await supabase
     .from("event_sales_menu_items")
     .select("id, name, price")

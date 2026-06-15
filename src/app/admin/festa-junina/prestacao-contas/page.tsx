@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   ArrowDownUp,
   Download,
+  FileText,
   FileSpreadsheet,
   ReceiptText,
 } from "lucide-react";
@@ -72,13 +73,23 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
           >
             ← Gestão
           </Link>
-          <Link
-            href="/admin/festa-junina/prestacao-contas/exportar-pedidos"
-            className="inline-flex items-center gap-2 rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm"
-            prefetch={false}
-          >
-            <Download className="h-4 w-4" /> Exportar pedidos CSV
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/festa-junina/prestacao-contas/gerar-pdf"
+              target="_blank"
+              className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-3 text-sm font-black text-amber-950 shadow-sm"
+              prefetch={false}
+            >
+              <FileText className="h-4 w-4" /> Gerar PDF do relatório
+            </Link>
+            <Link
+              href="/admin/festa-junina/prestacao-contas/exportar-pedidos"
+              className="inline-flex items-center gap-2 rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white shadow-sm"
+              prefetch={false}
+            >
+              <Download className="h-4 w-4" /> Exportar pedidos CSV
+            </Link>
+          </div>
         </div>
 
         <div className="rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
@@ -319,13 +330,23 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
             para ter uma cópia completa dos pedidos, itens, pagamentos e
             pendências.
           </p>
-          <Link
-            href="/admin/festa-junina/prestacao-contas/exportar-pedidos"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white"
-            prefetch={false}
-          >
-            <ReceiptText className="h-4 w-4" /> Baixar CSV completo
-          </Link>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href="/admin/festa-junina/prestacao-contas/gerar-pdf"
+              target="_blank"
+              className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-5 py-3 text-sm font-black text-amber-950"
+              prefetch={false}
+            >
+              <FileText className="h-4 w-4" /> Gerar PDF do relatório
+            </Link>
+            <Link
+              href="/admin/festa-junina/prestacao-contas/exportar-pedidos"
+              className="inline-flex items-center gap-2 rounded-full bg-green-900 px-5 py-3 text-sm font-black text-white"
+              prefetch={false}
+            >
+              <ReceiptText className="h-4 w-4" /> Baixar CSV completo
+            </Link>
+          </div>
         </div>
       </section>
     </AdminPageShell>

@@ -129,27 +129,44 @@ export async function getConsumptionOrdersForEvent(
   const orderIds = typedOrders.map((order) => order.id);
   if (orderIds.length === 0) return [];
 
-  const [{ data: items }, { data: payments }, { data: menuItems }] =
-    await Promise.all([
-      supabase
-        .from("event_consumption_order_items")
-        .select(
-          "id, event_id, order_id, sales_menu_item_id, item_name, quantity, unit_price, total_price, status, created_at",
-        )
-        .in("order_id", orderIds)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("event_consumption_payments")
-        .select(
-          "id, order_id, method, amount, status, proof_file_path, notes, created_at",
-        )
-        .in("order_id", orderIds)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("event_sales_menu_items")
-        .select("id, name, category")
-        .eq("event_id", eventId),
-    ]);
+  const [itemsResult, paymentsResult, menuItemsResult] = await Promise.all([
+    supabase
+      .from("event_consumption_order_items")
+      .select(
+        "id, event_id, order_id, sales_menu_item_id, item_name, quantity, unit_price, total_price, status, created_at",
+      )
+      .in("order_id", orderIds)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("event_consumption_payments")
+      .select(
+        "id, order_id, method, amount, status, proof_file_path, notes, created_at",
+      )
+      .in("order_id", orderIds)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("event_sales_menu_items")
+      .select("id, name, category")
+      .eq("event_id", eventId),
+  ]);
+
+  let items = (itemsResult.data ?? null) as ConsumptionOrderItemRow[] | null;
+
+  // Compatibilidade: algumas bases antigas podem não aceitar algum campo extra
+  // no select acima. Neste caso, buscamos novamente com os campos mínimos para
+  // garantir que os relatórios continuem mostrando os itens vendidos.
+  if (itemsResult.error) {
+    const fallbackItemsResult = await supabase
+      .from("event_consumption_order_items")
+      .select("id, order_id, item_name, quantity, unit_price, total_price, status, created_at")
+      .in("order_id", orderIds)
+      .order("created_at", { ascending: true });
+
+    items = (fallbackItemsResult.data ?? null) as ConsumptionOrderItemRow[] | null;
+  }
+
+  const payments = paymentsResult.data;
+  const menuItems = menuItemsResult.data;
 
   const categoryByMenuId = new Map<string, string | null>();
   const categoryByName = new Map<string, string | null>();

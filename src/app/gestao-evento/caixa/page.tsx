@@ -557,14 +557,15 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
                               ))}
                             </div>
 
-                            <details className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                              <summary className="cursor-pointer text-sm font-black text-amber-950">
-                                Editar pedido: incluir, excluir ou trocar itens
-                              </summary>
-                              <form
-                                action={updateCashierOrderItems}
-                                className="mt-4 grid gap-4"
-                              >
+                            {!paid ? (
+                              <details className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                                <summary className="cursor-pointer text-sm font-black text-amber-950">
+                                  Editar pedido: incluir, excluir ou trocar itens
+                                </summary>
+                                <form
+                                  action={updateCashierOrderItems}
+                                  className="mt-4 grid gap-4"
+                                >
                                 <input
                                   type="hidden"
                                   name="event_id"
@@ -585,13 +586,13 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
                                   name="existing_note"
                                   value={order.notes ?? ""}
                                 />
-                                <p className="text-xs font-bold text-amber-950">
-                                  Altere as quantidades abaixo. Para excluir um
-                                  item, deixe quantidade 0. Para trocar, zere o
-                                  item atual e informe quantidade no novo item.
-                                  Se o pedido já estiver pago, confira se haverá
-                                  diferença a cobrar ou devolver.
-                                </p>
+                                  <p className="text-xs font-bold text-amber-950">
+                                    Altere as quantidades abaixo. Para excluir um
+                                    item, deixe quantidade 0. Para trocar, zere o
+                                    item atual e informe quantidade no novo item.
+                                    Esta opção fica disponível somente para pedidos
+                                    ainda não pagos.
+                                  </p>
                                 <div className="grid max-h-[420px] gap-2 overflow-y-auto pr-1 md:grid-cols-2">
                                   {menuItems.map((menuItem) => (
                                     <label
@@ -632,8 +633,13 @@ export default async function CaixaPublicPage({ searchParams }: PageProps) {
                                 <button className="rounded-full bg-amber-500 px-5 py-3 text-sm font-black text-amber-950 shadow-sm hover:bg-amber-400">
                                   Salvar alteração do pedido
                                 </button>
-                              </form>
-                            </details>
+                                </form>
+                              </details>
+                            ) : (
+                              <p className="rounded-2xl border border-green-200 bg-green-50 p-3 text-sm font-bold text-green-900">
+                                Pedido pago. Edição bloqueada para preservar a prestação de contas.
+                              </p>
+                            )}
 
                             {orderPending > 0 ? (
                               <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
