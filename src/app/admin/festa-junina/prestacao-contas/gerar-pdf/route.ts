@@ -4,7 +4,7 @@ import { getCurrentEventForAdmin } from "@/lib/current-event";
 import { formatCurrency } from "@/lib/format";
 import {
   buildCategorySummary,
-  buildHourlyItemSummary,
+  buildPeriodCategorySummary,
   buildPaymentMethodSummary,
   buildSalesSummary,
   getConsumptionOrdersForEvent,
@@ -24,16 +24,10 @@ function escapeHtml(value: unknown) {
 
 function shortDateTime(value: string | Date) {
   return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
-}
-
-function shortTime(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
 }
 
 function rows<T>(items: T[], render: (item: T) => string, empty: string) {
@@ -59,7 +53,7 @@ export async function GET() {
   const paymentTotals = buildPaymentMethodSummary(activeOrders);
   const categoryTotals = buildCategorySummary(activeOrders);
   const itemTotals = [...summary.itemDetails].sort((a, b) => b.total - a.total);
-  const hourlyItems = buildHourlyItemSummary(activeOrders);
+  const periodCategoryTotals = buildPeriodCategorySummary(activeOrders);
   const cancelledTotal = totalFromOrders(cancelledOrders);
   const generatedAt = new Date();
 
@@ -146,12 +140,13 @@ export async function GET() {
       )}
     </tbody></table>
 
-    <h2>4. Itens vendidos por períodos de 60 minutos</h2>
-    <table><thead><tr><th>Período</th><th>Categoria</th><th>Item</th><th>Quantidade</th><th>Valor</th></tr></thead><tbody>
+    <h2>4. Totais por período de 60 minutos</h2>
+    <p class="small">Visão igual ao resumo por categoria, agrupada por períodos operacionais de 60 minutos no fuso de São Paulo. Período principal considerado: 12:00–17:00. Registros fora desta janela aparecem como “Antes de 12:00” ou “Após 17:00”.</p>
+    <table><thead><tr><th>Período</th><th>Categoria</th><th>Quantidade</th><th>Total</th></tr></thead><tbody>
       ${rows(
-        hourlyItems,
-        (item) => `<tr><td>${shortTime(item.bucketStart)}–${shortTime(item.bucketEnd)}</td><td>${escapeHtml(item.category)}</td><td>${escapeHtml(item.itemName)}</td><td>${item.quantity}</td><td>${formatCurrency(item.total)}</td></tr>`,
-        "Nenhum item encontrado por período.",
+        periodCategoryTotals,
+        (item) => `<tr><td>${escapeHtml(item.period)}</td><td>${escapeHtml(item.category)}</td><td>${item.quantity}</td><td>${formatCurrency(item.total)}</td></tr>`,
+        "Nenhum total encontrado por período.",
       )}
     </tbody></table>
 

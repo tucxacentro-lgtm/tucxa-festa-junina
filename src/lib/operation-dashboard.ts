@@ -560,50 +560,69 @@ export function buildCategorySummary(
     .sort((a, b) => b.total - a.total);
 }
 
-export type HourlyItemSummary = {
-  bucketStart: Date;
-  bucketEnd: Date;
-  itemName: string;
+const REPORT_TIME_ZONE = "America/Sao_Paulo";
+const EVENT_OPERATIONAL_START_HOUR = 12;
+const EVENT_OPERATIONAL_END_HOUR = 17;
+
+export type PeriodCategorySummary = {
+  period: string;
   category: string;
   quantity: number;
   total: number;
+  sortKey: number;
 };
 
-export function buildHourlyItemSummary(
+function getZonedHour(value: string | Date, timeZone = REPORT_TIME_ZONE) {
+  const date = value instanceof Date ? value : new Date(value);
+  const parts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+
+  const hour = Number(parts.find((part) => part.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((part) => part.type === "minute")?.value ?? 0);
+  return { hour, minute };
+}
+
+function hourLabel(hour: number) {
+  return `${String(hour).padStart(2, "0")}:00–${String(hour + 1).padStart(2, "0")}:00`;
+}
+
+function operationalPeriodFor(value: string | Date) {
+  const { hour } = getZonedHour(value);
+
+  if (hour < EVENT_OPERATIONAL_START_HOUR) {
+    return { period: `Antes de ${String(EVENT_OPERATIONAL_START_HOUR).padStart(2, "0")}:00`, sortKey: EVENT_OPERATIONAL_START_HOUR - 1 };
+  }
+
+  if (hour >= EVENT_OPERATIONAL_END_HOUR) {
+    return { period: `Após ${String(EVENT_OPERATIONAL_END_HOUR).padStart(2, "0")}:00`, sortKey: EVENT_OPERATIONAL_END_HOUR };
+  }
+
+  return { period: hourLabel(hour), sortKey: hour };
+}
+
+export function buildPeriodCategorySummary(
   orders: ConsumptionOrderWithDetails[],
-): HourlyItemSummary[] {
-  const activeOrders = orders
-    .filter((order) => order.status !== "cancelled")
-    .sort(
-      (a, b) =>
-        new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-    );
+): PeriodCategorySummary[] {
+  const buckets = new Map<string, PeriodCategorySummary>();
 
-  if (activeOrders.length === 0) return [];
-
-  const firstTime = new Date(activeOrders[0].created_at).getTime();
-  const buckets = new Map<string, HourlyItemSummary>();
-
-  for (const order of activeOrders) {
-    const orderTime = new Date(order.created_at).getTime();
-    const bucketIndex = Math.max(
-      0,
-      Math.floor((orderTime - firstTime) / (60 * 60 * 1000)),
-    );
-    const bucketStart = new Date(firstTime + bucketIndex * 60 * 60 * 1000);
-    const bucketEnd = new Date(bucketStart.getTime() + 60 * 60 * 1000);
+  for (const order of orders.filter((entry) => entry.status !== "cancelled")) {
+    const { period, sortKey } = operationalPeriodFor(order.created_at);
 
     for (const item of order.items.filter(
       (entry) => entry.status !== "cancelled",
     )) {
-      const key = `${bucketIndex}:${item.item_name}`;
+      const category = item.category || "Cardápio";
+      const key = `${sortKey}:${period}:${category}`;
       const current = buckets.get(key) ?? {
-        bucketStart,
-        bucketEnd,
-        itemName: item.item_name,
-        category: item.category || "Cardápio",
+        period,
+        category,
         quantity: 0,
         total: 0,
+        sortKey,
       };
       current.quantity += numeric(item.quantity);
       current.total += numeric(item.total_price);
@@ -612,11 +631,15 @@ export function buildHourlyItemSummary(
   }
 
   return Array.from(buckets.values()).sort((a, b) => {
-    const timeDiff = a.bucketStart.getTime() - b.bucketStart.getTime();
-    if (timeDiff !== 0) return timeDiff;
+    const periodDiff = a.sortKey - b.sortKey;
+    if (periodDiff !== 0) return periodDiff;
     return b.total - a.total;
   });
 }
+
+// Mantido como alias para compatibilidade com imports antigos.
+export const buildHourlyItemSummary = buildPeriodCategorySummary;
+export type HourlyItemSummary = PeriodCategorySummary;
 
 export function orderStatusLabel(value: string) {
   const labels: Record<string, string> = {

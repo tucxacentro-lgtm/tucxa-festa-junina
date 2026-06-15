@@ -1,72 +1,82 @@
-# Atualização - Relatório final: formas de pagamento, itens e períodos
+# Ajuste - Períodos do relatório final de prestação de contas
 
-## Objetivo
+Este pacote ajusta o item **4. Itens vendidos por períodos de 60 minutos** do relatório final.
 
-Este pacote corrige a origem dos dados do Relatório final do evento e do PDF de prestação de contas.
+## O que foi alterado
 
-## Ajustes realizados
+1. O item 4 passou a ser exibido como resumo por **período + categoria**, no mesmo espírito do item **2. Totais por categoria/resumo**.
 
-1. **Itens do relatório final e PDF**
-   - A leitura de itens dos pedidos passou a ser feita em blocos menores.
-   - Isso evita falhas quando o relatório busca pedidos ativos e cancelados juntos, especialmente após evento com muitos pedidos.
-   - Corrige as seções:
-     - Totais por categoria/resumo;
-     - Itens vendidos por item do cardápio;
-     - Itens vendidos por períodos de 60 minutos.
+   Antes:
+   - Período
+   - Categoria
+   - Item
+   - Quantidade
+   - Valor
 
-2. **Formas de pagamento**
-   - O relatório agora considera pagamentos com status `paid`, `registered` e `proof_sent` quando o pedido já foi fechado/pago.
-   - A opção **Pago sem forma registrada** fica apenas como exceção, quando o pedido está como pago, mas não existe nenhum registro de pagamento associado.
+   Agora:
+   - Período
+   - Categoria
+   - Quantidade
+   - Total
 
-3. **Exportação CSV**
-   - A exportação passa a usar a mesma regra de forma de pagamento do relatório.
+2. Os horários do item 4 agora são calculados no fuso **America/Sao_Paulo**.
+
+3. O relatório considera a janela operacional principal da festa como **12:00–17:00**.
+
+4. Pedidos registrados fora dessa janela aparecem agrupados como:
+   - **Antes de 12:00**
+   - **Após 17:00**
+
+Isso evita que o relatório mostre períodos deslocados como 13:11–14:11, 14:11–15:11 etc. e deixa a leitura mais adequada para prestação de contas.
 
 ## Arquivos incluídos
 
 ```txt
 src/lib/operation-dashboard.ts
 src/app/admin/festa-junina/prestacao-contas/page.tsx
-src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts
 src/app/admin/festa-junina/prestacao-contas/gerar-pdf/route.ts
+src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts
 README_ATUALIZACAO.md
 aplicar-ajustes.ps1
 ```
 
-## Passo a passo
+## Como aplicar
 
-1. Extraia este ZIP na raiz do projeto, mantendo a estrutura `src/...`.
-2. Rode:
+Extraia este ZIP na raiz do projeto, mantendo a estrutura de pastas `src/...`.
+
+Ou rode no PowerShell, a partir da raiz do projeto:
+
+```powershell
+.\aplicar-ajustes.ps1
+```
+
+## Validação
+
+Depois de aplicar, rode:
 
 ```bash
 npm run lint
 npm run build
 ```
 
-3. Teste as telas:
+Depois teste:
 
 ```txt
 /admin/festa-junina/prestacao-contas
 /admin/festa-junina/prestacao-contas/gerar-pdf
-/admin/festa-junina/prestacao-contas/exportar-pedidos
 ```
 
-4. Confira se agora aparecem:
-   - formas reais de pagamento: Pix, Crédito, Débito, Dinheiro;
-   - categorias/resumo;
-   - itens vendidos;
-   - itens por períodos de 60 minutos.
-
-5. Commit sugerido:
+## Commit sugerido
 
 ```bash
 git status
 
 git add src/lib/operation-dashboard.ts \
   src/app/admin/festa-junina/prestacao-contas/page.tsx \
-  src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts \
-  src/app/admin/festa-junina/prestacao-contas/gerar-pdf/route.ts
+  src/app/admin/festa-junina/prestacao-contas/gerar-pdf/route.ts \
+  src/app/admin/festa-junina/prestacao-contas/exportar-pedidos/route.ts
 
-git commit -m "Corrige dados do relatorio final de prestacao de contas"
+git commit -m "Ajusta períodos do relatório final de prestação de contas"
 
 git push
 ```

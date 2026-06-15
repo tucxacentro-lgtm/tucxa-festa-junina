@@ -12,7 +12,7 @@ import { getCurrentEventForAdmin } from "@/lib/current-event";
 import { formatCurrency } from "@/lib/format";
 import {
   buildCategorySummary,
-  buildHourlyItemSummary,
+  buildPeriodCategorySummary,
   buildPaymentMethodSummary,
   buildSalesSummary,
   getConsumptionOrdersForEvent,
@@ -27,12 +27,6 @@ type PageProps = {
   }>;
 };
 
-function shortTime(date: Date) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
 
 function sortLink(orderBy: "quantidade" | "valor") {
   return `/admin/festa-junina/prestacao-contas?ordenar=${orderBy}`;
@@ -60,7 +54,7 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
   const sortedItems = [...summary.itemDetails].sort((a, b) =>
     orderBy === "quantidade" ? b.quantity - a.quantity : b.total - a.total,
   );
-  const hourlyItems = buildHourlyItemSummary(activeOrders);
+  const periodCategoryTotals = buildPeriodCategorySummary(activeOrders);
 
   return (
     <AdminPageShell>
@@ -253,43 +247,39 @@ export default async function PrestacaoContasPage({ searchParams }: PageProps) {
 
         <details className="mt-8 rounded-[2rem] border border-green-100 bg-white p-6 shadow-sm">
           <summary className="cursor-pointer text-xl font-black text-green-950">
-            4. Itens vendidos por períodos de 60 minutos
+            4. Totais por período de 60 minutos
           </summary>
           <p className="mt-3 text-sm text-stone-700">
-            Agrupamento automático do primeiro ao último pedido registrado, em
-            blocos de 60 minutos.
+            Visão igual ao resumo por categoria, agrupada por períodos operacionais
+            de 60 minutos no fuso de São Paulo. Período principal considerado:
+            12:00–17:00. Registros fora desta janela aparecem como
+            “Antes de 12:00” ou “Após 17:00”.
           </p>
           <div className="mt-4 overflow-x-auto rounded-2xl border border-stone-100">
-            <table className="w-full min-w-[760px] text-left text-sm">
+            <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="bg-green-950 text-white">
                 <tr>
                   <th className="p-3">Período</th>
                   <th className="p-3">Categoria</th>
-                  <th className="p-3">Item</th>
                   <th className="p-3">Quantidade</th>
-                  <th className="p-3">Valor</th>
+                  <th className="p-3">Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
-                {hourlyItems.map((item) => (
-                  <tr
-                    key={`${item.bucketStart.toISOString()}-${item.itemName}`}
-                  >
-                    <td className="p-3 font-bold">
-                      {shortTime(item.bucketStart)}–{shortTime(item.bucketEnd)}
-                    </td>
-                    <td className="p-3">{item.category}</td>
-                    <td className="p-3 font-bold">{item.itemName}</td>
+                {periodCategoryTotals.map((item) => (
+                  <tr key={`${item.period}-${item.category}`}>
+                    <td className="p-3 font-bold">{item.period}</td>
+                    <td className="p-3 font-bold">{item.category}</td>
                     <td className="p-3">{item.quantity}</td>
                     <td className="p-3 font-black">
                       {formatCurrency(item.total)}
                     </td>
                   </tr>
                 ))}
-                {hourlyItems.length === 0 ? (
+                {periodCategoryTotals.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-4 text-sm text-stone-600">
-                      Nenhum item encontrado por período.
+                    <td colSpan={4} className="p-4 text-sm text-stone-600">
+                      Nenhum total encontrado por período.
                     </td>
                   </tr>
                 ) : null}
